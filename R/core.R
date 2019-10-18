@@ -391,18 +391,18 @@ print.hdd = function(x, ...){
 #' }
 #'
 summary.hdd = function(object, ...){
-	n = length(x$.size)
-	cat("Hard drive data of ", osize(x), " Made of ", n, " files.\n", sep = "")
+	n = length(object$.size)
+	cat("Hard drive data of ", osize(object), " Made of ", n, " files.\n", sep = "")
 
-	key = attr(x, "key")
+	key = attr(object, "key")
 	if(!is.null(key)){
 		cat("Sorted by:", paste0(key, collapse = ", "), "\n")
 	}
 
-	cat("Location: ", gsub("/[^/]+$", "/", x$.fileName[1]), "\n", sep = "")
-	nb = x$.row_cum[n]
+	cat("Location: ", gsub("/[^/]+$", "/", object$.fileName[1]), "\n", sep = "")
+	nb = object$.row_cum[n]
 	nb = numberFormat(nb)
-	cat(nb, " lines, ", x$.ncol[1], " variables.\n", sep = "")
+	cat(nb, " lines, ", object$.ncol[1], " variables.\n", sep = "")
 
 }
 
