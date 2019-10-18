@@ -1,0 +1,35 @@
+
+#
+# Exports
+#
+
+# Main
+export(hdd, hdd_slice, mergehdd, readfst, setkeyhdd, txt2hdd, write_hdd)
+export(guess_col_types, guess_delim, peek)
+
+# Setters/Getters
+export(setHdd_extract.cap, getHdd_extract.cap)
+
+# S3 exports
+S3method("$", hdd)
+S3method("[", hdd)
+S3method(dim, hdd)
+S3method(names, hdd)
+S3method(print, hdd)
+S3method(summary, hdd)
+
+#
+# Imports
+#
+
+# Depends
+import(data.table)
+
+# Imports
+importFrom(fst, fst, read_fst, write_fst)
+importFrom(utils, object.size, head, tail, View)
+importFrom(readr, read_delim_chunked, read_lines, guess_parser, problems)
+
+
+
+
