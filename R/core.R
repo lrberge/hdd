@@ -44,7 +44,17 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 	# it avoids adding as.data.table = TRUE
 	# + reads hdd files
 
+	check_arg(path, "singleCharacter")
+	check_arg(from, "singleIntegerGE1")
+	check_arg(to, "nullSingleIntegerGE1")
+	check_arg(confirm, "singleLogical")
+
 	if(grepl("\\.fst", path)){
+
+		if(!file.exists(path)){
+			stop("The file the argument 'path' refers to does not exists.")
+		}
+
 		res = read_fst(path, columns, from, to, as.data.table = TRUE)
 	} else {
 		res = try(hdd(path))
@@ -77,7 +87,8 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 #' @param x A dataset (data.frame, hdd).
 #' @param fun A function to be applied to slices of the dataset. The function must return a data frame like object.
 #' @param chunkMB The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additionnal information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.
-#' @param rep The destination repository where the data is saved.
+#' @param dir The destination directory where the data is saved.
+#' @param replace Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.
 #' @param ... Other parameters to be passed to \code{fun}.
 #'
 #' @return
@@ -116,14 +127,31 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 #'
 #' }
 #'
-hdd_slice = function(x, fun, rep, chunkMB = 500, ...){
+hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 	# This function is useful for performing memory intensive operations
 	# it slices the operation in several chunks of the initial dat
 	# then you need to use the function recombine to obtain the result
 	# x: the main vector/matrix to which apply fun
 	# fun: the function to apply to x
 	# chunkMB: the size of the chunks of x, in mega bytes // default is a "smart guess"
-	# rep: the repository where to make the temporary savings. Default is "."
+	# dir: the repository where to make the temporary savings. Default is "."
+
+
+	# Controls
+
+	if(missing(x)){
+		stop("Argument 'x' is missing but is required.")
+	}
+
+	if(missing(fun)){
+		stop("Argument 'fun' is missing but is required.")
+	} else if(!is.function(fun)){
+		stop("Argument 'fun' must be a function. Currently its class is ", class(fun)[[1]], ".")
+	}
+
+	check_arg(dir, "singleCharacterMbt")
+	check_arg(chunkMB, "singleNumericGT0")
+	check_arg(replace, "singleLogical")
 
 	if(is.null(dim(x))){
 		isTable = FALSE
@@ -154,21 +182,24 @@ hdd_slice = function(x, fun, rep, chunkMB = 500, ...){
 	end = c(start[-1] - 1, n)
 
 	# The directory
-	control_variable(rep, "singleCharacter", mustBeThere = TRUE)
-	rep = gsub("([^/])$", "\\1/", rep)
+	dir = gsub("([^/])$", "\\1/", dir)
 
-	if(!dir.exists(rep)){
-		dir.create(rep)
+	if(!dir.exists(dir)){
+		dir.create(dir)
 	}
 
 	# cleaning (if necessary)
-	all_files = list.files(rep, full.names = TRUE)
-	for(fname in all_files) unlink(fname)
+	all_files = list.files(dir, full.names = TRUE)
+	all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt|info\\.txt)$", all_files)]
+	if(length(all_files2clean) > 0){
+		if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
+		for(fname in all_files2clean) unlink(fname)
+	}
 
 	# writing the information file
 	call = match.call()
 	info = c(deparse(call), paste0("CHUNK: ", n_chunks, " chunks of ", round(chunkMB), "MB."))
-	writeLines(info, paste0(rep, "info.txt"))
+	writeLines(info, paste0(dir, "info.txt"))
 
 
 	n_digits = ceiling(log10(n_chunks)) + (log10(n_chunks) %% 1 == 0)
@@ -191,9 +222,8 @@ hdd_slice = function(x, fun, rep, chunkMB = 500, ...){
 		}
 
 		# we save the result in the temporary repository
-		# write.fst(res_small, path = paste0(rep, "hdd_slice", sprintf("%0*i", n_digits, i), ".fst"))
 		if(nrow(res_small) > 0){
-			write_hdd(res_small, rep, add = ADD, replace = TRUE, chunkMB = Inf)
+			write_hdd(res_small, dir, add = ADD, replace = TRUE, chunkMB = Inf)
 			ADD = TRUE
 		}
 
@@ -209,7 +239,7 @@ hdd_slice = function(x, fun, rep, chunkMB = 500, ...){
 #'
 #' This function connects to a hard drive data set (hdd). You can access the hard drive data in a similar way as a \code{data.table}.
 #'
-#' @param rep The repository where the hard drive data set is.
+#' @param dir The directory where the hard drive data set is.
 #'
 #' @examples
 #'
@@ -221,26 +251,33 @@ hdd_slice = function(x, fun, rep, chunkMB = 500, ...){
 #' }
 #'
 #'
-hdd = function(rep){
+hdd = function(dir){
 	# This function creates a link to a repository containing fst files
 	# NOTA: The HDD files are all named "sliceXX.fst"
 
+	check_arg(dir, "singleCharacterMbt")
+
 	# The directory + prefix
-	if(grepl("\\.fst", rep)) {
-		rep = gsub("[[:digit:]]+\\.fst", "", rep)
+	if(grepl("\\.fst", dir)) {
+		dir = gsub("[[:digit:]]+\\.fst", "", dir)
 	} else {
-		rep = paste0(gsub("([^/])$", "\\1/", rep), "slice")
+		dir = paste0(gsub("([^/])$", "\\1/", dir), "slice")
 	}
 
-	dir = gsub("/[^/]+$", "/", rep)
+	dir = gsub("/[^/]+$", "/", dir)
+	file_head = paste0(dir, "slice_")
 
 	if(!dir.exists(dir)){
-		stop("The directory ", dir, " does not exists.")
+		stop("In argument 'dir': The directory ", dir, " does not exists.")
 	}
 
+	# all_files: valid files containing data: i.e. dir/slice_xx.fst
 	all_files = list.files(dir, full.names = TRUE)
+	all_files = sort(all_files[grepl(file_head, all_files) & grepl("\\.fst", all_files)])
 
-	all_files = sort(all_files[grepl(rep, all_files) & grepl("\\.fst", all_files)])
+	if(length(all_files) == 0){
+		stop("The current directory is not a valid HDD data set (i.e. no HDD files in it).")
+	}
 
 	# we gather the information from the files:
 	all_sizes = as.vector(sapply(all_files, function(x) file.info(x)$size))
@@ -280,133 +317,6 @@ hdd = function(rep){
 }
 
 
-object_size = function(x){
-	if("hdd" %in% class(x)){
-		res = tail(x$.size_cum, 1)
-	} else {
-		res = utils::object.size(x)
-	}
-	res
-}
-
-
-#' Dimension of a hdd object
-#'
-#' Gets the dimension of a hard drive data set (hdd).
-#'
-#' @param x A hdd object.
-#'
-#' @return
-#' It returns a vector of length 2 containing the number of rows and the columns.
-#'
-#' @examples
-#'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' dim(data_hdd)
-#'
-#' }
-#'
-dim.hdd = function(x){
-	n = length(x$.size)
-	c(x$.row_cum[n], x$.ncol[1])
-}
-
-#' Variables names of an hdd object
-#'
-#' Gets the variable names of a hard drive data set (hdd).
-#'
-#' @inheritParams dim.hdd
-#'
-#' @return
-#' A character vector.
-#'
-#' @examples
-#'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' names(data_hdd)
-#'
-#' }
-#'
-names.hdd = function(x){
-	x_tmp = fst(x$.fileName[1])
-	names(x_tmp)
-}
-
-#' Print method for hdd objects
-#'
-#' This functions displays the first and last lines of a hard drive data set (hdd).
-#'
-#' @inheritParams dim.hdd
-#'
-#' @param ... Not currently used.
-#'
-#' @return
-#' Nothing is returned.
-#'
-#' @examples
-#'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' print(data_hdd)
-#'
-#' }
-#'
-print.hdd = function(x, ...){
-	n = nrow(x)
-	if(n < 8){
-		print(x[])
-	} else {
-		quoi = as.data.frame(rbindlist(list(head(x, 4), tail(x, 3))))
-		quoi = formatTable(quoi)
-		quoi[4, ] = rep(" " , ncol(quoi))
-		nmax = tail(x$.row_cum, 1)
-		dmax = log10(nmax) + 1
-		row.names(quoi) = c(1:3, substr('------------', 1, max(3, 4/3*dmax)), numberFormat(nmax - 2:0))
-		print(quoi)
-	}
-}
-
-#' Summary information for hdd objects
-#'
-#' Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (hdd).
-#'
-#' @inheritParams dim.hdd
-#'
-#' @param object A hdd object.
-#' @param ... Not currently used.
-#'
-#'
-#' @examples
-#'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' summary(data_hdd)
-#'
-#' }
-#'
-summary.hdd = function(object, ...){
-	n = length(object$.size)
-	cat("Hard drive data of ", osize(object), " Made of ", n, " files.\n", sep = "")
-
-	key = attr(object, "key")
-	if(!is.null(key)){
-		cat("Sorted by:", paste0(key, collapse = ", "), "\n")
-	}
-
-	cat("Location: ", gsub("/[^/]+$", "/", object$.fileName[1]), "\n", sep = "")
-	nb = object$.row_cum[n]
-	nb = numberFormat(nb)
-	cat(nb, " lines, ", object$.ncol[1], " variables.\n", sep = "")
-
-}
-
-
 
 #' Extraction of hdd data
 #'
@@ -414,10 +324,10 @@ summary.hdd = function(object, ...){
 #'
 #' @param x A hdd file.
 #' @param index An index, you can use \code{.N} and variable names, like in data.table.
-#' @param ... Other components of the extraction to be passed to data.table.
+#' @param ... Other components of the extraction to be passed to \code{\link[data.table]{data.table}}.
 #' @param file Which file to extract from? (Remember hdd data is split in several files.) You can use \code{.N}.
 #' @param all.vars Logical, default is \code{FALSE}. By default, if the first argument of \code{...} is provided (i.e. argument \code{j}) then only variables appearing in all \code{...} plus the variable names found in \code{index} are extracted. If \code{TRUE} all variables are extracted before any selection is done. (This can be useful when the algorithm getting the variable names gets confused in case of complex queries.)
-#' @param newfile A destination repository. Default is missing. Should be result of the query be saved into a new HDD repository? Otherwise, it is put in memory.
+#' @param newfile A destination directory. Default is missing. Should be result of the query be saved into a new HDD directory? Otherwise, it is put in memory.
 #' @param replace Only used if argument \code{newfile} is not missing: default is \code{FALSE}. If the \code{newfile} points to an existing HDD data, then to replace it you must have \code{replace = TRUE}.
 #'
 #' @return
@@ -470,6 +380,11 @@ summary.hdd = function(object, ...){
 	var_names = names(x)
 	mc = match.call()
 
+	check_arg(file, "integerVector")
+	check_arg(newfile, "singleCharacter", "Argument 'newfile' must be a valid path to a directory. REASON")
+	check_arg(replace, "singleLogical")
+	check_arg(all.vars, "singleLogical")
+
 	mc_small = mc[!names(mc) %in% c("x", "index", "file", "all.vars")]
 	if(all.vars || length(mc_small) == 1){
 		# I do that because in what follows, it is just a guess,
@@ -504,14 +419,14 @@ summary.hdd = function(object, ...){
 		# we save in a new document
 		doWrite = TRUE
 
-		rep = newfile
-		if(grepl("\\.fst", rep)) {
-			rep = gsub("[[:digit:]]+\\.fst", "", rep)
+		dir = newfile
+		if(grepl("\\.fst", dir)) {
+			dir = gsub("[[:digit:]]+\\.fst", "", dir)
 		} else {
-			rep = paste0(gsub("([^/])$", "\\1/", rep), "slice")
+			dir = paste0(gsub("([^/])$", "\\1/", dir), "slice")
 		}
 
-		dir = gsub("/[^/]+$", "/", rep)
+		dir = gsub("/[^/]+$", "/", dir)
 	}
 
 	if(!missing(file)){
@@ -603,7 +518,7 @@ summary.hdd = function(object, ...){
 					stop("You cannot save to a new file when the outcome of the call is not a data.frame (here it is a vector: use .(var) instead).")
 				}
 
-				write_hdd(res[[i]], rep = dir, replace = replace, add = i!=1)
+				write_hdd(res[[i]], dir = dir, replace = replace, add = i!=1)
 				res[[i]] = NULL # we clean memory
 			}
 
@@ -731,7 +646,7 @@ summary.hdd = function(object, ...){
 
 		if(doWrite){
 			stop("newfile not implemented for 'regular' indexes. Think to the design.")
-			write_hdd(res[[i]], rep = dir, replace = replace, add = i_running!=1)
+			write_hdd(res[[i]], dir = dir, replace = replace, add = i_running!=1)
 			res[[i]] = NULL # we clean memory
 		}
 
@@ -850,7 +765,7 @@ summary.hdd = function(object, ...){
 #' This function saves in-memory/HDD data sets into HDD repositories. Useful to append several data sets.
 #'
 #' @param x A data set.
-#' @param rep The HDD repository.
+#' @param dir The HDD repository, i.e. the directory where the HDD data is.
 #' @param chunkMB If the data has to be split in several files of \code{chunkMB} sizes. Default is \code{Inf}.
 #' @param compress Compression rate to be applied by \code{\link[fst]{write_fst}}. Default is 50.
 #' @param add Should the file be added to the existing repository? Default is \code{FALSE}.
@@ -874,9 +789,9 @@ summary.hdd = function(object, ...){
 #'
 #' }
 #'
-write_hdd = function(x, rep, chunkMB = Inf, compress = 50, add = FALSE, replace = FALSE, showWarning){
+write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace = FALSE, showWarning){
 	# data: the data (in memory or fst or hdd)
-	# rep: the hdd repository
+	# dir: the hdd repository
 	# write hdd data
 	# _hdd.txt => file avec infos
 	# variables, head du file, si'il y a une key ou pas
@@ -885,12 +800,14 @@ write_hdd = function(x, rep, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	mc = match.call()
 
 	# controls
+	check_arg(dir, "singleCharacterMbt", "Argument 'dir' must be a valid path. REASON")
+	check_arg(chunkMB, "singleNumericGT0")
+	check_arg(compress, "singleIntegerGE0LE100")
+	check_arg(add, "singleLogical")
+	check_arg(replace, "singleLogical")
+	check_arg(showWarning, "singleLogical")
+
 	control_variable(x, "data.frame", mustBeThere = TRUE)
-	control_variable(chunkMB, "singleNumericGT0", mustBeThere = TRUE)
-	control_variable(compress, "singleNumericGE0LE100", mustBeThere = TRUE)
-	control_variable(add, "singleLogical", mustBeThere = TRUE)
-	control_variable(replace, "singleLogical", mustBeThere = TRUE)
-	control_variable(showWarning, "singleLogical", mustBeThere = FALSE)
 
 	# if no observation
 	if(missing(showWarning)){
@@ -909,14 +826,15 @@ write_hdd = function(x, rep, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	}
 
 	# The repository
-	control_variable(rep, "singleCharacter", mustBeThere = TRUE)
-	if(grepl("\\.fst", rep)) {
-		rep = gsub("[[:digit:]]+\\.fst", "", rep)
+	control_variable(dir, "singleCharacter", mustBeThere = TRUE)
+	if(grepl("\\.fst", dir)) {
+		dir = gsub("[[:digit:]]+\\.fst", "", dir)
 	} else {
-		rep = paste0(gsub("([^/])$", "\\1/", rep), "slice_")
+		dir = paste0(gsub("([^/])$", "\\1/", dir), "slice_")
 	}
 
-	dir = gsub("/[^/]+$", "/", rep)
+	dir = gsub("/[^/]+$", "/", dir)
+	file_head = paste0(dir, "slice_")
 	dirExists = dir.exists(dir)
 	all_files = list.files(dir, full.names = TRUE)
 	all_files_fst = ggrepl("\\.fst", all_files)
@@ -1027,7 +945,7 @@ write_hdd = function(x, rep, chunkMB = Inf, compress = 50, add = FALSE, replace 
 		n_digits = ceiling(log10(nb_all)) + (log10(nb_all) %% 1 == 0)
 
 		for(i in 1:n_chunks){
-			write_fst(x[start[i]:end[i], ], path = paste0(rep, sprintf("%0*i", n_digits, nb_files_existing + i), ".fst"), compress = compress)
+			write_fst(x[start[i]:end[i], ], path = paste0(file_head, sprintf("%0*i", n_digits, nb_files_existing + i), ".fst"), compress = compress)
 		}
 	} else {
 		# we just copy the files except there is the need to recreate the files to account for the key
@@ -1035,7 +953,7 @@ write_hdd = function(x, rep, chunkMB = Inf, compress = 50, add = FALSE, replace 
 
 		nb_all = nb_files_existing + n_chunks
 		n_digits = ceiling(log10(nb_all)) + (log10(nb_all) %% 1 == 0)
-		files_new = paste0(rep, sprintf("%0*i", n_digits, nb_files_existing+(1:n_chunks)), ".fst")
+		files_new = paste0(file_head, sprintf("%0*i", n_digits, nb_files_existing+(1:n_chunks)), ".fst")
 
 		# To handle the cases with key
 		justCopy = TRUE
@@ -1079,7 +997,7 @@ write_hdd = function(x, rep, chunkMB = Inf, compress = 50, add = FALSE, replace 
 		# Updating file names
 		n_digits_original = ceiling(log10(nb_files_existing)) + (log10(nb_files_existing) %% 1 == 0)
 		if(n_digits > n_digits_original){
-			new_file_names = paste0(rep, sprintf("%0*i", n_digits, 1:nb_files_existing), ".fst")
+			new_file_names = paste0(file_head, sprintf("%0*i", n_digits, 1:nb_files_existing), ".fst")
 			for(i in 1:nb_files_existing){
 				file.rename(all_files_fst[i], new_file_names[i])
 			}
@@ -1148,13 +1066,17 @@ setkeyhdd = function(x, key, newfile, chunkMB = 500){
 
 	# key can be a data.table call? No, not at the moment
 
+	check_arg(key, "characterVectorMbt")
+	check_arg(newfile, "singleCharacterMbt")
+	check_arg(chunkMB, "singleNumericGT0")
+
 	if(!all(key %in% names(x))){
 		stop("The key must be a variable name.")
 	}
 
-	# if(length(key) > 1){
-	#     stop("The function for 2 or more keys needs to be developped.")
-	# }
+	if(missing(x)){
+		stop("Argument 'x' must be a hdd object, but it is currently missing.")
+	}
 
 	if(!"hdd" %in% class(x)){
 		stop("x must be a hdd object.")
@@ -1297,141 +1219,12 @@ setkeyhdd = function(x, key, newfile, chunkMB = 500){
 
 	if(nfiles != nfiles_origin){
 		cat("reshaping...")
-		write_hdd(x_tmp, rep = newfile, replace = TRUE, chunkMB = mean(x$.size) / 1e6)
+		write_hdd(x_tmp, dir = newfile, replace = TRUE, chunkMB = mean(x$.size) / 1e6)
 		cat("done")
 	} else {
-		write_hdd(x_tmp, rep = newfile, replace = TRUE)
+		write_hdd(x_tmp, dir = newfile, replace = TRUE)
 	}
 
-}
-
-numID = function(x){
-	if(ncol(x) == 1){
-		x = x[[1]]
-	} else {
-		# we recreate the ids using rowid
-		vars = names(x)
-		x[, xxOBSxx := 1:.N]
-		setorderv(x, vars)
-
-		x[, xxNEWIDxx := cumsum(sign(1 - c(-100, diff(rowidv(x, vars)))))]
-		setorder(x, xxOBSxx)
-		x = x[["xxNEWIDxx"]]
-	}
-	return(x)
-}
-
-
-find_split = function(x){
-	# This function to find where to cut a file.
-	# we do not want the same value to be in two different files
-
-	x = numID(x)
-
-	n = length(x)
-	obs_mid = round(n/2)
-	v_left = x[obs_mid]
-	v_right = x[obs_mid + 1]
-
-	if(v_left != v_right){
-		return(obs_mid)
-	} else {
-		# then we need to split differently
-		if(v_left != x[n]){
-			obs_mid = obs_mid + which.max(x[(obs_mid+1):n] != v_left) - 1
-		} else if(v_left != x[1]){
-			obs_mid = which.max(x[1:obs_mid] == v_left) - 1
-		} else {
-			stop("No middle value found. The two files could not be split, revise the code to allow merging the files automatically.")
-		}
-		return(obs_mid)
-	}
-}
-
-find_n_split = function(x, key, nfiles){
-	# This function to find where to cut a file.
-	# we do not want the same value to be in two different files
-	# nfiles: the new number of files
-	# returns a vector of the beginning observations
-
-	nfiles_origin = length(x$.nrow)
-	n_all = x$.row_cum[nfiles_origin]
-
-	# preliminary starting point of each file
-	start = floor(seq(1, n_all, by = n_all/nfiles))
-	start = c(start[1:nfiles], n_all)
-
-	DELTA = 10000 # value of the increment
-	if(n_all/nfiles + 2 < DELTA){
-		DELTA = floor(n_all/nfiles) - 1
-	}
-
-	# We find the right starting point of each file
-	for(i in 2:nfiles){
-		start_tmp = start[i]
-		id = numID(x[start_tmp + 0:1, j = key, with = FALSE])
-		id_left = id[1]
-
-		if(id[1] != id[2]){
-			# OK! => nothing to do
-			next
-		} else {
-			# we go to the right
-			k = 1
-			while(TRUE){
-				if(start_tmp + k*DELTA > start[i + 1]){
-					stop("The hdd file with key could not be split in ", nfiles, " documents (because of too many identical keys). Reduce the number of documents.")
-				}
-
-				id = numID(x[start_tmp + c(0, k*DELTA), key, with = FALSE])
-				if(id[1] != id[2]){
-					# we find the right point!
-					id = numID(x[start_tmp + c(0, ((DELTA*(k-1)+1):(DELTA*k))), key, with = FALSE])
-					start_new = start_tmp + DELTA*(k-1) + which.max(id[-1] != id[1])
-					start[i] = start_new
-					break
-				} else {
-					k = k + 1
-				}
-			}
-		}
-	}
-
-	start_final = start[1:nfiles]
-	return(start_final)
-}
-
-obs = function(x, file){
-	# Finds the observation numbers of a hdd document by file
-
-	if(!"hdd" %in% class(x)){
-		stop("x must be a hdd file.")
-	}
-
-	if(missing(file)){
-		stop("file must be provided.")
-	}
-
-	n = length(x$.nrow)
-	control_variable(file, "integerVectorGT0")
-	if(any(file > n)){
-		stop("file cannot exceed ", n, ".")
-	}
-
-
-	row_cum = x$.row_cum
-	end = row_cum
-	start = (1 + c(0, row_cum))
-
-	# creation of the vector
-	res = list()
-	index = 0
-	for(i in file){
-		index = index + 1
-		res[[index]] = start[i]:end[i]
-	}
-
-	unlist(res)
 }
 
 #' Merges data to an hdd file
@@ -1466,6 +1259,15 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 
 	# CONTROLS
 
+	if(missing(x)) stop("Argument 'x' is required.")
+	if(missing(y)) stop("Argument 'y' is required.")
+	check_arg(newfile, "singleCharacter", "Argument 'newfile' must be a path to a directory. REASON")
+
+	check_arg(all, "singleLogical")
+	check_arg(all.x, "singleLogical")
+	check_arg(all.y, "singleLogical")
+	check_arg(replace, "singleLogical")
+
 	if(!"hdd" %in% class(x)){
 		stop("x must be a hdd file!")
 	}
@@ -1488,18 +1290,26 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 
 	# Formatting the repository of destination
 	control_variable(newfile, "singleCharacter", mustBeThere = TRUE)
-	rep = newfile
-	if(grepl("\\.fst", rep)) {
-		rep = gsub("[[:digit:]]+\\.fst", "", rep)
+	dir = newfile
+	if(grepl("\\.fst", dir)) {
+		dir = gsub("[[:digit:]]+\\.fst", "", dir)
 	} else {
-		rep = paste0(gsub("([^/])$", "\\1/", rep), "slice")
+		dir = paste0(gsub("([^/])$", "\\1/", dir), "slice")
 	}
 
-	repDest = gsub("/[^/]+$", "/", rep)
+	dirDest = gsub("/[^/]+$", "/", dir)
 
-	if(dir.exists(repDest) && !replace){
-		stop("The repository of destination already exists. To replace the existing data, use replace = TRUE.")
+	if(dir.exists(dirDest)){
+		# cleaning (if necessary)
+		all_files = list.files(dirDest, full.names = TRUE)
+		all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt)$", all_files)]
+		if(length(all_files2clean) > 0){
+			if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
+			for(fname in all_files2clean) unlink(fname)
+		}
 	}
+
+
 
 	# Merging
 	all_files_x = x$.fileName
@@ -1515,7 +1325,7 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 				y_chunk = read_fst(fname_y, as.data.table = TRUE)
 				res_chunk = merge(x_chunk, y_chunk, by = by, all = all, all.x = all.x, all.y = all.y)
 				if(nrow(res_chunk) > 0){
-					write_hdd(res_chunk, repDest, chunkMB = Inf, add = ADD, replace = TRUE)
+					write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE)
 					ADD = TRUE
 				}
 			}
@@ -1523,7 +1333,7 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 		} else {
 			res_chunk = merge(x_chunk, y, by = by, all = all, all.x = all.x, all.y = all.y)
 			if(nrow(res_chunk) > 0){
-				write_hdd(res_chunk, repDest, chunkMB = Inf, add = ADD, replace = TRUE)
+				write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE)
 				ADD = TRUE
 			}
 		}
@@ -1539,13 +1349,14 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 #' Imports text data and saves it into a HDD file. It uses \code{\link[readr]{read_delim_chunked}} to extract the data. It also allows to preprocess the data.
 #'
 #' @param path Path where the data is.
-#' @param repDest The destination repository.
+#' @param dirDest The destination directory, where the new HDD data should be saved.
 #' @param chunkMB The chunk sizes in MB, no default.
 #' @param col_names The column names, by default is uses the ones of the dataset. If the dataset lacks column names, you must provide them.
 #' @param col_types The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} to find them.
 #' @param nb_skip Number of lines to skip.
 #' @param delim The delimiter. By default the function tries to find the delimiter, but sometimes it fails.
 #' @param preprocessfun A function that is applied to the data before saving. Default is missing.
+#' @param replace If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.
 #' @param verbose Integer. If verbose > 0, then the evolution of the importing process is reported.
 #' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, \code{quote = ""} can be interesting sometimes.
 #'
@@ -1574,7 +1385,7 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 #' }
 #'
 #'
-txt2hdd = function(path, repDest, chunkMB, col_names, col_types, nb_skip, delim, preprocessfun, verbose = 1, ...){
+txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim, preprocessfun, replace = FALSE, verbose = 1, ...){
 	# This function reads a large text file thanks to readr
 	# and trasforms it into a hdd document
 
@@ -1582,12 +1393,26 @@ txt2hdd = function(path, repDest, chunkMB, col_names, col_types, nb_skip, delim,
 	# Control
 	#
 
+	check_arg(path, "singleCharacterMbt")
+	check_arg(dirDest, "singleCharacterMbt")
+	check_arg(chunkMB, "singleNumericGT0Mbt")
+	check_arg(col_names, "characterVector")
+	check_arg(nb_skip, "singleIntegerGE0")
+	check_arg(delim, "singleCharacter")
+	check_arg(replace, "singleLogical")
+	check_arg(verbose, "singleNumeric")
+
+
 	DO_PREPROCESS = FALSE
 	if(!missing(preprocessfun)){
 		if(!is.function(preprocessfun)){
 			stop("Argument 'preprocessfun' must be a function.")
 		}
 		DO_PREPROCESS = TRUE
+	}
+
+	if(!missing(col_types) && !length(class(col_types) == 1) || class(col_types) != "col_spec"){
+		stop("Argument 'col_types' must be a 'col_spec' object, obtained from, e.g., readr::cols() or readr::cols_only(), or from guess_cols_type()).")
 	}
 
 	#
@@ -1656,16 +1481,29 @@ txt2hdd = function(path, repDest, chunkMB, col_names, col_types, nb_skip, delim,
 
 	# Function to apply to each chunk
 
-	REP_PBLM = gsub("/?$", "/problems", repDest)
-	REP_DEST = repDest
+	REP_PBLM = gsub("/?$", "/problems", dirDest)
+	REP_DEST = dirDest
 	ADD = FALSE
 	IS_PBLM = FALSE
 
-	# We clean the problems folder
-	if(dir.exists(REP_PBLM)){
-		all_files_pblm = list.files(REP_PBLM, full.names = TRUE)
-		for(fname in all_files_pblm) unlink(fname)
+	# We check replacement
+	if(dir.exists(REP_DEST)){
+
+		# cleaning (if necessary)
+		all_files = list.files(REP_DEST, full.names = TRUE)
+		all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt)$", all_files)]
+		if(length(all_files2clean) > 0){
+			if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
+			for(fname in all_files2clean) unlink(fname)
+		}
+
+		# We also clean the problems folder
+		if(dir.exists(REP_PBLM)){
+			all_files_pblm = list.files(REP_PBLM, full.names = TRUE)
+			for(fname in all_files_pblm) unlink(fname)
+		}
 	}
+
 
 	funPerChunk = function(x, pos){
 
@@ -1688,7 +1526,7 @@ txt2hdd = function(path, repDest, chunkMB, col_names, col_types, nb_skip, delim,
 		}
 
 		# save the data
-		write_hdd(x, rep = REP_DEST, replace = TRUE, add = ADD)
+		write_hdd(x, dir = REP_DEST, replace = TRUE, add = ADD)
 
 		if(!ADD) ADD <<- TRUE
 
@@ -1724,6 +1562,8 @@ txt2hdd = function(path, repDest, chunkMB, col_names, col_types, nb_skip, delim,
 guess_col_types = function(dt_or_path, col_names, n = 10000){
 	# guess the column types of a text document
 
+	if(missing(dt_or_path)) stop("Argument 'dt_or_path' is required.")
+
 	if(length(dt_or_path) == 1 && is.character(dt_or_path)){
 		first_lines = readr::read_lines(dt_or_path, n_max = n)
 		sample_dt = data.table::fread(paste0(first_lines, collapse = "\n"))
@@ -1732,6 +1572,9 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 	} else {
 		stop("Object dt_or_path must be a data.frame or a path.")
 	}
+
+	check_arg(col_names, "characterVector")
+	check_arg(n, "singleIntegerGE1")
 
 	# The column names
 	if(missing(col_names)){
@@ -1751,7 +1594,7 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 	qui_character = which(all_classes == "character")
 	qui_numeric = which(all_classes == "numeric")
 
-	all_classes[qui_int] = "double" # double is Int64 in terms of precision
+	all_classes[qui_int] = "double" # double is (almost) Int64 in terms of precision
 	all_classes[qui_int64] = "double"
 	all_classes[qui_numeric] = "double"
 
@@ -1767,7 +1610,7 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 	all_classes[all_classes == "double"] = "d"
 	all_classes[all_classes == "date"] = "D"
 	all_classes[all_classes == "logical"] = "l"
-	myCall = paste0("cols(", paste0(col_names, "='", all_classes, "'", collapse = ", "), ")")
+	myCall = paste0("readr::cols(", paste0(col_names, "='", all_classes, "'", collapse = ", "), ")")
 
 	eval(parse(text = myCall))
 }
@@ -1794,10 +1637,15 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 #'
 guess_delim = function(path){
 
+
+	check_arg(path, "characterVector", "Argument path must be a valid path. REASON")
+
 	# importing a sample
 
 	if(length(path) > 1 && any(grepl("\n$", path))){
 		first_lines = path
+	} else if(length(path) > 1) {
+		stop("Argument path must be a valid path. Currenlty it is of length ", length(path), ".")
 	} else {
 		first_lines = readLines(path, n = 100)
 	}
@@ -1853,6 +1701,8 @@ guess_delim = function(path){
 #' @param onlyLines Default is \code{FALSE}. If \code{TRUE}, then the first \code{n} lines are directly displayed without formatting.
 #' @param n Integer. The number of lines to extract from the file. Default is 100 or 5 if \code{onlyLine = TRUE}.
 #'
+#' @return
+#' Returns the data invisibly.
 #'
 #' @examples
 #'
@@ -1866,9 +1716,16 @@ guess_delim = function(path){
 #'
 #' }
 #'
-#' # peek("path.csv")
-#'
 peek = function(path, onlyLines = FALSE, n){
+
+	# Controls
+
+	check_arg(path, "singleCharacterMbt")
+	check_arg(onlyLines, "singleLogical")
+	check_arg(n, "singleIntegerGE1")
+
+	if(!file.exists(path)) stop("The path does not lead to an existing file.")
+
 
 	if(missing(n)){
 		if(onlyLines){
@@ -1894,33 +1751,6 @@ peek = function(path, onlyLines = FALSE, n){
 	#
 
 	if(ncol(sample_dt) >= 2){
-
-		# v1 = sample_dt[[1]]
-		# v2 = sample_dt[[2]]
-		#
-		# adj = ifelse(all(grepl("^V", names(sample_dt))), 0, 1)
-		#
-		# pattern2avoid = "(\\[|\\]|\\(|\\)|\"|\\{|\\}|\\?|\\+|\\*)"
-		#
-		# if(any(grepl(pattern2avoid, pattern2avoid))){
-		# 	cat("Could not determine the delimiter. Here is the first line:\n")
-		# 	print(first_lines[1 + adj])
-		# } else {
-		# 	quiOK = which(!is.na(v1) & !is.na(v2) & nchar(v1) >= 1 & nchar(v2) >= 1)[1]
-		#
-		# 	delim = gsub(paste0('^"?', v1[quiOK]), "", first_lines[quiOK + adj])
-		# 	delim = gsub(paste0(v2[quiOK], ".*$"), "", delim)
-		#
-		# 	delim = gsub('"', "", delim)
-		#
-		# 	info = delim[1]
-		# 	if(delim == ","){
-		# 		info = "CSV"
-		# 	} else if(delim == "\t"){
-		# 		info = "TSV"
-		# 	}
-		# 	cat("Delimiter: ", info, "\n")
-		# }
 
 		# very simple check -- real work here is made by fread
 		find_candidate = function(x){
@@ -1949,14 +1779,163 @@ peek = function(path, onlyLines = FALSE, n){
 			} else if(delim == "\t"){
 				info = "TSV"
 			}
-			cat("Delimiter: ", info, "\n")
+			cat("Delimiter:", info, "\n")
 		}
 	}
 
 	dt_name = paste0("peek_", gsub("\\..+", "", gsub("^.+/", "", path)))
 
-	View(sample_dt, dt_name)
+	myView(sample_dt, dt_name)
 	invisible(sample_dt)
 }
+
+
+####
+#### S3 methods ####
+####
+
+#' Dimension of a hdd object
+#'
+#' Gets the dimension of a hard drive data set (hdd).
+#'
+#' @param x A \code{hdd} object.
+#'
+#' @return
+#' It returns a vector of length 2 containing the number of rows and the columns.
+#'
+#' @examples
+#'
+#' \dontrun{
+#' # your data set is in the hard drive, in hdd format already
+#' data_hdd = hdd("path/my_big_data")
+#' dim(data_hdd)
+#'
+#' }
+#'
+dim.hdd = function(x){
+	n = length(x$.size)
+	c(x$.row_cum[n], x$.ncol[1])
+}
+
+#' Variables names of an hdd object
+#'
+#' Gets the variable names of a hard drive data set (hdd).
+#'
+#' @inheritParams dim.hdd
+#'
+#' @return
+#' A character vector.
+#'
+#' @examples
+#'
+#' \dontrun{
+#' # your data set is in the hard drive, in hdd format already
+#' data_hdd = hdd("path/my_big_data")
+#' names(data_hdd)
+#'
+#' }
+#'
+names.hdd = function(x){
+	x_tmp = fst(x$.fileName[1])
+	names(x_tmp)
+}
+
+#' Print method for hdd objects
+#'
+#' This functions displays the first and last lines of a hard drive data set (hdd).
+#'
+#' @inheritParams dim.hdd
+#'
+#' @param ... Not currently used.
+#'
+#' @return
+#' Nothing is returned.
+#'
+#' @examples
+#'
+#' \dontrun{
+#' # your data set is in the hard drive, in hdd format already
+#' data_hdd = hdd("path/my_big_data")
+#' print(data_hdd)
+#'
+#' }
+#'
+print.hdd = function(x, ...){
+	n = nrow(x)
+	if(n < 8){
+		print(x[])
+	} else {
+		quoi = as.data.frame(rbindlist(list(head(x, 4), tail(x, 3))))
+		quoi = formatTable(quoi)
+		quoi[4, ] = rep(" " , ncol(quoi))
+		nmax = tail(x$.row_cum, 1)
+		dmax = log10(nmax) + 1
+		row.names(quoi) = c(1:3, substr('------------', 1, max(3, 4/3*dmax)), numberFormat(nmax - 2:0))
+		print(quoi)
+	}
+}
+
+#' Summary information for hdd objects
+#'
+#' Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (hdd).
+#'
+#' @inheritParams dim.hdd
+#'
+#' @param object A hdd object.
+#' @param ... Not currently used.
+#'
+#'
+#' @examples
+#'
+#' \dontrun{
+#' # your data set is in the hard drive, in hdd format already
+#' data_hdd = hdd("path/my_big_data")
+#' summary(data_hdd)
+#'
+#' }
+#'
+summary.hdd = function(object, ...){
+	n = length(object$.size)
+	cat("Hard drive data of ", osize(object), " Made of ", n, " files.\n", sep = "")
+
+	key = attr(object, "key")
+	if(!is.null(key)){
+		cat("Sorted by:", paste0(key, collapse = ", "), "\n")
+	}
+
+	cat("Location: ", gsub("/[^/]+$", "/", object$.fileName[1]), "\n", sep = "")
+	nb = object$.row_cum[n]
+	nb = numberFormat(nb)
+	cat(nb, " lines, ", object$.ncol[1], " variables.\n", sep = "")
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
