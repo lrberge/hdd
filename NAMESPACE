@@ -27,8 +27,8 @@ import(data.table)
 
 # Imports
 importFrom(fst, fst, read_fst, write_fst)
-importFrom(utils, object.size, head, tail, View)
-importFrom(readr, read_delim_chunked, read_lines, guess_parser, problems)
+importFrom(utils, object.size, head, tail)
+importFrom(readr, read_delim_chunked, read_lines, guess_parser, problems, cols)
 
 
 
