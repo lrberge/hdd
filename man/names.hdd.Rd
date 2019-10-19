@@ -7,7 +7,7 @@
 \method{names}{hdd}(x)
 }
 \arguments{
-\item{x}{A hdd object.}
+\item{x}{A \code{hdd} object.}
 }
 \value{
 A character vector.

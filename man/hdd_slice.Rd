@@ -4,16 +4,18 @@
 \alias{hdd_slice}
 \title{Applies a function to slices of data (and save them)}
 \usage{
-hdd_slice(x, fun, rep, chunkMB = 500, ...)
+hdd_slice(x, fun, dir, chunkMB = 500, replace = FALSE, ...)
 }
 \arguments{
 \item{x}{A dataset (data.frame, hdd).}
 
 \item{fun}{A function to be applied to slices of the dataset. The function must return a data frame like object.}
 
-\item{rep}{The destination repository where the data is saved.}
+\item{dir}{The destination directory where the data is saved.}
 
 \item{chunkMB}{The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additionnal information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.}
+
+\item{replace}{Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.}
 
 \item{...}{Other parameters to be passed to \code{fun}.}
 }

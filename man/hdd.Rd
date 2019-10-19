@@ -4,10 +4,10 @@
 \alias{hdd}
 \title{Hard drive data set}
 \usage{
-hdd(rep)
+hdd(dir)
 }
 \arguments{
-\item{rep}{The repository where the hard drive data set is.}
+\item{dir}{The directory where the hard drive data set is.}
 }
 \description{
 This function connects to a hard drive data set (hdd). You can access the hard drive data in a similar way as a \code{data.table}.

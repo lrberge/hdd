@@ -7,7 +7,7 @@
 \method{dim}{hdd}(x)
 }
 \arguments{
-\item{x}{A hdd object.}
+\item{x}{A \code{hdd} object.}
 }
 \value{
 It returns a vector of length 2 containing the number of rows and the columns.

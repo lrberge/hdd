@@ -7,7 +7,7 @@
 \method{$}{hdd}(x, name)
 }
 \arguments{
-\item{x}{A hdd object.}
+\item{x}{A \code{hdd} object.}
 
 \item{name}{The variable name to be extracted.Note that there is an automatic protection for not trying to import data that would not fit into memory. The extraction cap is set with the function \code{\link[hdd]{setHdd_extract.cap}}.}
 }

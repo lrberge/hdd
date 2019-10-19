@@ -12,11 +12,11 @@
 
 \item{index}{An index, you can use \code{.N} and variable names, like in data.table.}
 
-\item{...}{Other components of the extraction to be passed to data.table.}
+\item{...}{Other components of the extraction to be passed to \code{\link[data.table]{data.table}}.}
 
 \item{file}{Which file to extract from? (Remember hdd data is split in several files.) You can use \code{.N}.}
 
-\item{newfile}{A destination repository. Default is missing. Should be result of the query be saved into a new HDD repository? Otherwise, it is put in memory.}
+\item{newfile}{A destination directory. Default is missing. Should be result of the query be saved into a new HDD directory? Otherwise, it is put in memory.}
 
 \item{replace}{Only used if argument \code{newfile} is not missing: default is \code{FALSE}. If the \code{newfile} points to an existing HDD data, then to replace it you must have \code{replace = TRUE}.}
 

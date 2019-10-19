@@ -13,6 +13,9 @@ peek(path, onlyLines = FALSE, n)
 
 \item{n}{Integer. The number of lines to extract from the file. Default is 100 or 5 if \code{onlyLine = TRUE}.}
 }
+\value{
+Returns the data invisibly.
+}
 \description{
 This function looks at the first elements of a file, format it into a data frame and displays it. It can also just show the first lines of the file without formatting into a DF.
 }
@@ -27,7 +30,5 @@ peek("path/data.txt")
 peek("path/data.txt", onlyLines = TRUE)
 
 }
-
-# peek("path.csv")
 
 }

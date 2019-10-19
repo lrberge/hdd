@@ -4,13 +4,13 @@
 \alias{write_hdd}
 \title{Saves or appends a dataset into a HDD file}
 \usage{
-write_hdd(x, rep, chunkMB = Inf, compress = 50, add = FALSE,
+write_hdd(x, dir, chunkMB = Inf, compress = 50, add = FALSE,
   replace = FALSE, showWarning)
 }
 \arguments{
 \item{x}{A data set.}
 
-\item{rep}{The HDD repository.}
+\item{dir}{The HDD repository, i.e. the directory where the HDD data is.}
 
 \item{chunkMB}{If the data has to be split in several files of \code{chunkMB} sizes. Default is \code{Inf}.}
 

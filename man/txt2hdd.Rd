@@ -4,13 +4,13 @@
 \alias{txt2hdd}
 \title{Transforms text data into a HDD file}
 \usage{
-txt2hdd(path, repDest, chunkMB, col_names, col_types, nb_skip, delim,
-  preprocessfun, verbose = 1, ...)
+txt2hdd(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
+  preprocessfun, replace = FALSE, verbose = 1, ...)
 }
 \arguments{
 \item{path}{Path where the data is.}
 
-\item{repDest}{The destination repository.}
+\item{dirDest}{The destination directory, where the new HDD data should be saved.}
 
 \item{chunkMB}{The chunk sizes in MB, no default.}
 
@@ -23,6 +23,8 @@ txt2hdd(path, repDest, chunkMB, col_names, col_types, nb_skip, delim,
 \item{delim}{The delimiter. By default the function tries to find the delimiter, but sometimes it fails.}
 
 \item{preprocessfun}{A function that is applied to the data before saving. Default is missing.}
+
+\item{replace}{If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.}
 
 \item{verbose}{Integer. If verbose > 0, then the evolution of the importing process is reported.}
 
