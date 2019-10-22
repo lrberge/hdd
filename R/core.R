@@ -57,7 +57,15 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 
 		res = read_fst(path, columns, from, to, as.data.table = TRUE)
 	} else {
-		res = try(hdd(path))
+
+		# Checking the path
+		if(grepl("\\.[[:alpha:]]+$", path)){
+			if(!file.exists(path)) stop("Argument 'path' points to a non-existing file.")
+		} else if(!dir.exists(path)){
+			stop("Argument 'path' points to a non-existing directory.")
+		}
+
+		res = try(hdd(path), silent = TRUE)
 		if("try-error" %in% class(res)){
 			stop("Argument path must be either a fst file (this is not the case), either a hdd folder. Using path as hdd raises an error:\n", res)
 		}
@@ -749,11 +757,11 @@ hdd = function(dir){
 		current_size = x_size - sum(x_num) * 8 * n_row
 	}
 	# we tranform in MB
-	current_size = current_size / 1e6
+	current_size = addCommas(round(current_size / 1e6))
 
 	size_cap = getHdd_extract.cap()
 	if(current_size > size_cap){
-		stop("Cannot extract variable ", name, " because its expected size (", current_size, "MB) is greater than the cap of ", size_cap, "MB. You can change the cap using setHdd_extract.cap(new_cap).")
+		stop("Cannot extract variable ", name, " because its expected size (", current_size, " MB) is greater than the cap of ", addCommas(size_cap), " MB. You can change the cap using setHdd_extract.cap(new_cap).")
 	}
 
 	# now extraction
@@ -1577,7 +1585,7 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 	read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
 }
 
-
+# This function is conservative, it will suggest to import as characters large integers in order not to lose information (remember we should deal with big data here!).
 
 #' Guesses the columns types of a file
 #'
