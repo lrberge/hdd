@@ -7,7 +7,7 @@
 # roxygen2::roxygenise(roclets = "rd")
 
 #-----------------------------------------------------#
-# Internal variable names:                            #
+# Internal variables:                                 #
 # .nrow, .row_cum, .ncol, .size, .size_cum, .fileName #
 #_____________________________________________________#
 
@@ -63,7 +63,7 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 		}
 
 		mc = match.call()
-		qui_pblm = setdiff(names(mc), c("columns", "from", "to"))
+		qui_pblm = intersect(names(mc), c("columns", "from", "to"))
 		if(length(qui_pblm) > 0){
 			stop("When 'path' leads to a hdd file, the full dataset is read. Thus the argument", enumerate_words(qui_pblm, addS = TRUE), " ignored: for sub-selections use hdd(path) instead.")
 		}
@@ -205,6 +205,7 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 	n_digits = ceiling(log10(n_chunks)) + (log10(n_chunks) %% 1 == 0)
 
 	ADD = FALSE
+	call_txt = deparse_long(match.call())
 
 	# The main loop
 	for(i in 1:n_chunks){
@@ -223,7 +224,7 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 
 		# we save the result in the temporary repository
 		if(nrow(res_small) > 0){
-			write_hdd(res_small, dir, add = ADD, replace = TRUE, chunkMB = Inf)
+			write_hdd(res_small, dir, add = ADD, replace = TRUE, chunkMB = Inf, call_txt = call_txt)
 			ADD = TRUE
 		}
 
@@ -379,8 +380,9 @@ hdd = function(dir){
 	# We look at what variables to select, because it is costly to extract variables: we need the minimum!
 	var_names = names(x)
 	mc = match.call()
+	call_txt = deparse_long(mc)
 
-	check_arg(file, "integerVector")
+	# check_arg(file, "integerVector")
 	check_arg(newfile, "singleCharacter", "Argument 'newfile' must be a valid path to a directory. REASON")
 	check_arg(replace, "singleLogical")
 	check_arg(all.vars, "singleLogical")
@@ -518,7 +520,7 @@ hdd = function(dir){
 					stop("You cannot save to a new file when the outcome of the call is not a data.frame (here it is a vector: use .(var) instead).")
 				}
 
-				write_hdd(res[[i]], dir = dir, replace = replace, add = i!=1)
+				write_hdd(res[[i]], dir = dir, replace = replace, add = i!=1, call_txt = call_txt)
 				res[[i]] = NULL # we clean memory
 			}
 
@@ -562,7 +564,8 @@ hdd = function(dir){
 		}
 
 		if(doWrite){
-			res = eval(parse(text = paste0("x[", index2text, ", ..., file = 1:.N, newfile =", dir, ", replace = ", replace, "]")))
+			res = eval(parse(text = paste0("x[", index2text, ", ..., file = 1:.N, newfile =\"", dir, "\", replace = ", replace, "]")))
+			return(invisible(NULL))
 		} else {
 			res = eval(parse(text = paste0("x[", index2text, ", ..., file = 1:.N]")))
 		}
@@ -646,7 +649,7 @@ hdd = function(dir){
 
 		if(doWrite){
 			stop("newfile not implemented for 'regular' indexes. Think to the design.")
-			write_hdd(res[[i]], dir = dir, replace = replace, add = i_running!=1)
+			write_hdd(res[[i]], dir = dir, replace = replace, add = i_running!=1, call_txt = call_txt)
 			res[[i]] = NULL # we clean memory
 		}
 
@@ -770,7 +773,8 @@ hdd = function(dir){
 #' @param compress Compression rate to be applied by \code{\link[fst]{write_fst}}. Default is 50.
 #' @param add Should the file be added to the existing repository? Default is \code{FALSE}.
 #' @param replace If \code{add = FALSE}, should any existing document be replaced? Default is \code{FALSE}.
-#' @param showWarning If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} is NOT called within a function.
+#' @param showWarning If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code[hdd]{write_hdd} is NOT called within a function.
+#' @param ... Not currently used.
 #'
 #' @examples
 #'
@@ -789,7 +793,7 @@ hdd = function(dir){
 #'
 #' }
 #'
-write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace = FALSE, showWarning){
+write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace = FALSE, showWarning, ...){
 	# data: the data (in memory or fst or hdd)
 	# dir: the hdd repository
 	# write hdd data
@@ -808,6 +812,16 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	check_arg(showWarning, "singleLogical")
 
 	control_variable(x, "data.frame", mustBeThere = TRUE)
+
+	# hidden arguments
+	dots = list(...)
+	is_ext_call = FALSE
+	if("call_txt" %in% names(dots)){
+		call_txt = dots$call_txt
+		is_ext_call = TRUE
+	} else {
+		call_txt = deparse(mc)
+	}
 
 	# if no observation
 	if(missing(showWarning)){
@@ -989,7 +1003,15 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 			key_txt = paste0("key\t", paste0(key, collapse = "\t"))
 		}
 
-		info = c("hdd file", key_txt, paste0(numberFormat(nrow(x)), " rows and ", ncol(x), " variables."), "\n", paste0(names(x), collapse= "\t"), apply(head(x, 5), 1, function(x) paste0(x, collapse = "\t")), "\n",  "log:", deparse(mc))
+		# formatting the log message
+		if(is_ext_call){
+			log_msg = paste0("1 file ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+		} else {
+			log_msg = paste0("#1 ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+		}
+
+
+		info = c("hdd file", key_txt, paste0(numberFormat(nrow(x)), " rows and ", ncol(x), " variables."), "\n", paste0(names(x), collapse= "\t"), apply(head(x, 5), 1, function(x) paste0(x, collapse = "\t")), "\n",  "log:", log_msg)
 		writeLines(info, con = infoFile)
 	} else {
 		# we update the information file AND update the original file names
@@ -1011,7 +1033,7 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 			keys = strsplit(info[2], "\t")[[1]]
 			if(keys[2] != "NA"){
 				info[2] = "key\tNA"
-				warning("You need to rerun setkeyhdd() to have the data sorted.")
+				warning("You need to re-run hdd_setkey() to have the data sorted.")
 			}
 
 			# update rows
@@ -1019,7 +1041,23 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 			info[3] = paste0(numberFormat(nrow(x)), " rows and ", ncol(x), " variables.")
 
 			# update log
-			info = c(info, deparse(mc))
+			if(is_ext_call){
+				# The two functions that use ext_call are:
+				#	- extract with newfile, hdd_slice, merge_hdd and txt2hdd
+				#	- they MUST create a new document
+				#	- hence we're sure the last line contains the word "file"
+				# we take the last line and update it
+				log_msg = paste0(nb_files_existing, " files ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+				# we replace the line
+				info[grepl("^[^;]+file", info)] = log_msg
+
+			} else {
+				# We add the line with information on the file nber and nber of rows
+				log_msg = paste0("#", nb_files_existing, " ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+				info = c(info, log_msg)
+				# We DON'T reformat the line numbers because we don't know what's before
+				# it is then too risky
+			}
 
 			writeLines(info, con = infoFile)
 		} else {
@@ -1050,11 +1088,11 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 #' data_hdd = hdd("path/big_data")
 #'
 #' # We want to create a new HDD file, sorted by id:
-#' setkeyhdd(data_hdd, "id", "path/big_data_sorted")
+#' hdd_setkey(data_hdd, "id", "path/big_data_sorted")
 #'
 #' }
 #'
-setkeyhdd = function(x, key, newfile, chunkMB = 500){
+hdd_setkey = function(x, key, newfile, chunkMB = 500){
 	# on va creer une base HDD triee
 	# The operation is very simple, so we can use big chunks => much more efficient!
 
@@ -1246,11 +1284,11 @@ setkeyhdd = function(x, key, newfile, chunkMB = 500){
 #' y = data.frame(xx = 1:3, Species = c("virginica", "setosa", "versicolor"))
 #' iris_hdd = hdd("iris_hdd")
 #'
-#' mergehdd(iris_hdd, y, "iris_merged_with_y")
+#' hdd_merge(iris_hdd, y, "iris_merged_with_y")
 #'
 #' }
 #'
-mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replace = FALSE){
+hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replace = FALSE){
 	# Function to merge Hdd files
 	# It returns a hdd file
 	# x: hdd
@@ -1267,6 +1305,8 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 	check_arg(all.x, "singleLogical")
 	check_arg(all.y, "singleLogical")
 	check_arg(replace, "singleLogical")
+
+	call_txt = deparse_long(match.call())
 
 	if(!"hdd" %in% class(x)){
 		stop("x must be a hdd file!")
@@ -1325,7 +1365,7 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 				y_chunk = read_fst(fname_y, as.data.table = TRUE)
 				res_chunk = merge(x_chunk, y_chunk, by = by, all = all, all.x = all.x, all.y = all.y)
 				if(nrow(res_chunk) > 0){
-					write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE)
+					write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE, call_txt = call_txt)
 					ADD = TRUE
 				}
 			}
@@ -1333,7 +1373,7 @@ mergehdd = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replac
 		} else {
 			res_chunk = merge(x_chunk, y, by = by, all = all, all.x = all.x, all.y = all.y)
 			if(nrow(res_chunk) > 0){
-				write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE)
+				write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE, call_txt = call_txt)
 				ADD = TRUE
 			}
 		}
@@ -1504,6 +1544,7 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 		}
 	}
 
+	CALL_TXT = deparse_long(match.call())
 
 	funPerChunk = function(x, pos){
 
@@ -1526,7 +1567,7 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 		}
 
 		# save the data
-		write_hdd(x, dir = REP_DEST, replace = TRUE, add = ADD)
+		write_hdd(x, dir = REP_DEST, replace = TRUE, add = ADD, call_txt = CALL_TXT)
 
 		if(!ADD) ADD <<- TRUE
 
