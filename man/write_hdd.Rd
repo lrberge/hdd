@@ -5,7 +5,7 @@
 \title{Saves or appends a dataset into a HDD file}
 \usage{
 write_hdd(x, dir, chunkMB = Inf, compress = 50, add = FALSE,
-  replace = FALSE, showWarning)
+  replace = FALSE, showWarning, ...)
 }
 \arguments{
 \item{x}{A data set.}
@@ -21,6 +21,8 @@ write_hdd(x, dir, chunkMB = Inf, compress = 50, add = FALSE,
 \item{replace}{If \code{add = FALSE}, should any existing document be replaced? Default is \code{FALSE}.}
 
 \item{showWarning}{If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} is NOT called within a function.}
+
+\item{...}{Not currently used.}
 }
 \description{
 This function saves in-memory/HDD data sets into HDD repositories. Useful to append several data sets.
