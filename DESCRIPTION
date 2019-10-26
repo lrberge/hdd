@@ -1,14 +1,12 @@
 Package: hdd
 Type: Package
-Title: Manipulation of out of memory data sets
+Title: Easy manipulation of out of memory data sets
 Version: 0.1.0
 Authors@R: person("Laurent", "Berge", email = "laurent.berge@uni.lu", role = c("aut", "cre"))
 Imports: fst, utils, readr
 Depends: data.table
 Suggests: knitr, rmarkdown
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: Hard drive data: Class of data allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to data.table. Operations are performed "chunk-wise" behind the scene.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
