@@ -4,16 +4,19 @@
 \alias{hdd_setkey}
 \title{Sorts HDD objects}
 \usage{
-hdd_setkey(x, key, newfile, chunkMB = 500)
+hdd_setkey(x, key, newfile, chunkMB = 500, replace = FALSE,
+  verbose = 1)
 }
 \arguments{
 \item{x}{A hdd file.}
 
 \item{key}{A character vector of the keys.}
 
-\item{newfile}{Where to save the sorted file.}
+\item{newfile}{Destination of the result, i.e., a destination folder that will receive the HDD data.}
 
 \item{chunkMB}{The size of chunks used to sort the data. Default is 500MB. The bigger this number the faster the sorting is (depends on your memory available though).}
+
+\item{replace}{Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.}
 }
 \description{
 This function sets a key to a HDD file. It creates a copy of the HDD file sorted by the key. Note that the sorting process is very time consuming.

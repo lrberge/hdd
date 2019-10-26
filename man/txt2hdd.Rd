@@ -22,7 +22,7 @@ txt2hdd(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 
 \item{delim}{The delimiter. By default the function tries to find the delimiter, but sometimes it fails.}
 
-\item{preprocessfun}{A function that is applied to the data before saving. Default is missing.}
+\item{preprocessfun}{A function that is applied to the data before saving. Default is missing. Note that if a function is provided, it MUST return a data.frame, anything other than data.frame is ignored.}
 
 \item{replace}{If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.}
 

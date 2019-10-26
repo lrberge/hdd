@@ -4,7 +4,7 @@
 \alias{peek}
 \title{Peek into a text file}
 \usage{
-peek(path, onlyLines = FALSE, n)
+peek(path, onlyLines = FALSE, n, view = TRUE)
 }
 \arguments{
 \item{path}{Path linking to the text file.}
@@ -12,6 +12,8 @@ peek(path, onlyLines = FALSE, n)
 \item{onlyLines}{Default is \code{FALSE}. If \code{TRUE}, then the first \code{n} lines are directly displayed without formatting.}
 
 \item{n}{Integer. The number of lines to extract from the file. Default is 100 or 5 if \code{onlyLine = TRUE}.}
+
+\item{view}{Logical, default it \code{TRUE}: whether the data should be displayed on the viewer. Only when \code{onlyLines = FALSE}.}
 }
 \value{
 Returns the data invisibly.

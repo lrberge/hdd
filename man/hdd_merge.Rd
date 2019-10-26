@@ -5,14 +5,14 @@
 \title{Merges data to an hdd file}
 \usage{
 hdd_merge(x, y, newfile, all = FALSE, all.x = all, all.y = all,
-  replace = FALSE)
+  replace = FALSE, verbose)
 }
 \arguments{
 \item{x}{A hdd file.}
 
 \item{y}{A dataset either a data.frame of a HDD object.}
 
-\item{newfile}{Destination of the result.}
+\item{newfile}{Destination of the result, i.e., a destination folder that will receive the HDD data.}
 
 \item{all}{Default is \code{FALSE}.}
 
@@ -20,7 +20,7 @@ hdd_merge(x, y, newfile, all = FALSE, all.x = all, all.y = all,
 
 \item{all.y}{Default is \code{all}.}
 
-\item{replace}{Default is \code{FALSE} whether to replace existing destination data.}
+\item{replace}{Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.}
 }
 \description{
 This function merges in-memory/HDD data to an hdd file.
