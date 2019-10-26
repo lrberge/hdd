@@ -1,0 +1,138 @@
+---
+title: "hdd walkthrough"
+author: "Laurent Berge"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+vignette: >
+  %\VignetteIndexEntry{hdd introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	eval = FALSE,
+	collapse = TRUE,
+	comment = "#>"
+)
+```
+
+```{r, eval = TRUE}
+library(hdd)
+```
+
+
+
+`hdd` provides a class of data, *hard drive data*, allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to data.table. Operations are performed "chunk-wise" behind the scene. Here is a brief presentation of the main features.
+
+# Example with publication data
+
+Throughout this document, we will use the example of the Microsoft Academic Graph data (<https://www.microsoft.com/en-us/research/project/microsoft-academic-graph/>). This large and freely available data set contains all scientific publications meta information (like authors, titles, institutions, etc...) as collected by Microsoft and used in [microsoft academic](<https://aka.ms/microsoft-academic>).
+
+The data is in the form of a relational data base of usually large text files (well over 10GB). We'll see how to deal with them in `R` with `hdd`.
+
+
+## Importation
+
+First we have to import the data into `R` through a `hdd` data set. We're interested in importing the information on authors. We'll use the `txt2hdd` function. But first let's have a look at the data.
+
+```{r, echo = TRUE}
+library(hdd)
+peek("_path/authors.txt")
+```
+
+```{r, eval=TRUE, results='asis'}
+tab = head(peek("C:/Users/laurent.berge/DATA/MAG/Authors.txt", view = FALSE))
+knitr::kable(tab)
+```
+
+We can see that the data set contains 8 variables, some are text, other are numeric. By default, the function `peek` also displays the delimiter of the data, here it is a tab delimited text file. 
+
+Now let's import the data. From the documentation, we can retrieve the variable names, and we will use them:
+
+```{r, echo = TRUE}
+col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", "LastKnownAffiliationId", 
+			  "PaperCount", "CitationCount", "CreatedDate")
+txt2hdd("_path/authors.txt", # The text file
+		dirDest = "_path/hdd_authors", # The destination of the HDD data => must be a directory
+		chunkMB = 500, col_names = col_names)
+```
+
+By default, the types of the variables are automatically set, based on the guess of the function `fread` from package `data.table`. Note that integer 64 variables are imported as doubles. You can set the column types yourself using the function `cols` or `cols_only` from package `readr`. In any case, if there are importing problems, a specific repository, which is itself a hdd file, reporting all importing problems is created.
+
+Now the data is imported into a `hdd` file. Let's have a look at it:
+
+```{r, echo = TRUE}
+authors = hdd("_path/hdd_authors")
+summary(authors)
+```
+
+```{r, eval = TRUE}
+authors = hdd("C:/Users/laurent.berge/DATA/MAG/HDD/authors")
+summary(authors)
+```
+
+The summary provides some general information: the location of the data in the hard drive (note that this is the location on my hard drive!), the size of the data set on disk (which is lower that what it would be in-memory due to compression), here 13GB, the number of chunks, here 69, the number of lines, here 217 millions, and the numer of variables.
+
+Now let's have a quick look at the data:
+
+```{r, eval = TRUE, echo = TRUE}
+head(authors)
+```
+
+It's indeed the same data as in the text file. You can see that you can access it as a regular data frame.
+
+### Importing with preprocessing
+
+Now assume that you do not want to import the full text file because some information might be unecessary to you -- or you may want to generate new information straight away. You can apply a preprocessing function while importing. Assume we want to import only the first three columns for which the names, in variable NormalizedName, contain only ASCII characters. We could do as follows:
+
+```{r, echo = TRUE}
+
+fun_ascii = function(x){
+	# selection of the first 3 columns
+	res = x[, 1:3]
+	# selection of only ascii names
+	res[!is.na(iconv(NormalizedName, to = "ASCII"))]
+}
+
+col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", "LastKnownAffiliationId", 
+			  "PaperCount", "CitationCount", "CreatedDate")
+txt2hdd("_path/authors.txt", dirDest = "_path/hdd_authors_ascii", 
+		chunkMB = 500, col_names = col_names,
+		preprocessfun = fun_ascii)
+```
+
+Let's look at the new data set:
+
+```{r, echo = TRUE}
+authors_ascii = hdd("_path/hdd_authors_ascii")
+head(authors_ascii)
+```
+
+```{r, eval = TRUE,}
+authors_ascii = authors[1:50, 1:3]
+authors_ascii = authors_ascii[!is.na(iconv(NormalizedName, to = "ASCII"))]
+head(authors_ascii)
+```
+
+
+## Manipulation
+
+The 
+
+
+## References
+
+On the Microsoft Academic Graph data:
+
+Arnab Sinha, Zhihong Shen, Yang Song, Hao Ma, Darrin Eide, Bo-June (Paul) Hsu, and Kuansan Wang. 2015. An Overview of Microsoft Academic Service (MAS) and Applications. In Proceedings of the 24th International Conference on World Wide Web (WWW 15 Companion). ACM, New York, NY, USA, 243-246. DOI=<http://dx.doi.org/10.1145/2740908.2742839>
+
+
