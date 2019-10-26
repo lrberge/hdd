@@ -1,7 +1,7 @@
 #----------------------------------------------#
-# Author: Laurent Berge
-# Date creation: Mon Apr 01 11:43:06 2019
-# Purpose: HDD suite functions
+# Author: Laurent Berge                        #
+# Date creation: Mon Apr 01 11:43:06 2019      #
+# Purpose: HDD suite functions                 #
 #----------------------------------------------#
 
 # roxygen2::roxygenise(roclets = "rd")
@@ -424,6 +424,25 @@ hdd = function(dir){
 		}
 	}
 
+	# if(any(c("by", "keyby") %in% names(mc))){
+	# 	clause = ifelse("keyby" %in% names(mc), "keyby", "by")
+	#
+	# 	if(!is.null(attr(x, "key"))){
+	# 		key = attr(x, "key")
+	# 		vars_by = as.character(mc[[clause]])[-1]
+	# 		if(length(vars_by) == length(key) && all(vars_by == key)){
+	# 			# fine
+	# 		} else if(length(vars_by) == 1 && vars_by == key[1]) {
+	# 			# fine (I take that case into account in hdd_setkey())
+	# 		} else {
+	# 			message("Note that the '", clause, "' clause is applied chunk by chunk, this is not a '", clause, "' on the whole data set. Currently the key", enumerate_items(key, addS = TRUE, start_verb = TRUE), " while the ", clause, " clause requires ", enumerate_items(vars_by, verb = FALSE), ". You may have to re-run hdd_setkey().")
+	# 		}
+	# 	} else {
+	# 		message("Note that the '", clause, "' clause is applied chunk by chunk, this is not a '", clause, "' on the whole data set. To have a result on the 'whole' data set, the data must be sorted beforehand with hdd_setkey() on the appropriate key.")
+	# 	}
+	#
+	# }
+
 	doWrite = FALSE
 	if(!missing(newfile)){
 		# we save in a new document
@@ -781,7 +800,7 @@ hdd = function(dir){
 #' @param compress Compression rate to be applied by \code{\link[fst]{write_fst}}. Default is 50.
 #' @param add Should the file be added to the existing repository? Default is \code{FALSE}.
 #' @param replace If \code{add = FALSE}, should any existing document be replaced? Default is \code{FALSE}.
-#' @param showWarning If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code[hdd]{write_hdd} is NOT called within a function.
+#' @param showWarning If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} is NOT called within a function.
 #' @param ... Not currently used.
 #'
 #' @examples
@@ -828,7 +847,7 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 		call_txt = dots$call_txt
 		is_ext_call = TRUE
 	} else {
-		call_txt = deparse(mc)
+		call_txt = deparse_long(mc)
 	}
 
 	# if no observation
@@ -848,7 +867,6 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	}
 
 	# The repository
-	control_variable(dir, "singleCharacter", mustBeThere = TRUE)
 	if(grepl("\\.fst", dir)) {
 		dir = gsub("[[:digit:]]+\\.fst", "", dir)
 	} else {
@@ -1013,9 +1031,10 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 
 		# formatting the log message
 		if(is_ext_call){
-			log_msg = paste0("1 file ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+			first_msg = ifelse(n_chunks == 1, "1 file ; ", paste0(n_chunks, " files ; "))
+			log_msg = paste0(first_msg, numberFormat(nrow(x)), " rows ; ", call_txt)
 		} else {
-			log_msg = paste0("#1 ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+			log_msg = paste0("#1 ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
 		}
 
 
@@ -1050,18 +1069,24 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 
 			# update log
 			if(is_ext_call){
-				# The two functions that use ext_call are:
+				# The functions that use ext_call are:
 				#	- extract with newfile, hdd_slice, merge_hdd and txt2hdd
 				#	- they MUST create a new document
 				#	- hence we're sure the last line contains the word "file"
 				# we take the last line and update it
-				log_msg = paste0(nb_files_existing, " files ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+				log_msg = paste0(nb_files_existing, " files ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
 				# we replace the line
-				info[grepl("^[^;]+file", info)] = log_msg
+				info[grepl("^[^;]+files? ;", info)] = log_msg
 
 			} else {
 				# We add the line with information on the file nber and nber of rows
-				log_msg = paste0("#", nb_files_existing, " ; ", numberFormat(nrow(x)), " rows ; ", call_text)
+				if(n_chunks == 1){
+					nb_show = nb_files_existing + 1
+				} else {
+					nb_show = paste0(nb_files_existing + 1, "-", nb_files_existing + n_chunks)
+				}
+
+				log_msg = paste0("#", nb_show, " ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
 				info = c(info, log_msg)
 				# We DON'T reformat the line numbers because we don't know what's before
 				# it is then too risky
@@ -1082,10 +1107,12 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 #'
 #' This function sets a key to a HDD file. It creates a copy of the HDD file sorted by the key. Note that the sorting process is very time consuming.
 #'
+#' @inheritParams hdd_merge
+#'
 #' @param x A hdd file.
 #' @param key A character vector of the keys.
-#' @param newfile Where to save the sorted file.
 #' @param chunkMB The size of chunks used to sort the data. Default is 500MB. The bigger this number the faster the sorting is (depends on your memory available though).
+#'
 #'
 #'
 #' @examples
@@ -1100,7 +1127,7 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 #'
 #' }
 #'
-hdd_setkey = function(x, key, newfile, chunkMB = 500){
+hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose = 1){
 	# on va creer une base HDD triee
 	# The operation is very simple, so we can use big chunks => much more efficient!
 
@@ -1115,10 +1142,8 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500){
 	check_arg(key, "characterVectorMbt")
 	check_arg(newfile, "singleCharacterMbt")
 	check_arg(chunkMB, "singleNumericGT0")
-
-	if(!all(key %in% names(x))){
-		stop("The key must be a variable name.")
-	}
+	check_arg(replace, "singleLogical")
+	check_arg(verbose, "singleNumeric")
 
 	if(missing(x)){
 		stop("Argument 'x' must be a hdd object, but it is currently missing.")
@@ -1128,38 +1153,54 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500){
 		stop("x must be a hdd object.")
 	}
 
+	if(!all(key %in% names(x))){
+		stop("The key must be a variable name.")
+	}
+
+	if(dir.exists(newfile)){
+		# cleaning (if necessary)
+		all_files = list.files(newfile, full.names = TRUE)
+		all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt)$", all_files)]
+		if(length(all_files2clean) > 0){
+			if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
+			for(fname in all_files2clean) unlink(fname)
+		}
+	}
+
 	nfiles_origin = length(x$.nrow)
+
+	call_txt = deparse_long(match.call())
 
 	# 1st step: sort all + recreation of all the objects
 
 	# estimation of the size of the data in R:
 	# used to recreate the data at an appropriate chunk size
-	cat("Guessing R size")
+	if(verbose > 0) message("Guessing R size", appendLF = FALSE)
 	sample = x[file = 1]
 	size_sample = object.size(sample)
 	factor = as.numeric(size_sample / x$.size[1])
 	r_size = sum(x$.size) * factor / 1e6
-	cat("...")
+	if(verbose > 0) message("...", appendLF = FALSE)
 	# cleaning
 	rm(sample)
 
 	nfiles = ceiling(r_size / chunkMB)
 	n = sum(x$.nrow)
 
-	cat(nfiles, "files...")
+	if(verbose > 0) message(nfiles, " files...", appendLF = FALSE)
 
 	start = floor(seq(1, n, by = n/nfiles))
 	start = start[1:nfiles]
 	end = c(start[-1] - 1, n)
 
-	tmpdir = paste0(gsub("/[^/]+$", "/", x$.fileName[1]), "tmp/")
+	tmpdir = paste0(gsub("/[^/]+$", "/", x$.fileName[1]), "tmp_hdd_setkey/")
 	all_files = list.files(tmpdir, full.names = TRUE)
 	for(fname in all_files) unlink(fname)
 
 	# creation of the tmp directory + first pair sort
 	i = 1
 	while(i < nfiles){
-		cat(".")
+		if(verbose > 0) message(".", appendLF = FALSE)
 		if(i + 2 == nfiles){
 			ij = i:(i+2)
 			i = i + 3
@@ -1197,7 +1238,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500){
 	x_tmp = hdd(tmpdir)
 	nbsort = ceiling(nfiles/2)
 	while(TRUE){
-		cat("+")
+		if(verbose > 0) message("+", appendLF = FALSE)
 
 		# I need to use a call, otherwise there are evaluation problems
 		# with one key: x_tmp[.N, key, file = 1:.N, with=FALSE] does not work
@@ -1234,14 +1275,14 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500){
 			i = i+1
 		}
 
-		cat(nbsort)
+		if(verbose > 0) message(nbsort, appendLF = FALSE)
 
 		if(all(lengths(pairs2sort) == 1)){
 			break
 		}
 
 		for(ij in pairs2sort[lengths(pairs2sort) == 2]){
-			cat(".")
+			if(verbose > 0) message(".", appendLF = FALSE)
 			x_mem = x_tmp[, file = ij]
 			setorderv(x_mem, key)
 			# x_mem = x_mem[order(id)]
@@ -1255,21 +1296,24 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500){
 
 	}
 
-	cat("\n")
+	if(verbose > 0) message("\n", appendLF = FALSE)
 
 	# we need to reupdate x_tmp (to have the appropriate meta information)
 	x_tmp = hdd(tmpdir)
 	attr(x_tmp, "key") = key
 
-	browser()
-
 	if(nfiles != nfiles_origin){
-		cat("reshaping...")
-		write_hdd(x_tmp, dir = newfile, replace = TRUE, chunkMB = mean(x$.size) / 1e6)
-		cat("done")
+		if(verbose > 0) message("Reshaping...", appendLF = FALSE)
+		write_hdd(x_tmp, dir = newfile, replace = TRUE, chunkMB = mean(x$.size) / 1e6, call_txt = call_txt)
+		if(verbose > 0) message("done")
 	} else {
-		write_hdd(x_tmp, dir = newfile, replace = TRUE)
+		write_hdd(x_tmp, dir = newfile, replace = TRUE, call_txt = call_txt)
 	}
+
+	# Cleaning the tmp directory
+	files2clean = list.files(tmpdir, full.names = TRUE)
+	for(fname in files2clean) unlink(fname)
+	unlink(tmpdir)
 
 }
 
@@ -1279,11 +1323,11 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500){
 #'
 #' @param x A hdd file.
 #' @param y A dataset either a data.frame of a HDD object.
-#' @param newfile Destination of the result.
+#' @param newfile Destination of the result, i.e., a destination folder that will receive the HDD data.
 #' @param all Default is \code{FALSE}.
 #' @param all.x Default is \code{all}.
 #' @param all.y Default is \code{all}.
-#' @param replace Default is \code{FALSE} whether to replace existing destination data.
+#' @param replace Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.
 #'
 #' @examples
 #'
@@ -1296,7 +1340,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500){
 #'
 #' }
 #'
-hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replace = FALSE){
+hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replace = FALSE, verbose){
 	# Function to merge Hdd files
 	# It returns a hdd file
 	# x: hdd
@@ -1313,11 +1357,16 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 	check_arg(all.x, "singleLogical")
 	check_arg(all.y, "singleLogical")
 	check_arg(replace, "singleLogical")
+	check_arg(verbose, "singleNumeric")
 
 	call_txt = deparse_long(match.call())
 
 	if(!"hdd" %in% class(x)){
 		stop("x must be a hdd file!")
+	}
+
+	if(missing(verbose)){
+		verbose = object_size(x)/1e6 > 1000
 	}
 
 	y_hdd = FALSE
@@ -1357,14 +1406,13 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 		}
 	}
 
-
-
 	# Merging
 	all_files_x = x$.fileName
 
 	ADD = FALSE
+	no_obs = TRUE
 	for(fname in all_files_x){
-		cat(".")
+		if(verbose > 0) message(".", appendLF = FALSE)
 		x_chunk = read_fst(fname, as.data.table = TRUE)
 
 		if(y_hdd){
@@ -1373,6 +1421,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 				y_chunk = read_fst(fname_y, as.data.table = TRUE)
 				res_chunk = merge(x_chunk, y_chunk, by = by, all = all, all.x = all.x, all.y = all.y)
 				if(nrow(res_chunk) > 0){
+					no_obs = FALSE
 					write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE, call_txt = call_txt)
 					ADD = TRUE
 				}
@@ -1381,11 +1430,16 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 		} else {
 			res_chunk = merge(x_chunk, y, by = by, all = all, all.x = all.x, all.y = all.y)
 			if(nrow(res_chunk) > 0){
+				no_obs = FALSE
 				write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE, call_txt = call_txt)
 				ADD = TRUE
 			}
 		}
 
+	}
+
+	if(no_obs){
+		message(ifelse(verbose > 0, "\n", ""), "No key", ifsingle(by, "", "s"), " in common found in the two data sets.")
 	}
 
 }
@@ -1403,7 +1457,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 #' @param col_types The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} to find them.
 #' @param nb_skip Number of lines to skip.
 #' @param delim The delimiter. By default the function tries to find the delimiter, but sometimes it fails.
-#' @param preprocessfun A function that is applied to the data before saving. Default is missing.
+#' @param preprocessfun A function that is applied to the data before saving. Default is missing. Note that if a function is provided, it MUST return a data.frame, anything other than data.frame is ignored.
 #' @param replace If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.
 #' @param verbose Integer. If verbose > 0, then the evolution of the importing process is reported.
 #' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, \code{quote = ""} can be interesting sometimes.
@@ -1459,7 +1513,7 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 		DO_PREPROCESS = TRUE
 	}
 
-	if(!missing(col_types) && !length(class(col_types) == 1) || class(col_types) != "col_spec"){
+	if(!missing(col_types) && (!length(class(col_types) == 1) || class(col_types) != "col_spec")){
 		stop("Argument 'col_types' must be a 'col_spec' object, obtained from, e.g., readr::cols() or readr::cols_only(), or from guess_cols_type()).")
 	}
 
@@ -1468,7 +1522,7 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 	#
 
 	# sample DT to get first information
-	first_lines = read_lines(path, n_max = 10000)
+	first_lines = readr::read_lines(path, n_max = 10000)
 	sample_table = data.table::fread(paste0(first_lines, collapse = "\n"))
 
 	nb_col = ncol(sample_table)
@@ -1557,10 +1611,10 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 	funPerChunk = function(x, pos){
 
 		# get the problems
-		pblm = problems(x)
+		pblm = readr::problems(x)
 		if(nrow(pblm) > 0){
 			setDT(pblm)
-			write_hdd(pblm, REP_PBLM, replace = TRUE, add = IS_PBLM)
+			write_hdd(pblm, REP_PBLM, replace = TRUE, add = IS_PBLM, call_txt = paste0("PROBLEMS: ", CALL_TXT))
 			IS_PBLM <<- TRUE
 		}
 
@@ -1582,7 +1636,9 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 
 	}
 
-	read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
+	readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
+
+	invisible(NULL)
 }
 
 # This function is conservative, it will suggest to import as characters large integers in order not to lose information (remember we should deal with big data here!).
@@ -1691,9 +1747,9 @@ guess_delim = function(path){
 
 	# importing a sample
 
-	if(length(path) > 1 && any(grepl("\n$", path))){
+	if(length(path) == 100){
 		first_lines = path
-	} else if(length(path) > 1) {
+	} else if(length(path) > 1){
 		stop("Argument path must be a valid path. Currenlty it is of length ", length(path), ".")
 	} else {
 		first_lines = readLines(path, n = 100)
@@ -1749,6 +1805,7 @@ guess_delim = function(path){
 #' @param path Path linking to the text file.
 #' @param onlyLines Default is \code{FALSE}. If \code{TRUE}, then the first \code{n} lines are directly displayed without formatting.
 #' @param n Integer. The number of lines to extract from the file. Default is 100 or 5 if \code{onlyLine = TRUE}.
+#' @param view Logical, default it \code{TRUE}: whether the data should be displayed on the viewer. Only when \code{onlyLines = FALSE}.
 #'
 #' @return
 #' Returns the data invisibly.
@@ -1765,12 +1822,13 @@ guess_delim = function(path){
 #'
 #' }
 #'
-peek = function(path, onlyLines = FALSE, n){
+peek = function(path, onlyLines = FALSE, n, view = TRUE){
 
 	# Controls
 
 	check_arg(path, "singleCharacterMbt")
 	check_arg(onlyLines, "singleLogical")
+	check_arg(view, "singleLogical")
 	check_arg(n, "singleIntegerGE1")
 
 	if(!file.exists(path)) stop("The path does not lead to an existing file.")
@@ -1788,9 +1846,9 @@ peek = function(path, onlyLines = FALSE, n){
 
 	if(onlyLines){
 
-		cat(first_lines, sep = "\n")
+		# cat(first_lines, sep = "\n")
 
-		return(invisible(first_lines))
+		return(first_lines)
 	}
 
 	sample_dt = fread(paste0(first_lines, collapse = "\n"))
@@ -1805,12 +1863,14 @@ peek = function(path, onlyLines = FALSE, n){
 		find_candidate = function(x){
 			tx = table(strsplit(gsub(" ", "", x), ""))
 			candidate = tx[tx >= ncol(sample_dt) - 1]
-			names(candidate[!grepl("[[:alnum:]\"'-]", names(candidate))])
+			names(candidate[!grepl("[[:alnum:]\"'-/]", names(candidate))])
 		}
 		l1_candidate = find_candidate(first_lines[1])
 
-		delim = ifelse(length(l1_candidate) == 1, l1_candidate, NULL)
-		if(length(l1_candidate) > 1){
+		delim = NULL
+		if(length(l1_candidate) == 1){
+			delim = l1_candidate
+		} else if(length(l1_candidate) > 1){
 			candid_all = lapply(first_lines, find_candidate)
 			t_cand = table(unlist(candid_all))
 			t_cand = names(t_cand)[t_cand == length(first_lines)]
@@ -1820,21 +1880,21 @@ peek = function(path, onlyLines = FALSE, n){
 		}
 
 		if(is.null(delim)){
-			cat("Could not determine the delimiter. Here is the first line:\n")
-			print(first_lines[1])
+			message("Could not determine the delimiter. Here is the first line:\n")
+			message(first_lines[1])
 		} else {
 			if(delim == ","){
-				info = "CSV"
+				delim = "CSV"
 			} else if(delim == "\t"){
-				info = "TSV"
+				delim = "TSV"
 			}
-			cat("Delimiter:", info, "\n")
+			message("Delimiter:", delim)
 		}
 	}
 
 	dt_name = paste0("peek_", gsub("\\..+", "", gsub("^.+/", "", path)))
 
-	myView(sample_dt, dt_name)
+	if(view) myView(sample_dt, dt_name)
 	invisible(sample_dt)
 }
 
