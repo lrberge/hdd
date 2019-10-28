@@ -2,7 +2,7 @@
 % Please edit documentation in R/core.R
 \name{[.hdd}
 \alias{[.hdd}
-\title{Extraction of hdd data}
+\title{Extraction of HDD data}
 \usage{
 \method{[}{hdd}(x, index, ..., file, newfile, replace = FALSE,
   all.vars = FALSE)
@@ -68,4 +68,7 @@ print(data_hdd_bis)
 
 }
 
+}
+\author{
+Laurent Berge
 }

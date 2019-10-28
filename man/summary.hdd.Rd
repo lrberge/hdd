@@ -2,17 +2,17 @@
 % Please edit documentation in R/core.R
 \name{summary.hdd}
 \alias{summary.hdd}
-\title{Summary information for hdd objects}
+\title{Summary information for HDD objects}
 \usage{
 \method{summary}{hdd}(object, ...)
 }
 \arguments{
-\item{object}{A hdd object.}
+\item{object}{A HDD object.}
 
 \item{...}{Not currently used.}
 }
 \description{
-Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (hdd).
+Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (HDD).
 }
 \examples{
 
@@ -23,4 +23,7 @@ summary(data_hdd)
 
 }
 
+}
+\author{
+Laurent Berge
 }

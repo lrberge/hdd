@@ -2,12 +2,12 @@
 % Please edit documentation in R/core.R
 \name{print.hdd}
 \alias{print.hdd}
-\title{Print method for hdd objects}
+\title{Print method for HDD objects}
 \usage{
 \method{print}{hdd}(x, ...)
 }
 \arguments{
-\item{x}{A \code{hdd} object.}
+\item{x}{A \code{HDD} object.}
 
 \item{...}{Not currently used.}
 }
@@ -15,7 +15,7 @@
 Nothing is returned.
 }
 \description{
-This functions displays the first and last lines of a hard drive data set (hdd).
+This functions displays the first and last lines of a hard drive data set (HDD).
 }
 \examples{
 
@@ -26,4 +26,7 @@ print(data_hdd)
 
 }
 
+}
+\author{
+Laurent Berge
 }

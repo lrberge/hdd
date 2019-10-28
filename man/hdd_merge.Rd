@@ -2,7 +2,7 @@
 % Please edit documentation in R/core.R
 \name{hdd_merge}
 \alias{hdd_merge}
-\title{Merges data to an hdd file}
+\title{Merges data to a HDD file}
 \usage{
 hdd_merge(x, y, newfile, all = FALSE, all.x = all, all.y = all,
   replace = FALSE, verbose)
@@ -21,9 +21,11 @@ hdd_merge(x, y, newfile, all = FALSE, all.x = all, all.y = all,
 \item{all.y}{Default is \code{all}.}
 
 \item{replace}{Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.}
+
+\item{verbose}{Numeric. Whether information on the advancement should be displayed. If equal to 0, nothing is displayed. By default it is equal to 1 if the size of \code{x} is greater than 1GB.}
 }
 \description{
-This function merges in-memory/HDD data to an hdd file.
+This function merges in-memory/HDD data to a HDD file.
 }
 \examples{
 
@@ -36,4 +38,7 @@ hdd_merge(iris_hdd, y, "iris_merged_with_y")
 
 }
 
+}
+\author{
+Laurent Berge
 }

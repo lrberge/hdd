@@ -2,18 +2,18 @@
 % Please edit documentation in R/core.R
 \name{dim.hdd}
 \alias{dim.hdd}
-\title{Dimension of a hdd object}
+\title{Dimension of a HDD object}
 \usage{
 \method{dim}{hdd}(x)
 }
 \arguments{
-\item{x}{A \code{hdd} object.}
+\item{x}{A \code{HDD} object.}
 }
 \value{
 It returns a vector of length 2 containing the number of rows and the columns.
 }
 \description{
-Gets the dimension of a hard drive data set (hdd).
+Gets the dimension of a hard drive data set (HDD).
 }
 \examples{
 
@@ -24,4 +24,7 @@ dim(data_hdd)
 
 }
 
+}
+\author{
+Laurent Berge
 }

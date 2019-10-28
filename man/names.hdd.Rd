@@ -2,18 +2,18 @@
 % Please edit documentation in R/core.R
 \name{names.hdd}
 \alias{names.hdd}
-\title{Variables names of an hdd object}
+\title{Variables names of a HDD object}
 \usage{
 \method{names}{hdd}(x)
 }
 \arguments{
-\item{x}{A \code{hdd} object.}
+\item{x}{A \code{HDD} object.}
 }
 \value{
 A character vector.
 }
 \description{
-Gets the variable names of a hard drive data set (hdd).
+Gets the variable names of a hard drive data set (HDD).
 }
 \examples{
 
@@ -24,4 +24,7 @@ names(data_hdd)
 
 }
 
+}
+\author{
+Laurent Berge
 }

@@ -45,3 +45,6 @@ write_hdd("path/big_data", "path/big_data_smallChunk", chunkMB = 1000)
 }
 
 }
+\author{
+Laurent Berge
+}

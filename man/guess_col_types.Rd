@@ -30,3 +30,6 @@ guess_cols("path/my_data.txt")
 
 
 }
+\author{
+Laurent Berge
+}

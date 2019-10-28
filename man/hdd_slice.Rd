@@ -2,7 +2,7 @@
 % Please edit documentation in R/core.R
 \name{hdd_slice}
 \alias{hdd_slice}
-\title{Applies a function to slices of data (and save them)}
+\title{Applies a function to slices of data to create a HDD data set}
 \usage{
 hdd_slice(x, fun, dir, chunkMB = 500, replace = FALSE, ...)
 }
@@ -58,4 +58,7 @@ hdd_slice(pat_abstract, fun, "path/pat_word")
 
 }
 
+}
+\author{
+Laurent Berge
 }

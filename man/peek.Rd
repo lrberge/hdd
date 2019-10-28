@@ -34,3 +34,6 @@ peek("path/data.txt", onlyLines = TRUE)
 }
 
 }
+\author{
+Laurent Berge
+}

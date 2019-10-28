@@ -17,6 +17,8 @@ hdd_setkey(x, key, newfile, chunkMB = 500, replace = FALSE,
 \item{chunkMB}{The size of chunks used to sort the data. Default is 500MB. The bigger this number the faster the sorting is (depends on your memory available though).}
 
 \item{replace}{Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.}
+
+\item{verbose}{Numeric, default is 1. Whether to display information on the advancement of the algorithm. If equal to 0, nothing is displayed.}
 }
 \description{
 This function sets a key to a HDD file. It creates a copy of the HDD file sorted by the key. Note that the sorting process is very time consuming.
@@ -33,4 +35,7 @@ hdd_setkey(data_hdd, "id", "path/big_data_sorted")
 
 }
 
+}
+\author{
+Laurent Berge
 }

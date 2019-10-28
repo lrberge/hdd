@@ -26,3 +26,6 @@ guess_delim("path/data.txt")
 }
 
 }
+\author{
+Laurent Berge
+}

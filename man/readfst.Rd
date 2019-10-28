@@ -2,7 +2,7 @@
 % Please edit documentation in R/core.R
 \name{readfst}
 \alias{readfst}
-\title{Read fst or hdd files as DT}
+\title{Read fst or HDD files as DT}
 \usage{
 readfst(path, columns = NULL, from = 1, to = NULL, confirm = FALSE)
 }
@@ -37,4 +37,7 @@ base = hdd("hdd_path")[]
 
 
 
+}
+\author{
+Laurent Berge
 }

@@ -12,6 +12,9 @@ hdd(dir)
 \description{
 This function connects to a hard drive data set (hdd). You can access the hard drive data in a similar way as a \code{data.table}.
 }
+\details{
+Once you have a hdd data set, then you can perform extraction operations with \code{\link[hdd]{sub-.hdd}}.
+}
 \examples{
 
 \dontrun{
@@ -19,7 +22,12 @@ This function connects to a hard drive data set (hdd). You can access the hard d
 data_hdd = hdd("path/my_big_data")
 summary(data_hdd)
 
+head(data_hdd)
+
 }
 
 
+}
+\author{
+Laurent Berge
 }

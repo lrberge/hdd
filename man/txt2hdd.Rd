@@ -59,3 +59,6 @@ txt2hdd("abstracts.txt", "path/pub_english", chunkMB = 1000, preprocessfun = fun
 
 
 }
+\author{
+Laurent Berge
+}
