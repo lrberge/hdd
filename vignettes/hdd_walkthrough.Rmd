@@ -19,13 +19,21 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
 	echo = FALSE,
-	eval = FALSE,
+	eval = TRUE,
 	collapse = TRUE,
 	comment = "#>"
 )
 ```
 
-```{r, eval = TRUE}
+```{r}
+# We conditionnaly run the code pieces
+if(!file.exists("C:/Users/laurent.berge/DATA/MAG/Authors.txt")){
+	message("This vignette takes the example of a data set of over 13GB on disk, and thus cannot be run non-locally.")
+	knitr::opts_chunk$set(eval = FALSE)
+}
+```
+
+```{r}
 suppressPackageStartupMessages(library(data.table))
 library(hdd)
 ```
@@ -45,21 +53,23 @@ The data is in the form of a relational data base of usually large text files (w
 
 First we have to import the data into `R` through a `hdd` data set. We're interested in importing the information on authors. We'll use the `txt2hdd` function. But first let's have a look at the data.
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 library(hdd)
 peek("_path/authors.txt")
 ```
 
-```{r, eval=TRUE, results='asis'}
+
+```{r, results='asis'}
 tab = head(peek("C:/Users/laurent.berge/DATA/MAG/Authors.txt", view = FALSE))
 knitr::kable(tab)
+
 ```
 
 We can see that the data set contains 8 variables, some are text, other are numeric. By default, the function `peek` also displays the delimiter of the data, here it is a tab delimited text file. 
 
 Now let's import the data. From the documentation, we can retrieve the variable names, and we will use them:
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", "LastKnownAffiliationId", 
 			  "PaperCount", "CitationCount", "CreatedDate")
 txt2hdd("_path/authors.txt", # The text file
@@ -73,12 +83,12 @@ The function `txt2hdd` creates a folder on disk containing the full data set div
 
 Now that the data is imported into a `hdd` file, let's have a look at it:
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 authors = hdd("_path/hdd_authors")
 summary(authors)
 ```
 
-```{r, eval = TRUE}
+```{r}
 authors = hdd("C:/Users/laurent.berge/DATA/MAG/HDD/authors")
 summary(authors)
 ```
@@ -87,7 +97,7 @@ The summary provides some general information: the location of the data in the h
 
 Now let's have a quick look at the first lines of the data:
 
-```{r, eval = TRUE, echo = TRUE}
+```{r, echo = TRUE}
 head(authors)
 ```
 
@@ -98,7 +108,7 @@ It's indeed the same data as in the text file. You can see that you can access i
 
 Now assume that you do not want to import the full text file because some information might be unecessary to you -- or you may want to generate new information straight away. You can apply a preprocessing function while importing. Assume we want to import only the first three columns for which the names, in variable `NormalizedName`, contain only ASCII characters. We could do as follows:
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 
 fun_ascii = function(x){
 	# selection of the first 3 columns
@@ -116,12 +126,12 @@ txt2hdd("_path/authors.txt", dirDest = "_path/hdd_authors_ascii",
 
 Let's look at the new data set:
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 authors_ascii = hdd("_path/hdd_authors_ascii")
 head(authors_ascii)
 ```
 
-```{r, eval = TRUE,}
+```{r}
 authors_ascii = authors[1:50, 1:3]
 authors_ascii = authors_ascii[!is.na(iconv(NormalizedName, to = "ASCII"))]
 head(authors_ascii)
@@ -134,13 +144,13 @@ You can manipulate the data as with any other `data.table`, but the extraction m
 
 By default, the results are put into memory. Using the previous `author` data, let's find out all the author names containing the word "Einstein":
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 names_einstein = authors[grepl("\\beinstein\\b", NormalizedName), NormalizedName]
 length(names_einstein)
 head(names_einstein)
 ```
 
-```{r, eval = TRUE}
+```{r}
 load("C:/Users/laurent.berge/Google Drive/R_packages/hdd/_DATA/names_einstein.RData")
 length(names_einstein)
 head(names_einstein)
@@ -150,7 +160,7 @@ That's it, the algorithm has gone through the 217 million rows and found 1700 au
 
 But what if the result of the query does not fit into memory? You can still perform the query by adding the argument `newfile`. Now the result will be a `hdd` data set located in the path provided by the argument `newfile`.  As in the `"Importing with preprocessing"` section, let's create the data set containing the first three columns and dropping all names with non-ASCII characters. We can do as follows:
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 authors[!is.na(iconv(NormalizedName, to = "ASCII")), 1:3, newfile = "_path/hdd_authors_ascii"]
 ```
 
@@ -160,14 +170,14 @@ The result is a new `hdd` data set located in `"_path/hdd_authors_ascii"`, which
 
 A `hdd` data set is made of several chunks, or files. You can explore each of them individually using the argument `file`. Further, you can use the special variable `.N` to refer to the total number of files making the data set. For example, let's select the first name of each chunk (or file):
 
-```{r, echo = TRUE, eval = TRUE}
+```{r, echo = TRUE}
 names_first = authors[1, NormalizedName, file = 1:.N]
 head(names_first)
 ```
 
 When you use the argument `file`, you can also use the special variable `.N` in the index. Here by selecting the last lines of each file:
 
-```{r, echo = TRUE, eval = TRUE}
+```{r, echo = TRUE}
 names_last = authors[.N, NormalizedName, file = 1:.N]
 head(names_last)
 ```
@@ -176,7 +186,7 @@ head(names_last)
 
 Of course you can extract a full variable with `$`, but the algorithm will proceed only if the expected size is not too large. For example the following code will raise an error because the expected size of the variable, 7GB, is deemed too large:
 
-```{r, echo = TRUE, eval = TRUE, error = TRUE}
+```{r, echo = TRUE, error = TRUE}
 author_id = authors$AuthorId
 ```
 
@@ -186,7 +196,7 @@ By default the cap at which this error is raised is 1GB. To drop the cap, just s
 
 Use the function `readfst` to read `hdd` files located on disk to memory. Of course the `hdd` file should be *small* enough to fit in memory. An error will be raised if the expected size of the data exceeds the value of `getHdd_extract.cap(new_cap)` (default is 1GB), which you can set with `setHdd_extract.cap(new_cap)`. For example:
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval = FALSE}
 # to read the full data set into memory:
 base_authors = readfst("_path/hdd_authors")
 # Alternative way
@@ -195,7 +205,7 @@ base_authors = authors_hdd[]
 ```
 
 
-## References
+# References
 
 On the Microsoft Academic Graph data:
 
