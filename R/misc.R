@@ -305,52 +305,6 @@ numberFormat = function(x, d=2, r=1){
 	gsub("%", "\\%", x, fixed = TRUE)
 }
 
-enumerate_items = function (x, verb = "is", addS = FALSE, past = FALSE, or = FALSE, start_verb = TRUE){
-	# function that enumerates items and add verbs
-	verb = match.arg(as.character(verb), c("is", "has", "no", "contain", "FALSE"))
-	if(verb == "FALSE") verb = "no"
-	n = length(x)
-
-	if(past){
-		verb_format = switch(verb, is = ifelse(n == 1, " was", " were"), no = "", contain = "contained", has="had")
-	} else {
-		verb_format = switch(verb, is = ifelse(n == 1, " is", " are"), no = "", contain = ifelse(n == 1, " contains", " contain"), has = ifelse(n == 1, " has", " have"))
-	}
-
-	if (addS) {
-		startWord = ifelse(n == 1, " ", "s ")
-	} else {
-		startWord = ""
-	}
-
-	if (n == 1) {
-		if(!start_verb){
-			res = paste0(startWord, x, verb_format)
-		} else {
-			res = paste0(startWord, gsub(" ", "", verb_format), " ", x)
-		}
-
-	} else {
-		and_or = ifelse(or, " or ", " and ")
-		if(!start_verb){
-			res = paste0(startWord, paste0(x[-n], collapse = ", "), and_or, x[n], verb_format)
-		} else {
-			res = paste0(startWord, gsub(" ", "", verb_format), " ", paste0(x[-n], collapse = ", "), and_or, x[n])
-		}
-
-	}
-
-	res
-}
-
-ifsingle = function(x, yes, no){
-	if(length(x) == 1){
-		return(yes)
-	} else {
-		return(no)
-	}
-}
-
 
 osize = function(x){
 	size = as.numeric(object_size(x))
