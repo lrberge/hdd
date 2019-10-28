@@ -26,12 +26,13 @@ knitr::opts_chunk$set(
 ```
 
 ```{r, eval = TRUE}
+suppressPackageStartupMessages(library(data.table))
 library(hdd)
 ```
 
 
 
-`hdd` provides a class of data, *hard drive data*, allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to data.table. Operations are performed "chunk-wise" behind the scene. Here is a brief presentation of the main features.
+`hdd` provides a class of data, *hard drive data*, allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to [data.table](<https://github.com/Rdatatable/data.table/wiki>). Operations are performed "chunk-wise" behind the scene. Here is a brief presentation of the main features.
 
 # Example with publication data
 
@@ -66,9 +67,11 @@ txt2hdd("_path/authors.txt", # The text file
 		chunkMB = 500, col_names = col_names)
 ```
 
-By default, the types of the variables are automatically set, based on the guess of the function `fread` from package `data.table`. Note that integer 64 variables are imported as doubles. You can set the column types yourself using the function `cols` or `cols_only` from package `readr`. In any case, if there are importing problems, a specific repository, which is itself a hdd file, reporting all importing problems is created.
+By default, the types of the variables are automatically set, based on the guess of the function `fread` from package `data.table`. Note that integer 64 variables are imported as doubles. You can set the column types yourself using the function `cols` or `cols_only` from package `readr`. In any case, if there are importing problems, a specific repository, which is itself a hdd file, reporting all importing problems is created (in the example, it there were problems, it would be located at `"_path/hdd_authors/problems"`).
 
-Now the data is imported into a `hdd` file. Let's have a look at it:
+The function `txt2hdd` creates a folder on disk containing the full data set divided into several files named `slice_XX.fst` with XX its number. The `.fst` files are in a format for fast reading/writing on disk (see `fst` [homepage](<http://www.fstpackage.org/>)). Every time a `hdd` data set is created, the associated folder on disk includes a file `_hdd.txt` containing: i) a summary of the data (number of rows/columns, first five observations) and ii) the log of the commands which created it.
+
+Now that the data is imported into a `hdd` file, let's have a look at it:
 
 ```{r, echo = TRUE}
 authors = hdd("_path/hdd_authors")
@@ -82,7 +85,7 @@ summary(authors)
 
 The summary provides some general information: the location of the data in the hard drive (note that this is the location on my hard drive!), the size of the data set on disk (which is lower that what it would be in-memory due to compression), here 13GB, the number of chunks, here 69, the number of lines, here 217 millions, and the numer of variables.
 
-Now let's have a quick look at the data:
+Now let's have a quick look at the first lines of the data:
 
 ```{r, eval = TRUE, echo = TRUE}
 head(authors)
@@ -90,9 +93,10 @@ head(authors)
 
 It's indeed the same data as in the text file. You can see that you can access it as a regular data frame.
 
+
 ### Importing with preprocessing
 
-Now assume that you do not want to import the full text file because some information might be unecessary to you -- or you may want to generate new information straight away. You can apply a preprocessing function while importing. Assume we want to import only the first three columns for which the names, in variable NormalizedName, contain only ASCII characters. We could do as follows:
+Now assume that you do not want to import the full text file because some information might be unecessary to you -- or you may want to generate new information straight away. You can apply a preprocessing function while importing. Assume we want to import only the first three columns for which the names, in variable `NormalizedName`, contain only ASCII characters. We could do as follows:
 
 ```{r, echo = TRUE}
 
@@ -126,7 +130,69 @@ head(authors_ascii)
 
 ## Manipulation
 
-The 
+You can manipulate the data as with any other `data.table`, but the extraction method for `hdd` objects (`[.hdd`) includes a few extra arguments.
+
+By default, the results are put into memory. Using the previous `author` data, let's find out all the author names containing the word "Einstein":
+
+```{r, echo = TRUE}
+names_einstein = authors[grepl("\\beinstein\\b", NormalizedName), NormalizedName]
+length(names_einstein)
+head(names_einstein)
+```
+
+```{r, eval = TRUE}
+load("C:/Users/laurent.berge/Google Drive/R_packages/hdd/_DATA/names_einstein.RData")
+length(names_einstein)
+head(names_einstein)
+```
+
+That's it, the algorithm has gone through the 217 million rows and found 1700 author names containing "Einstein". You can see that the command is the same as for a regular `data.table`.
+
+But what if the result of the query does not fit into memory? You can still perform the query by adding the argument `newfile`. Now the result will be a `hdd` data set located in the path provided by the argument `newfile`.  As in the `"Importing with preprocessing"` section, let's create the data set containing the first three columns and dropping all names with non-ASCII characters. We can do as follows:
+
+```{r, echo = TRUE}
+authors[!is.na(iconv(NormalizedName, to = "ASCII")), 1:3, newfile = "_path/hdd_authors_ascii"]
+```
+
+The result is a new `hdd` data set located in `"_path/hdd_authors_ascii"`, which can be of any size.
+
+## Exploring a hdd data set
+
+A `hdd` data set is made of several chunks, or files. You can explore each of them individually using the argument `file`. Further, you can use the special variable `.N` to refer to the total number of files making the data set. For example, let's select the first name of each chunk (or file):
+
+```{r, echo = TRUE, eval = TRUE}
+names_first = authors[1, NormalizedName, file = 1:.N]
+head(names_first)
+```
+
+When you use the argument `file`, you can also use the special variable `.N` in the index. Here by selecting the last lines of each file:
+
+```{r, echo = TRUE, eval = TRUE}
+names_last = authors[.N, NormalizedName, file = 1:.N]
+head(names_last)
+```
+
+## Extracting a full variable
+
+Of course you can extract a full variable with `$`, but the algorithm will proceed only if the expected size is not too large. For example the following code will raise an error because the expected size of the variable, 7GB, is deemed too large:
+
+```{r, echo = TRUE, eval = TRUE, error = TRUE}
+author_id = authors$AuthorId
+```
+
+By default the cap at which this error is raised is 1GB. To drop the cap, just set `setHdd_extract.cap(Inf)`, but then beware of memory issues!
+
+## Reading full hdd data sets from disk to memory
+
+Use the function `readfst` to read `hdd` files located on disk to memory. Of course the `hdd` file should be *small* enough to fit in memory. An error will be raised if the expected size of the data exceeds the value of `getHdd_extract.cap(new_cap)` (default is 1GB), which you can set with `setHdd_extract.cap(new_cap)`. For example:
+
+```{r, echo = TRUE}
+# to read the full data set into memory:
+base_authors = readfst("_path/hdd_authors")
+# Alternative way
+authors_hdd = hdd("_path/hdd_authors")
+base_authors = authors_hdd[]
+```
 
 
 ## References
