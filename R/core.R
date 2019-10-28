@@ -13,7 +13,7 @@
 
 
 
-#' Read fst or hdd files as DT
+#' Read fst or HDD files as DT
 #'
 #' This is the function \code{\link[fst]{read_fst}} but with automatic conversion to data.table. It also allows to read \code{hdd} data.
 #'
@@ -22,6 +22,8 @@
 #' @param from Read data starting from this row number. Ignored for \code{hdd} files.
 #' @param to Read data up until this row number. The default is to read to the last row of the stored dataset. Ignored for \code{hdd} files.
 #' @param confirm If the hdd file is larger than the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.
+#'
+#' @author Laurent Berge
 #'
 #' @examples
 #'
@@ -73,7 +75,7 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 		mc = match.call()
 		qui_pblm = intersect(names(mc), c("columns", "from", "to"))
 		if(length(qui_pblm) > 0){
-			stop("When 'path' leads to a hdd file, the full dataset is read. Thus the argument", enumerate_words(qui_pblm, addS = TRUE), " ignored: for sub-selections use hdd(path) instead.")
+			stop("When 'path' leads to a hdd file, the full dataset is read. Thus the argument", enumerate_items(qui_pblm, addS = TRUE), " ignored: for sub-selections use hdd(path) instead.")
 		}
 
 		res_size = object_size(res) / 1e6
@@ -88,7 +90,7 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 	res
 }
 
-#' Applies a function to slices of data (and save them)
+#' Applies a function to slices of data to create a HDD data set
 #'
 #' This function is useful to apply complex R functions to large datasets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a hdd dataset.
 #'
@@ -98,6 +100,8 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 #' @param dir The destination directory where the data is saved.
 #' @param replace Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.
 #' @param ... Other parameters to be passed to \code{fun}.
+#'
+#' @author Laurent Berge
 #'
 #' @return
 #' It doesn't return anything, the output is a "hard drive data" saved in the hard drive.
@@ -250,12 +254,19 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 #'
 #' @param dir The directory where the hard drive data set is.
 #'
+#' @author Laurent Berge
+#'
+#' @details
+#' Once you have a hdd data set, then you can perform extraction operations with \code{\link[hdd]{sub-.hdd}}.
+#'
 #' @examples
 #'
 #' \dontrun{
 #' # your data set is in the hard drive, in hdd format already
 #' data_hdd = hdd("path/my_big_data")
 #' summary(data_hdd)
+#'
+#' head(data_hdd)
 #'
 #' }
 #'
@@ -327,7 +338,7 @@ hdd = function(dir){
 
 
 
-#' Extraction of hdd data
+#' Extraction of HDD data
 #'
 #' This function extract data from HDD files, in a similar fashion as data.table but with more arguments.
 #'
@@ -338,6 +349,8 @@ hdd = function(dir){
 #' @param all.vars Logical, default is \code{FALSE}. By default, if the first argument of \code{...} is provided (i.e. argument \code{j}) then only variables appearing in all \code{...} plus the variable names found in \code{index} are extracted. If \code{TRUE} all variables are extracted before any selection is done. (This can be useful when the algorithm getting the variable names gets confused in case of complex queries.)
 #' @param newfile A destination directory. Default is missing. Should be result of the query be saved into a new HDD directory? Otherwise, it is put in memory.
 #' @param replace Only used if argument \code{newfile} is not missing: default is \code{FALSE}. If the \code{newfile} points to an existing HDD data, then to replace it you must have \code{replace = TRUE}.
+#'
+#' @author Laurent Berge
 #'
 #' @return
 #' Returns a data.table extracted from a hdd file (except if newwfile is not missing).
@@ -709,6 +722,8 @@ hdd = function(dir){
 #'
 #' @param name The variable name to be extracted.Note that there is an automatic protection for not trying to import data that would not fit into memory. The extraction cap is set with the function \code{\link[hdd]{setHdd_extract.cap}}.
 #'
+#' @author Laurent Berge
+#'
 #' @return
 #' It returns a vector.
 #'
@@ -802,6 +817,8 @@ hdd = function(dir){
 #' @param replace If \code{add = FALSE}, should any existing document be replaced? Default is \code{FALSE}.
 #' @param showWarning If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} is NOT called within a function.
 #' @param ... Not currently used.
+#'
+#' @author Laurent Berge
 #'
 #' @examples
 #'
@@ -1112,7 +1129,10 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 #' @param x A hdd file.
 #' @param key A character vector of the keys.
 #' @param chunkMB The size of chunks used to sort the data. Default is 500MB. The bigger this number the faster the sorting is (depends on your memory available though).
+#' @param verbose Numeric, default is 1. Whether to display information on the advancement of the algorithm. If equal to 0, nothing is displayed.
 #'
+#'
+#' @author Laurent Berge
 #'
 #'
 #' @examples
@@ -1317,9 +1337,9 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 
 }
 
-#' Merges data to an hdd file
+#' Merges data to a HDD file
 #'
-#' This function merges in-memory/HDD data to an hdd file.
+#' This function merges in-memory/HDD data to a HDD file.
 #'
 #' @param x A hdd file.
 #' @param y A dataset either a data.frame of a HDD object.
@@ -1328,6 +1348,9 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 #' @param all.x Default is \code{all}.
 #' @param all.y Default is \code{all}.
 #' @param replace Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.
+#' @param verbose Numeric. Whether information on the advancement should be displayed. If equal to 0, nothing is displayed. By default it is equal to 1 if the size of \code{x} is greater than 1GB.
+#'
+#' @author Laurent Berge
 #'
 #' @examples
 #'
@@ -1461,6 +1484,8 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 #' @param replace If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.
 #' @param verbose Integer. If verbose > 0, then the evolution of the importing process is reported.
 #' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, \code{quote = ""} can be interesting sometimes.
+#'
+#' @author Laurent Berge
 #'
 #' @examples
 #'
@@ -1651,6 +1676,8 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 #' @param col_names Optional: the vector of names of the columns, if not contained in the file. Must match the number of columns in the file.
 #' @param n Number of observations used to make the guess. By default, \code{n = 100000}.
 #'
+#' @author Laurent Berge
+#'
 #' @return
 #' It returns a \code{cols} object a la \code{readr.}
 #'
@@ -1729,6 +1756,8 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 #'
 #' @return
 #' It returns a character string of length 1: the delimiter.
+#'
+#' @author Laurent Berge
 #'
 #' @examples
 #'
@@ -1809,6 +1838,8 @@ guess_delim = function(path){
 #'
 #' @return
 #' Returns the data invisibly.
+#'
+#' @author Laurent Berge
 #'
 #' @examples
 #'
@@ -1903,14 +1934,16 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 #### S3 methods ####
 ####
 
-#' Dimension of a hdd object
+#' Dimension of a HDD object
 #'
-#' Gets the dimension of a hard drive data set (hdd).
+#' Gets the dimension of a hard drive data set (HDD).
 #'
-#' @param x A \code{hdd} object.
+#' @param x A \code{HDD} object.
 #'
 #' @return
 #' It returns a vector of length 2 containing the number of rows and the columns.
+#'
+#' @author Laurent Berge
 #'
 #' @examples
 #'
@@ -1926,11 +1959,13 @@ dim.hdd = function(x){
 	c(x$.row_cum[n], x$.ncol[1])
 }
 
-#' Variables names of an hdd object
+#' Variables names of a HDD object
 #'
-#' Gets the variable names of a hard drive data set (hdd).
+#' Gets the variable names of a hard drive data set (HDD).
 #'
 #' @inheritParams dim.hdd
+#'
+#' @author Laurent Berge
 #'
 #' @return
 #' A character vector.
@@ -1949,13 +1984,15 @@ names.hdd = function(x){
 	names(x_tmp)
 }
 
-#' Print method for hdd objects
+#' Print method for HDD objects
 #'
-#' This functions displays the first and last lines of a hard drive data set (hdd).
+#' This functions displays the first and last lines of a hard drive data set (HDD).
 #'
 #' @inheritParams dim.hdd
 #'
 #' @param ... Not currently used.
+#'
+#' @author Laurent Berge
 #'
 #' @return
 #' Nothing is returned.
@@ -1984,14 +2021,16 @@ print.hdd = function(x, ...){
 	}
 }
 
-#' Summary information for hdd objects
+#' Summary information for HDD objects
 #'
-#' Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (hdd).
+#' Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (HDD).
 #'
 #' @inheritParams dim.hdd
 #'
-#' @param object A hdd object.
+#' @param object A HDD object.
 #' @param ... Not currently used.
+#'
+#' @author Laurent Berge
 #'
 #'
 #' @examples
