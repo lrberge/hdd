@@ -57,11 +57,11 @@ numID = function(x){
 	} else {
 		# we recreate the ids using rowid
 		vars = names(x)
-		x[, xxOBSxx := 1:.N]
+		x[, "xxOBSxx" := 1:.N]
 		setorderv(x, vars)
 
-		x[, xxNEWIDxx := cumsum(sign(1 - c(-100, diff(rowidv(x, vars)))))]
-		setorder(x, xxOBSxx)
+		x[, "xxNEWIDxx" := cumsum(sign(1 - c(-100, diff(rowidv(x, vars)))))]
+		setorderv(x, "xxOBSxx")
 		x = x[["xxNEWIDxx"]]
 	}
 	return(x)
