@@ -13,7 +13,7 @@ readfst(path, columns = NULL, from = 1, to = NULL, confirm = FALSE)
 
 \item{from}{Read data starting from this row number. Ignored for \code{hdd} files.}
 
-\item{to}{Read data up until this row number. The default is to read to the last row of the stored dataset. Ignored for \code{hdd} files.}
+\item{to}{Read data up until this row number. The default is to read to the last row of the stored data set. Ignored for \code{hdd} files.}
 
 \item{confirm}{If the hdd file is larger than the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.}
 }
@@ -27,7 +27,7 @@ base = readfst("path.fst")
 # is exactly equivalent to:
 base = read_fst("path.fst", as.data.table = TRUE)
 
-# reading the full data from a hdd file
+# reading the full data from a HDD file
 base = readfst("hdd_path")
 # is equivalent to:
 base = hdd("hdd_path")[]

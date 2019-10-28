@@ -10,7 +10,7 @@ hdd_merge(x, y, newfile, all = FALSE, all.x = all, all.y = all,
 \arguments{
 \item{x}{A hdd file.}
 
-\item{y}{A dataset either a data.frame of a HDD object.}
+\item{y}{A data set either a data.frame of a HDD object.}
 
 \item{newfile}{Destination of the result, i.e., a destination folder that will receive the HDD data.}
 

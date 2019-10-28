@@ -2,7 +2,7 @@
 % Please edit documentation in R/core.R
 \name{write_hdd}
 \alias{write_hdd}
-\title{Saves or appends a dataset into a HDD file}
+\title{Saves or appends a data set into a HDD file}
 \usage{
 write_hdd(x, dir, chunkMB = Inf, compress = 50, add = FALSE,
   replace = FALSE, showWarning, ...)

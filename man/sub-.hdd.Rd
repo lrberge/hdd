@@ -23,7 +23,7 @@
 \item{all.vars}{Logical, default is \code{FALSE}. By default, if the first argument of \code{...} is provided (i.e. argument \code{j}) then only variables appearing in all \code{...} plus the variable names found in \code{index} are extracted. If \code{TRUE} all variables are extracted before any selection is done. (This can be useful when the algorithm getting the variable names gets confused in case of complex queries.)}
 }
 \value{
-Returns a data.table extracted from a hdd file (except if newwfile is not missing).
+Returns a data.table extracted from a HDD file (except if newwfile is not missing).
 }
 \description{
 This function extract data from HDD files, in a similar fashion as data.table but with more arguments.

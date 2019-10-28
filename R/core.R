@@ -20,7 +20,7 @@
 #' @param path Path to \code{fst} file -- or path to \code{hdd} data. For hdd files, there is a
 #' @param columns Column names to read. The default is to read all columns. Ignored for \code{hdd} files.
 #' @param from Read data starting from this row number. Ignored for \code{hdd} files.
-#' @param to Read data up until this row number. The default is to read to the last row of the stored dataset. Ignored for \code{hdd} files.
+#' @param to Read data up until this row number. The default is to read to the last row of the stored data set. Ignored for \code{hdd} files.
 #' @param confirm If the hdd file is larger than the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.
 #'
 #' @author Laurent Berge
@@ -32,7 +32,7 @@
 #' # is exactly equivalent to:
 #' base = read_fst("path.fst", as.data.table = TRUE)
 #'
-#' # reading the full data from a hdd file
+#' # reading the full data from a HDD file
 #' base = readfst("hdd_path")
 #' # is equivalent to:
 #' base = hdd("hdd_path")[]
@@ -69,13 +69,13 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 
 		res = try(hdd(path), silent = TRUE)
 		if("try-error" %in% class(res)){
-			stop("Argument path must be either a fst file (this is not the case), either a hdd folder. Using path as hdd raises an error:\n", res)
+			stop("Argument path must be either a fst file (this is not the case), either a HDD folder. Using path as hdd raises an error:\n", res)
 		}
 
 		mc = match.call()
 		qui_pblm = intersect(names(mc), c("columns", "from", "to"))
 		if(length(qui_pblm) > 0){
-			stop("When 'path' leads to a hdd file, the full dataset is read. Thus the argument", enumerate_items(qui_pblm, addS = TRUE), " ignored: for sub-selections use hdd(path) instead.")
+			stop("When 'path' leads to a HDD file, the full data set is read. Thus the argument", enumerate_items(qui_pblm, addS = TRUE), " ignored: for sub-selections use hdd(path) instead.")
 		}
 
 		res_size = object_size(res) / 1e6
@@ -92,11 +92,11 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 
 #' Applies a function to slices of data to create a HDD data set
 #'
-#' This function is useful to apply complex R functions to large datasets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a hdd dataset.
+#' This function is useful to apply complex R functions to large data sets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a HDD data set.
 #'
-#' @param x A dataset (data.frame, hdd).
-#' @param fun A function to be applied to slices of the dataset. The function must return a data frame like object.
-#' @param chunkMB The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additionnal information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.
+#' @param x A data set (data.frame, HDD).
+#' @param fun A function to be applied to slices of the data set. The function must return a data frame like object.
+#' @param chunkMB The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additional information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.
 #' @param dir The destination directory where the data is saved.
 #' @param replace Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.
 #' @param ... Other parameters to be passed to \code{fun}.
@@ -141,7 +141,7 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 #'
 hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 	# This function is useful for performing memory intensive operations
-	# it slices the operation in several chunks of the initial dat
+	# it slices the operation in several chunks of the initial data
 	# then you need to use the function recombine to obtain the result
 	# x: the main vector/matrix to which apply fun
 	# fun: the function to apply to x
@@ -250,14 +250,14 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 
 #' Hard drive data set
 #'
-#' This function connects to a hard drive data set (hdd). You can access the hard drive data in a similar way as a \code{data.table}.
+#' This function connects to a hard drive data set (HDD). You can access the hard drive data in a similar way as a \code{data.table}.
 #'
 #' @param dir The directory where the hard drive data set is.
 #'
 #' @author Laurent Berge
 #'
 #' @details
-#' Once you have a hdd data set, then you can perform extraction operations with \code{\link[hdd]{sub-.hdd}}.
+#' Once you have a HDD data set, then you can perform extraction operations with \code{\link[hdd]{sub-.hdd}}.
 #'
 #' @examples
 #'
@@ -353,7 +353,7 @@ hdd = function(dir){
 #' @author Laurent Berge
 #'
 #' @return
-#' Returns a data.table extracted from a hdd file (except if newwfile is not missing).
+#' Returns a data.table extracted from a HDD file (except if newwfile is not missing).
 #'
 #' @examples
 #'
@@ -805,7 +805,7 @@ hdd = function(dir){
 }
 
 
-#' Saves or appends a dataset into a HDD file
+#' Saves or appends a data set into a HDD file
 #'
 #' This function saves in-memory/HDD data sets into HDD repositories. Useful to append several data sets.
 #'
@@ -926,14 +926,14 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	} else if("data.frame" %in% class(x)){
 		memoryData = TRUE
 	} else {
-		stop("The class of data is not supported. Only data.frame like datasets can be written in hdd.")
+		stop("The class of data is not supported. Only data.frame like data sets can be written in hdd.")
 	}
 
 	if(nrow(x) == 0) return(invisible(NULL))
 
 	if(add){
 
-		if(isKey) stop("At the moment add = TRUE with x a hdd data base with key is not supported.")
+		if(isKey) stop("At the moment add = TRUE with x a HDD data base with key is not supported.")
 
 		nb_files_existing = length(all_files_fst)
 		# We also check consistency of appending data
@@ -1166,11 +1166,11 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 	check_arg(verbose, "singleNumeric")
 
 	if(missing(x)){
-		stop("Argument 'x' must be a hdd object, but it is currently missing.")
+		stop("Argument 'x' must be a HDD object, but it is currently missing.")
 	}
 
 	if(!"hdd" %in% class(x)){
-		stop("x must be a hdd object.")
+		stop("x must be a HDD object.")
 	}
 
 	if(!all(key %in% names(x))){
@@ -1342,7 +1342,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 #' This function merges in-memory/HDD data to a HDD file.
 #'
 #' @param x A hdd file.
-#' @param y A dataset either a data.frame of a HDD object.
+#' @param y A data set either a data.frame of a HDD object.
 #' @param newfile Destination of the result, i.e., a destination folder that will receive the HDD data.
 #' @param all Default is \code{FALSE}.
 #' @param all.x Default is \code{all}.
@@ -1365,10 +1365,10 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 #'
 hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replace = FALSE, verbose){
 	# Function to merge Hdd files
-	# It returns a hdd file
+	# It returns a HDD file
 	# x: hdd
 	# y: data.frame or hdd
-	# LATER: add possiblity to subset/select variables of x before evaluation
+	# LATER: add possibility to subset/select variables of x before evaluation
 
 	# CONTROLS
 
@@ -1385,7 +1385,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 	call_txt = deparse_long(match.call())
 
 	if(!"hdd" %in% class(x)){
-		stop("x must be a hdd file!")
+		stop("x must be a HDD file!")
 	}
 
 	if(missing(verbose)){
@@ -1396,7 +1396,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 	if("hdd" %in% class(y)){
 		y_hdd = TRUE
 	} else if(!"data.frame" %in% class(y)){
-		stop("y must be either a data.frame or a hdd file.")
+		stop("y must be either a data.frame or a HDD file.")
 	}
 
 	names_x = names(x)
@@ -1476,7 +1476,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 #' @param path Path where the data is.
 #' @param dirDest The destination directory, where the new HDD data should be saved.
 #' @param chunkMB The chunk sizes in MB, no default.
-#' @param col_names The column names, by default is uses the ones of the dataset. If the dataset lacks column names, you must provide them.
+#' @param col_names The column names, by default is uses the ones of the data set. If the data set lacks column names, you must provide them.
 #' @param col_types The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} to find them.
 #' @param nb_skip Number of lines to skip.
 #' @param delim The delimiter. By default the function tries to find the delimiter, but sometimes it fails.
@@ -1514,7 +1514,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 #'
 txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim, preprocessfun, replace = FALSE, verbose = 1, ...){
 	# This function reads a large text file thanks to readr
-	# and trasforms it into a hdd document
+	# and trasforms it into a HDD document
 
 	#
 	# Control

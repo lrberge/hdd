@@ -7,13 +7,13 @@
 hdd_slice(x, fun, dir, chunkMB = 500, replace = FALSE, ...)
 }
 \arguments{
-\item{x}{A dataset (data.frame, hdd).}
+\item{x}{A data set (data.frame, HDD).}
 
-\item{fun}{A function to be applied to slices of the dataset. The function must return a data frame like object.}
+\item{fun}{A function to be applied to slices of the data set. The function must return a data frame like object.}
 
 \item{dir}{The destination directory where the data is saved.}
 
-\item{chunkMB}{The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additionnal information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.}
+\item{chunkMB}{The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additional information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.}
 
 \item{replace}{Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.}
 
@@ -23,7 +23,7 @@ hdd_slice(x, fun, dir, chunkMB = 500, replace = FALSE, ...)
 It doesn't return anything, the output is a "hard drive data" saved in the hard drive.
 }
 \description{
-This function is useful to apply complex R functions to large datasets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a hdd dataset.
+This function is useful to apply complex R functions to large data sets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a HDD data set.
 }
 \examples{
 

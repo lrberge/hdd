@@ -14,7 +14,7 @@ txt2hdd(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 
 \item{chunkMB}{The chunk sizes in MB, no default.}
 
-\item{col_names}{The column names, by default is uses the ones of the dataset. If the dataset lacks column names, you must provide them.}
+\item{col_names}{The column names, by default is uses the ones of the data set. If the data set lacks column names, you must provide them.}
 
 \item{col_types}{The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} to find them.}
 
