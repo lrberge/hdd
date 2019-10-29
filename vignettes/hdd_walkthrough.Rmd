@@ -77,7 +77,7 @@ txt2hdd("_path/authors.txt", # The text file
 		chunkMB = 500, col_names = col_names)
 ```
 
-By default, the types of the variables are automatically set, based on the guess of the function `fread` from package `data.table`. Note that integer 64 variables are imported as doubles. You can set the column types yourself using the function `cols` or `cols_only` from package `readr`. In any case, if there are importing problems, a specific repository, which is itself a hdd file, reporting all importing problems is created (in the example, it there were problems, it would be located at `"_path/hdd_authors/problems"`).
+By default, the types of the variables are automatically set, based on the guess of the function `fread` from package `data.table`. Note that 64bits integers variables are imported as doubles. You can set the column types yourself using the function `cols` or `cols_only` from package `readr`. In any case, if there are importing problems, a specific repository, which is itself a hdd file, reporting all importing problems is created (in the example, it there were problems, it would be located at `"_path/hdd_authors/problems"`).
 
 The function `txt2hdd` creates a folder on disk containing the full data set divided into several files named `slice_XX.fst` with XX its number. The `.fst` files are in a format for fast reading/writing on disk (see `fst` [homepage](<http://www.fstpackage.org/>)). Every time a `hdd` data set is created, the associated folder on disk includes a file `_hdd.txt` containing: i) a summary of the data (number of rows/columns, first five observations) and ii) the log of the commands which created it.
 
