@@ -17,6 +17,8 @@
 #'
 #' This is the function \code{\link[fst]{read_fst}} but with automatic conversion to data.table. It also allows to read \code{hdd} data.
 #'
+#' @inherit hdd seealso
+#'
 #' @param path Path to \code{fst} file -- or path to \code{hdd} data. For hdd files, there is a
 #' @param columns Column names to read. The default is to read all columns. Ignored for \code{hdd} files.
 #' @param from Read data starting from this row number. Ignored for \code{hdd} files.
@@ -27,19 +29,18 @@
 #'
 #' @examples
 #'
-#' \dontrun{
-#' base = readfst("path.fst")
-#' # is exactly equivalent to:
-#' base = read_fst("path.fst", as.data.table = TRUE)
+#' # Toy example with the iris data set
 #'
-#' # reading the full data from a HDD file
-#' base = readfst("hdd_path")
+#' # writing a hdd file
+#' hdd_path = tempfile()
+#' write_hdd(iris, hdd_path, rowsPerChunk = 30)
+#'
+#' # reading the full data in memory
+#' base_mem = readfst(hdd_path)
+#'
 #' # is equivalent to:
-#' base = hdd("hdd_path")[]
-#'
-#' }
-#'
-#'
+#' base_hdd = hdd(hdd_path)
+#' base_mem_bis = base_hdd[]
 #'
 #'
 readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
@@ -94,52 +95,56 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 #'
 #' This function is useful to apply complex R functions to large data sets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a HDD data set.
 #'
+#' @inherit hdd seealso
+#'
 #' @param x A data set (data.frame, HDD).
 #' @param fun A function to be applied to slices of the data set. The function must return a data frame like object.
 #' @param chunkMB The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additional information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.
+#' @param rowsPerChunk Integer, default is missing. Alternative to the argument \code{chunkMB}. If provided, the functions will be applied to chunks of \code{rowsPerChunk} of \code{x}.
 #' @param dir The destination directory where the data is saved.
 #' @param replace Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.
+#' @param verbose Integer, defaults to 1. If greater than 0 then the progress is displayed.
 #' @param ... Other parameters to be passed to \code{fun}.
 #'
 #' @author Laurent Berge
+#'
+#' @details
+#' This function splits the original data into several slices and then apply a function to each of them, saving the results into a HDD data set.
+#'
+#' You can perform merging operations with \code{hdd_slice}, but for regular merges not that you have the function \code{\link[hdd]{hdd_merge}} that may prove more convenient (not need to write a ad hoc function).
 #'
 #' @return
 #' It doesn't return anything, the output is a "hard drive data" saved in the hard drive.
 #'
 #' @examples
 #'
-#' \dontrun{
+#' # Toy example with iris data.
+#' # Say you want to perform a cartesian merge
+#' # If the results of the function is out of memory
+#' # you can use hdd_slice (not the case for this example)
 #'
-#' # Example in the context of patent data.
+#' # preparing the cartesian merge
+#' iris_bis = iris
+#' names(iris_bis) = c(paste0("x_", 1:4), "species_bis")
 #'
-#' # Assume you have a data set, pat_abstract, with two variables:
-#' # - patent_id: an identification number (here a patent number)
-#' # - abstract: the abstract of the patent
-#' # You want to create the data set, pat_word, with three variables:
-#' # - patent_id: same as before
-#' # - word: a word appearing in the patent abstract
-#' # - word_freq: the number of times the word appeared in the patent abstract
 #'
-#' # Typically, if you have millions of patents, it will
-#' # create a data set that won't fit in memory.
-#' # This is what hdd_slice is for.
-#'
-#' # Now the code:
-#' fun = function(x){
-#'   abstract_split = strsplit(x$abstract, " ")
-#'   base_split = data.table(patent_id = rep(x$patent_id,
-#'                                           lengths(abstract_split)),
-#'                           word = unlist(abstract_split))
-#'
-#'   res = base_split[, .(word_freq = .N), by = .(patent_id, word)]
-#'   res
+#' fun_cartesian = function(x){
+#' 	# Note that x is treated as a data.table
+#' 	# => we need the argument allow.cartesian
+#' 	merge(x, iris_bis, allow.cartesian = TRUE)
 #' }
 #'
-#' hdd_slice(pat_abstract, fun, "path/pat_word")
+#' hdd_result = tempfile() # => folder where results are saved
+#' hdd_slice(iris, fun_cartesian, dir = hdd_result, rowsPerChunk = 30)
 #'
-#' }
+#' # Let's look at the result
+#' base_hdd = hdd(hdd_result)
+#' summary(base_hdd)
+#' head(base_hdd)
 #'
-hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
+#'
+#'
+hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk, replace = FALSE, verbose=1, ...){
 	# This function is useful for performing memory intensive operations
 	# it slices the operation in several chunks of the initial data
 	# then you need to use the function recombine to obtain the result
@@ -148,6 +153,8 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 	# chunkMB: the size of the chunks of x, in mega bytes // default is a "smart guess"
 	# dir: the repository where to make the temporary savings. Default is "."
 
+
+	mc = match.call()
 
 	# Controls
 
@@ -163,6 +170,7 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 
 	check_arg(dir, "singleCharacterMbt")
 	check_arg(chunkMB, "singleNumericGT0")
+	check_arg(rowsPerChunk, "singleIntegerGE1")
 	check_arg(replace, "singleLogical")
 
 	if(is.null(dim(x))){
@@ -173,20 +181,31 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 		n = nrow(x)
 	}
 
-	# size of x
-	if(class(x)[1] == "fst_table"){
-		# we estimate the size of x
-		n2check = min(1000, ceiling(nrow(x) / 10))
-		size_x_subset = as.numeric(object.size(x[1:n2check, ]) / 1e6) # in MB
-		size_x = size_x_subset * nrow(x) / n2check
+	# Determining the number of chunks
+	if(!missing(rowsPerChunk)){
+		if("chunkMB" %in% names(mc)) warning("The value of argument 'chunkMB' is neglected since argument 'rowsPerChunk' is provided.")
+
+		if(rowsPerChunk > 1e9){
+			stop("The value of argument 'rowsPerChunk' cannot exceed 1 billion.")
+		}
+
+		n_chunks = ceiling(nrow(x) / rowsPerChunk)
 	} else {
-		size_x = as.numeric(object_size(x) / 1e6) # in MB
+		if(class(x)[1] == "fst_table"){
+			# we estimate the size of x
+			n2check = min(1000, ceiling(nrow(x) / 10))
+			size_x_subset = as.numeric(object.size(x[1:n2check, ]) / 1e6) # in MB
+			size_x = size_x_subset * nrow(x) / n2check
+		} else {
+			size_x = as.numeric(object_size(x) / 1e6) # in MB
+		}
+
+		n_chunks = ceiling(size_x / chunkMB)
 	}
 
-	n_chunks = ceiling(size_x / chunkMB)
 
 	if(n_chunks == 1){
-		stop("Size of 'x' is lower than 'chunkMB'. Function hdd_slice() is useless.")
+		message("Only one chunk: Function hdd_slice() is not needed.")
 	}
 
 	start = floor(seq(1, n, by = n/n_chunks))
@@ -221,7 +240,8 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 
 	# The main loop
 	for(i in 1:n_chunks){
-		cat(i, "..", sep = "")
+		if(verbose > 0) message(i, "..", appendLF = FALSE)
+
 		if(isTable){
 			x_small = x[start[i]:end[i], ]
 		} else {
@@ -243,35 +263,63 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, replace = FALSE, ...){
 
 	}
 
-	cat("end.\n")
+	if(verbose > 0) message("end.")
 }
 
 
 
 #' Hard drive data set
 #'
-#' This function connects to a hard drive data set (HDD). You can access the hard drive data in a similar way as a \code{data.table}.
+#' This function connects to a hard drive data set (HDD). You can access the hard drive data in a similar way to a \code{data.table}.
 #'
 #' @param dir The directory where the hard drive data set is.
 #'
 #' @author Laurent Berge
 #'
 #' @details
-#' Once you have a HDD data set, then you can perform extraction operations with \code{\link[hdd]{sub-.hdd}}.
+#' HDD has been created to deal with out of memory data sets. The data set exists in the hard drive, split in multiple files -- each file being workable in memory.
+#'
+#' You can perform extraction and manipulation operations as with a regular data set with \code{\link[hdd]{sub-.hdd}}. Each operation is performed chunk-by-chunk behind the scene.
+#'
+#' In terms of performance, working with complete data sets in memory will always be faster. This is because read/write operations on disk are order of magnitude slower than read/write in memory. However, this might be the only way to deal with out of memory data.
+#'
+#' @seealso
+#' See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+#'
+#' See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+#'
+#' To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+#'
+#' To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 #'
 #' @examples
 #'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' summary(data_hdd)
+#' # Toy example with iris data
+#' iris_path = tempfile()
+#' fwrite(iris, iris_path)
 #'
-#' head(data_hdd)
+#' # destination path
+#' hdd_path = tempfile()
 #'
-#' }
+#' # reading the text file with 50 rows chunks:
+#' txt2hdd(iris_path, dirDest = hdd_path, rowsPerChunk = 50)
+#'
+#' # creating a HDD object
+#' base_hdd = hdd(hdd_path)
+#'
+#' # Summary information on the whole data set
+#' summary(base_hdd)
+#'
+#' # Looking at it like a regular data.frame
+#' print(base_hdd)
+#' dim(base_hdd)
+#' names(base_hdd)
+#'
 #'
 #'
 hdd = function(dir){
+	# Rd Note: The example section is used in summary/print/names/dim
+
 	# This function creates a link to a repository containing fst files
 	# NOTA: The HDD files are all named "sliceXX.fst"
 
@@ -293,7 +341,7 @@ hdd = function(dir){
 
 	# all_files: valid files containing data: i.e. dir/slice_xx.fst
 	all_files = list.files(dir, full.names = TRUE)
-	all_files = sort(all_files[grepl(file_head, all_files) & grepl("\\.fst", all_files)])
+	all_files = sort(all_files[grepl(file_head, all_files, fixed = TRUE) & grepl("\\.fst$", all_files)])
 
 	if(length(all_files) == 0){
 		stop("The current directory is not a valid HDD data set (i.e. no HDD files in it).")
@@ -320,8 +368,9 @@ hdd = function(dir){
 	if(file.exists(infoFile)){
 		info = readLines(infoFile)
 		key = strsplit(info[2], "\t")[[1]]
+
 		if(key[2] != "NA"){
-			attr(info_files, "key") = key[-1]
+			attr(res, "key") = key[-1]
 		}
 	} else {
 		info = c("hdd file", "key\tNA", paste0(numberFormat(sum(all_row)), " rows and ", ncol(res), " variables."), "\n", paste0(names(res), collapse= "\t"), apply(res, 1, function(x) paste0(x, collapse = "\t")), "\n",  "log:", "? (original file did not have _hdd.txt file)")
@@ -342,6 +391,8 @@ hdd = function(dir){
 #'
 #' This function extract data from HDD files, in a similar fashion as data.table but with more arguments.
 #'
+#' @inherit hdd seealso
+#'
 #' @param x A hdd file.
 #' @param index An index, you can use \code{.N} and variable names, like in data.table.
 #' @param ... Other components of the extraction to be passed to \code{\link[data.table]{data.table}}.
@@ -352,48 +403,64 @@ hdd = function(dir){
 #'
 #' @author Laurent Berge
 #'
+#' @details
+#' The extraction of variables look like a regular \code{data.table} extraction but in fact all operations are made chunk-by-chunk behind the scene.
+#'
+#' The extra arguments \code{file}, \code{newfile} and \code{replace} are added to a regular \code{\link[data.table]{data.table}} call. Argument \code{file} is used to select the chunks, you can use the special variable \code{.N} to identify the last chunk.
+#'
+#' By default, the operation loads the data in memory. But if the expected size is still too large, you can use the argument \code{newfile} to create a new HDD data set without size restriction. If a HDD data set already exists in the \code{newfile} destination, you can use the argument \code{replace=TRUE} to override it.
+#'
 #' @return
 #' Returns a data.table extracted from a HDD file (except if newwfile is not missing).
 #'
 #' @examples
 #'
-#' \dontrun{
+#' # Toy example with iris data
+#'
+#' # First we create a hdd data set to run the example
+#' hdd_path = tempfile()
+#' write_hdd(iris, hdd_path, rowsPerChunk = 40)
 #'
 #' # your data set is in the hard drive, in hdd format already.
-#' # Say this data is made of two variables: x and id.
-#' data_hdd = hdd("path/big_data")
+#' data_hdd = hdd(hdd_path)
+#'
+#' # summary information on the whole file:
+#' summary(data_hdd)
 #'
 #' # You can use the argument 'file' to subselect slices.
 #' # Let's have some descriptive statistics of the first slice of HDD
 #' summary(data_hdd[, file = 1])
+#'
 #' # It extract the data from the first HDD slice and
 #' # returns a data.table in memory, we then apply summary to it
-#'
 #' # You can use the special argument .N, as in data.table.
+#'
 #' # the following query shows the first and last lines of
 #' # each slice of the HDD data set:
 #' data_hdd[c(1, .N), file = 1:.N]
 #'
-#' # Extraction of observations for which variable x is equal to 1
-#' data_hdd[x == 1, ]
+#' # Extraction of observations for which the variable
+#' # Petal.Width is lower than 0.1
+#' data_hdd[Petal.Width < 0.2, ]
 #'
 #' # You can apply data.table syntax:
-#' data_hdd[, .(x, mean_x = mean(x))]
+#' data_hdd[, .(pl = Petal.Length)]
+#'
+#' # and create variables
+#' data_hdd[, pl2 := Petal.Length**2]
 #'
 #' # You can use the by clause, but then
 #' # the by is applied slice by slice, NOT on the full data set:
-#' data_hdd[, .(mean_x = mean(x)), by = id]
+#' data_hdd[, .(mean_pl = mean(Petal.Length)), by = Species]
 #'
 #' # If the data you extract does not fit into memory,
 #' # you can create a new HDD file with the argument 'newfile':
-#' data_hdd[, .(x, mean_x = mean(x)), newfile = "path/big_data_bis"]
+#' hdd_path_new = tempfile()
+#' data_hdd[, pl2 := Petal.Length**2, newfile = hdd_path_new]
 #' # check the result:
-#' data_hdd_bis = hdd("path/big_data_bis")
+#' data_hdd_bis = hdd(hdd_path_new)
 #' summary(data_hdd_bis)
 #' print(data_hdd_bis)
-#'
-#'
-#' }
 #'
 "[.hdd" = function(x, index, ..., file, newfile, replace = FALSE, all.vars = FALSE){
 	# newfile: creates a new hdd
@@ -719,41 +786,54 @@ hdd = function(dir){
 #' This method extracts a single variable from a hard drive data set (HDD). There is an automatic protection to avoid extracting too large data into memory. The bound is set by the function \code{\link[hdd]{setHdd_extract.cap}}.
 #'
 #' @inheritParams dim.hdd
+#' @inherit hdd seealso
 #'
 #' @param name The variable name to be extracted.Note that there is an automatic protection for not trying to import data that would not fit into memory. The extraction cap is set with the function \code{\link[hdd]{setHdd_extract.cap}}.
 #'
 #' @author Laurent Berge
+#'
+#' @details
+#' By default if the expected size of the variable to extract is greater than the value given by \code{\link[hdd]{getHdd_extract.cap}} an error is raised.
+#' For numeric variables, the expected size is exact. For non-numeric data, the expected size is a guess that considers all the non-numeric variables being of the same size. This may lead to an over or under estimation depending on the cases.
+#' In any case, if your variable is large and you don't want to change the extraction cap (\code{\link[hdd]{setHdd_extract.cap}}), you can still extract the variable with \code{\link[hdd]{sub-.hdd}} for which there is no such protection.
+#'
+#' Note that you cannot create variables with \code{$}, e.g. like \code{base_hdd$x_new <- something}. To create variables, use the \code{[} instead (see \code{\link[hdd]{sub-.hdd}}).
 #'
 #' @return
 #' It returns a vector.
 #'
 #' @examples
 #'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already.
-#' # Say this data is made of two variables: x and id.
-#' # 'x' is integer and 'id' is of type character.
-#' data_hdd = hdd("path/big_data")
+#' # Toy example with iris data
+#' # We first create a hdd dataset with approx. 100KB
+#' hdd_path = tempfile() # => folder where the data will be saved
+#' write_hdd(iris, hdd_path)
+#' for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
 #'
-#' # The two variables, if loaded into memory, would be of size:
-#' # - x :  800MB
-#' # - id: 5000MB
+#' base_hdd = hdd(hdd_path)
+#' summary(base_hdd) # => 11 files
 #'
-#' # There is a protection for not loading variable that are too large.
-#' # By default, the cap is set at 1000MB, you can change it
-#' # with setHdd_extract.cap(new_cap).
+#' # we can extract the data from the 11 files with '$':
+#' pl = base_hdd$Sepal.Length
 #'
-#' # By default, the following would run:
-#' x = data_hdd$x
+#' \donttest{
+#' #
+#' # Illustration of the protection mechanism:
+#' #
 #'
-#' # But this would raise an error:
-#' id = data_hdd$id
+#' # By default you cannot extract a variable with '$'
+#' # when its size would be too large (default is greater than 1000MB)
+#' # You can set the cap with setHdd_extract.cap.
 #'
-#' # To make it would you need at least to set a 5GB cap:
-#' setHdd_extract.cap(6000)
-#' id = data_hdd$id
-#' # Now it would work (provided you have enough memory!!!)
+#' # Following code raises an error:
+#' setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
+#' pl = base_hdd$Sepal.Length
 #'
+#' # To extract the variable without changing the cap:
+#' pl = base_hdd[, Sepal.Length] # => no size control is performed
+#'
+#' # Resetting the default cap
+#' setHdd_extract.cap()
 #' }
 #'
 "$.hdd" = function(x, name){
@@ -769,7 +849,7 @@ hdd = function(dir){
 	# real variables
 	if(!name %in% names(x)){
 		mc = match.call()
-		stop(name, " is not a variable of the hdd data ", deparse(mc$x), ".")
+		stop(name, " is not a variable of the HDD data ", deparse(mc$x), ".")
 	}
 
 	i = which(names(x) == name)
@@ -779,6 +859,7 @@ hdd = function(dir){
 	x_num = sapply(x_sample, is.numeric)
 
 	# estimate of the size of the data
+	TRUE_SIZE = TRUE
 	isNum = FALSE
 	if(x_num[i]){
 		# numeric: 8 bytes
@@ -788,14 +869,31 @@ hdd = function(dir){
 		# for non numeric data: we don't know!
 		# we have an upper bound
 		x_size = object_size(x)
-		current_size = x_size - sum(x_num) * 8 * n_row
+		current_size_non_numeric = x_size - sum(x_num) * 8 * n_row
+		if(sum(!x_num) == 1){
+			current_size = current_size_non_numeric
+		} else {
+			TRUE_SIZE = FALSE
+			# we consider an even repartition + 50% to be on the safe side
+			# NOTA: we could have a much better estimation by extracting
+			# 10K observations randomly and then computing the size share of
+			# each variable.
+			# PBLM: fst is not very efficient at extracting svl distant observations
+			# in a single file.
+			# Consequence: it can be slow => it is always disappointing from an user
+			# perspective to have to wait to get an error message.
+			# Thus we sacrifice precision for speed.
+			current_size = current_size_non_numeric / sum(!x_num)
+			current_size = 1.5 * current_size
+		}
+
 	}
 	# we tranform in MB
-	current_size = addCommas(round(current_size / 1e6))
+	current_sizeMB = current_size / 1e6
 
 	size_cap = getHdd_extract.cap()
-	if(current_size > size_cap){
-		stop("Cannot extract variable ", name, " because its expected size (", current_size, " MB) is greater than the cap of ", addCommas(size_cap), " MB. You can change the cap using setHdd_extract.cap(new_cap).")
+	if(current_sizeMB > size_cap){
+		stop("Cannot extract variable ", name, " because its ", ifelse(TRUE_SIZE, "", " approximated "), "size (", addCommas(mysignif(current_sizeMB, r = 0)), " MB) is greater than the cap of ", addCommas(size_cap), " MB. You can change the cap using setHdd_extract.cap(new_cap).")
 	}
 
 	# now extraction
@@ -809,9 +907,12 @@ hdd = function(dir){
 #'
 #' This function saves in-memory/HDD data sets into HDD repositories. Useful to append several data sets.
 #'
+#' @inherit hdd seealso
+#'
 #' @param x A data set.
 #' @param dir The HDD repository, i.e. the directory where the HDD data is.
 #' @param chunkMB If the data has to be split in several files of \code{chunkMB} sizes. Default is \code{Inf}.
+#' @param rowsPerChunk Integer, default is missing. Alternative to the argument \code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk} rows.
 #' @param compress Compression rate to be applied by \code{\link[fst]{write_fst}}. Default is 50.
 #' @param add Should the file be added to the existing repository? Default is \code{FALSE}.
 #' @param replace If \code{add = FALSE}, should any existing document be replaced? Default is \code{FALSE}.
@@ -820,24 +921,30 @@ hdd = function(dir){
 #'
 #' @author Laurent Berge
 #'
+#' @details
+#' Creating a HDD data set with this function always create an additional file named \dQuote{_hdd.txt} in the HDD folder. This file contains summary information on the data: the number of rows, the number of variables, the first five lines and a log of how the HDD data set has been created. To access the log directly from \code{R}, use the function \code{\link[hdd]{origin}}.
+#'
 #' @examples
 #'
-#' \dontrun{
+#' # Toy example with iris data
 #'
-#' # Say you have a data set split into 25 different files.
-#' # You want to save them all in a single HDD file:
-#' write_hdd(data_01, "path/big_data")
-#' write_hdd(data_02, "path/big_data", add = TRUE)
-#' # etc...
-#' write_hdd(data_25, "path/big_data", add = TRUE)
+#' # Let's create a HDD data set from iris data
+#' hdd_path = tempfile() # => folder where the data will be saved
+#' write_hdd(iris, hdd_path)
+#' # Let's add data to it
+#' for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
 #'
-#' # Now say you want to reformat a HDD file
-#' # to increase the chunk sizes:
-#' write_hdd("path/big_data", "path/big_data_smallChunk", chunkMB = 1000)
+#' base_hdd = hdd(hdd_path)
+#' summary(base_hdd) # => 11 files, 1650 lines, 48.7KB on disk
 #'
-#' }
+#' # Let's save the iris data by chunks of 1KB
+#' # we use replace = TRUE to delete the previous data
+#' write_hdd(iris, hdd_path, chunkMB = 0.001, replace = TRUE)
 #'
-write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace = FALSE, showWarning, ...){
+#' base_hdd = hdd(hdd_path)
+#' summary(base_hdd) # => 8 files, 150 lines, 10.2KB on disk
+#'
+write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = FALSE, replace = FALSE, showWarning, ...){
 	# data: the data (in memory or fst or hdd)
 	# dir: the hdd repository
 	# write hdd data
@@ -850,6 +957,7 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	# controls
 	check_arg(dir, "singleCharacterMbt", "Argument 'dir' must be a valid path. REASON")
 	check_arg(chunkMB, "singleNumericGT0")
+	check_arg(rowsPerChunk, "singleIntegerGE1")
 	check_arg(compress, "singleIntegerGE0LE100")
 	check_arg(add, "singleLogical")
 	check_arg(replace, "singleLogical")
@@ -968,13 +1076,26 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	# Adding is the same as the not adding, we just have to update the names of the files
 	# and start numbering from higher
 
+	if(!missing(rowsPerChunk)){
+		if("chunkMB" %in% names(mc)) warning("The value of argument 'chunkMB' is neglected since argument 'rowsPerChunk' is provided.")
+
+		if(rowsPerChunk > 1e9){
+			stop("The value of argument 'rowsPerChunk' cannot exceed 1 billion.")
+		}
+
+		# we set chunkMB to an arbitraty value => to get into chunking
+		chunkMB = 1
+	}
+
 
 	if(memoryData || is.finite(chunkMB)){
 
 		if(!is.finite(chunkMB)){
 			# this is memory data
 			n_chunks = 1
-		} else{
+		} else if(!missing(rowsPerChunk)) {
+			n_chunks = ceiling(nrow(x) / rowsPerChunk)
+		} else {
 			if("fst_table" %in% class(x)){
 				# we estimate the size of x
 				n2check = min(1000, ceiling(nrow(x) / 10))
@@ -1039,6 +1160,7 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 	# Creating an information file
 	infoFile = paste0(dir, "_hdd.txt")
 	if(!add){
+
 		key = attr(x, "key")
 		if(length(key) == 0){
 			key_txt = "key\tNA"
@@ -1048,10 +1170,11 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 
 		# formatting the log message
 		if(is_ext_call){
-			first_msg = ifelse(n_chunks == 1, "1 file ; ", paste0(n_chunks, " files ; "))
-			log_msg = paste0(first_msg, numberFormat(nrow(x)), " rows ; ", call_txt)
+			first_msg = ifelse(n_chunks == 1, "1 file", paste0(n_chunks, " files"))
+			log_msg = paste0(first_msg, " ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
 		} else {
-			log_msg = paste0("#1 ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
+			first_msg = ifelse(n_chunks == 1, "# 1", paste0("# 1-", n_chunks))
+			log_msg = paste0(first_msg, " ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
 		}
 
 
@@ -1103,7 +1226,7 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 					nb_show = paste0(nb_files_existing + 1, "-", nb_files_existing + n_chunks)
 				}
 
-				log_msg = paste0("#", nb_show, " ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
+				log_msg = paste0("# ", nb_show, " ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
 				info = c(info, log_msg)
 				# We DON'T reformat the line numbers because we don't know what's before
 				# it is then too risky
@@ -1124,6 +1247,7 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 #'
 #' This function sets a key to a HDD file. It creates a copy of the HDD file sorted by the key. Note that the sorting process is very time consuming.
 #'
+#' @inherit hdd seealso
 #' @inheritParams hdd_merge
 #'
 #' @param x A hdd file.
@@ -1131,21 +1255,46 @@ write_hdd = function(x, dir, chunkMB = Inf, compress = 50, add = FALSE, replace 
 #' @param chunkMB The size of chunks used to sort the data. Default is 500MB. The bigger this number the faster the sorting is (depends on your memory available though).
 #' @param verbose Numeric, default is 1. Whether to display information on the advancement of the algorithm. If equal to 0, nothing is displayed.
 #'
+#' @details
+#' This function is provided for convenience reason: it does the job of sorting the data and ensuring consistency across files, but it is very slow since it involves copying several times the entire data set. To be used parsimoniously.
 #'
 #' @author Laurent Berge
 #'
 #'
 #' @examples
 #'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already.
-#' # Say this data is made of two variables: x and id.
-#' data_hdd = hdd("path/big_data")
+#' # Toy example with iris data
 #'
-#' # We want to create a new HDD file, sorted by id:
-#' hdd_setkey(data_hdd, "id", "path/big_data_sorted")
+#' # Creating HDD data to be sorted
+#' hdd_path = tempfile() # => folder where the data will be saved
+#' write_hdd(iris, hdd_path)
+#' # Let's add data to it
+#' for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
 #'
-#' }
+#' base_hdd = hdd(hdd_path)
+#' summary(base_hdd)
+#'
+#' # Sorting by Sepal.Width
+#' hdd_sorted = tempfile()
+#' # we use a very small chunkMB to show how the function works
+#' hdd_setkey(base_hdd, key = "Sepal.Width",
+#' 		   newfile = hdd_sorted, chunkMB = 0.010)
+#'
+#'
+#' base_hdd_sorted = hdd(hdd_sorted)
+#' summary(base_hdd_sorted) # => additional line "Sorted by:"
+#' print(base_hdd_sorted)
+#'
+#' # Sort with two keys:
+#' hdd_sorted = tempfile()
+#' # we use a very small chunkMB to show how the function works
+#' hdd_setkey(base_hdd, key = c("Species", "Sepal.Width"),
+#' 		   newfile = hdd_sorted, chunkMB = 0.010)
+#'
+#'
+#' base_hdd_sorted = hdd(hdd_sorted)
+#' summary(base_hdd_sorted)
+#' print(base_hdd_sorted)
 #'
 hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose = 1){
 	# on va creer une base HDD triee
@@ -1155,7 +1304,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 
 	# On va cree un hdd file tmp
 	# un autre tmp2
-	# en final, on coupera-collera dans newfile
+	# an final, on coupera-collera dans newfile
 
 	# key can be a data.table call? No, not at the moment
 
@@ -1174,7 +1323,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 	}
 
 	if(!all(key %in% names(x))){
-		stop("The key must be a variable name.")
+		stop("The key must be a variable name. This is not the case for ", enumerate_items(setdiff(key, names(x)), verb = FALSE), ".")
 	}
 
 	if(dir.exists(newfile)){
@@ -1207,6 +1356,15 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 	nfiles = ceiling(r_size / chunkMB)
 	n = sum(x$.nrow)
 
+	if(nfiles == 1){
+		# memory enough to fit all
+		x_all = x[]
+		setorderv(x_all, key)
+		write_hdd(x_all, dir = newfile, replace = replace)
+		if(verbose > 0) message("done.")
+		return(invisible(NULL))
+	}
+
 	if(verbose > 0) message(nfiles, " files...", appendLF = FALSE)
 
 	start = floor(seq(1, n, by = n/nfiles))
@@ -1216,6 +1374,9 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 	tmpdir = paste0(gsub("/[^/]+$", "/", x$.fileName[1]), "tmp_hdd_setkey/")
 	all_files = list.files(tmpdir, full.names = TRUE)
 	for(fname in all_files) unlink(fname)
+
+	# flag for warning if key spans multiple files
+	WARNED_ALREADY = FALSE
 
 	# creation of the tmp directory + first pair sort
 	i = 1
@@ -1238,6 +1399,11 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 		setorderv(x_mem, key)
 
 		obs_mid = find_split(x_mem[, key, with = FALSE])
+		if(is.null(obs_mid)){
+			if(!WARNED_ALREADY) warning("A single key (", x_mem[1, key, with = FALSE][1], ") spans at least two complete chunks (", nrow(x_mem), " lines). Thus the algorithm cannot ensure there will be only one key value per file. If you really care about ensuring a key does not span multiple files: stop the algorithm now and re-run with a higher value for 'chunkMB' or for 'rowsPerChunk' (to increase the size of the files).", immediate. = TRUE)
+			WARNED_ALREADY = TRUE
+			obs_mid = ceiling(nrow(x_mem) / 2)
+		}
 
 		write_hdd(x_mem[1:obs_mid], tmpdir, add = TRUE)
 		write_hdd(x_mem[(obs_mid+1):.N], tmpdir, add = TRUE)
@@ -1309,6 +1475,11 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 
 			# obs_mid = find_split(x_mem[, id])
 			obs_mid = find_split(x_mem[, key, with = FALSE])
+			if(is.null(obs_mid)){
+				if(!WARNED_ALREADY) warning("A single key (", x_mem[1, key, with = FALSE][1], ") spans at least two complete chunks (", nrow(x_mem), " lines). Thus the algorithm cannot ensure there will be only one key value per file. If you really care about ensuring a key does not span multiple files: stop the algorithm now and re-run with a higher value for 'chunkMB' or for 'rowsPerChunk' (to increase the size of the files).", immediate. = TRUE)
+				WARNED_ALREADY = TRUE
+				obs_mid = ceiling(nrow(x_mem) / 2)
+			}
 
 			write_fst(x_mem[1:obs_mid], all_files_fst[ij[1]])
 			write_fst(x_mem[(obs_mid+1):.N], all_files_fst[ij[2]])
@@ -1320,20 +1491,25 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 
 	# we need to reupdate x_tmp (to have the appropriate meta information)
 	x_tmp = hdd(tmpdir)
-	attr(x_tmp, "key") = key
+	# If warned already: means key is not valid
+	if(WARNED_ALREADY == FALSE) attr(x_tmp, "key") = key
 
-	if(nfiles != nfiles_origin){
-		if(verbose > 0) message("Reshaping...", appendLF = FALSE)
-		write_hdd(x_tmp, dir = newfile, replace = TRUE, chunkMB = mean(x$.size) / 1e6, call_txt = call_txt)
-		if(verbose > 0) message("done")
-	} else {
-		write_hdd(x_tmp, dir = newfile, replace = TRUE, call_txt = call_txt)
-	}
+	# NOW: NO RESHAPING!
+	# START: DEPREC ----------------------------------------------------- =
+	# if(nfiles != nfiles_origin){
+	# 	if(verbose > 0) message("Reshaping...", appendLF = FALSE)
+	# 	write_hdd(x_tmp, dir = newfile, replace = TRUE, chunkMB = mean(x$.size) / 1e6, call_txt = call_txt)
+	# 	if(verbose > 0) message("done")
+	# } else {
+	# 	write_hdd(x_tmp, dir = newfile, replace = TRUE, call_txt = call_txt)
+	# }
+	# __END: DEPREC ----------------------------------------------------- =
+	write_hdd(x_tmp, dir = newfile, replace = TRUE, call_txt = call_txt)
 
 	# Cleaning the tmp directory
 	files2clean = list.files(tmpdir, full.names = TRUE)
 	for(fname in files2clean) unlink(fname)
-	unlink(tmpdir)
+	unlink(tmpdir, recursive = TRUE)
 
 }
 
@@ -1341,29 +1517,49 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 #'
 #' This function merges in-memory/HDD data to a HDD file.
 #'
-#' @param x A hdd file.
+#' @inherit hdd seealso
+#'
+#' @param x A HDD object or a \code{data.frame}.
 #' @param y A data set either a data.frame of a HDD object.
 #' @param newfile Destination of the result, i.e., a destination folder that will receive the HDD data.
+#' @param chunkMB Numeric, default is missing. If provided, the data 'x' is split in chunks of 'chunkMB' MB and the merge is applied chunkwise.
+#' @param rowsPerChunk Integer, default is missing. If provided, the data 'x' is split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.
 #' @param all Default is \code{FALSE}.
 #' @param all.x Default is \code{all}.
 #' @param all.y Default is \code{all}.
+#' @param allow.cartesian Logical: whether to allow cartesian merge. Defaults to \code{FALSE}.
 #' @param replace Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.
 #' @param verbose Numeric. Whether information on the advancement should be displayed. If equal to 0, nothing is displayed. By default it is equal to 1 if the size of \code{x} is greater than 1GB.
+#'
+#' @details
+#' If \code{x} (resp \code{y}) is a HDD object, then the merging will be operated chunkwise, with the original chunks of the objects. To change the size of the chunks for \code{x}: you can use the argument \code{chunkMB} or \code{rowsPerChunk.}
+#'
+#' To change the chunk size of \code{y}, you can rewrite \code{y} with a new chunk size using \code{\link[hdd]{write_hdd}}.
+#'
+#' Note that the merging operation could also be achieved with \code{\link[hdd]{hdd_slice}} (although it would require setting up a ad hoc function).
 #'
 #' @author Laurent Berge
 #'
 #' @examples
 #'
-#' \dontrun{
+#' # Toy example with iris data
 #'
-#' y = data.frame(xx = 1:3, Species = c("virginica", "setosa", "versicolor"))
-#' iris_hdd = hdd("iris_hdd")
+#' # Cartesian merge example
+#' iris_bis = iris
+#' names(iris_bis) = c(paste0("x_", 1:4), "species_bis")
+#' # We must have a common key on which to merge
+#' iris_bis$id = iris$id = 1
 #'
-#' hdd_merge(iris_hdd, y, "iris_merged_with_y")
+#' # merge, we chunk 'x' by 50 rows
+#' hdd_path = tempfile()
+#' hdd_merge(iris, iris_bis, newfile = hdd_path,
+#' 		  rowsPerChunk = 50, allow.cartesian = TRUE)
 #'
-#' }
+#' base_merged = hdd(hdd_path)
+#' summary(base_merged)
+#' print(base_merged)
 #'
-hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, replace = FALSE, verbose){
+hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = all, all.y = all, allow.cartesian = FALSE, replace = FALSE, verbose){
 	# Function to merge Hdd files
 	# It returns a HDD file
 	# x: hdd
@@ -1371,6 +1567,8 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 	# LATER: add possibility to subset/select variables of x before evaluation
 
 	# CONTROLS
+
+	mc = match.call()
 
 	if(missing(x)) stop("Argument 'x' is required.")
 	if(missing(y)) stop("Argument 'y' is required.")
@@ -1380,12 +1578,13 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 	check_arg(all.x, "singleLogical")
 	check_arg(all.y, "singleLogical")
 	check_arg(replace, "singleLogical")
+	check_arg(allow.cartesian, "singleLogical")
 	check_arg(verbose, "singleNumeric")
 
 	call_txt = deparse_long(match.call())
 
-	if(!"hdd" %in% class(x)){
-		stop("x must be a HDD file!")
+	if(!is.data.frame(x)){
+		stop("x must be a HDD object or a data.frame!")
 	}
 
 	if(missing(verbose)){
@@ -1399,12 +1598,24 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 		stop("y must be either a data.frame or a HDD file.")
 	}
 
+	IS_HDD = "hdd" %in% class(x)
+	if(!IS_HDD){
+		if(missing(rowsPerChunk) && missing(chunkMB)){
+			if(y_hdd){
+				stop("Since 'x' is not HDD, please provide the argument 'chunkMB' or 'rowsPerChunk' to make the merge chunkwise. Otherwise, since 'y' is a HDD object you may consider switching arguments x and y.")
+			} else {
+				stop("Since 'x' is not HDD, please provide the argument 'chunkMB' or 'rowsPerChunk' to make the merge chunkwise. Otherwise, you'd be better off just using a regular merge.")
+			}
+
+		}
+	}
+
 	names_x = names(x)
 	names_y = names(y)
 	by = intersect(names_x, names_y)
 
 	if(length(by) == 0){
-		stop("The two tables MUST have common variable names!")
+		stop("The two tables MUST have common variable names! Currently this is not the case.")
 	}
 
 
@@ -1429,7 +1640,50 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 		}
 	}
 
+	# Determining the number of chunks
+	DO_RESIZE = FALSE
+	if(!missing(rowsPerChunk)){
+		DO_RESIZE = TRUE
+		use_rows = TRUE
+		if("chunkMB" %in% names(mc)) warning("The value of argument 'chunkMB' is neglected since argument 'rowsPerChunk' is provided.")
+
+		if(rowsPerChunk > 1e9){
+			stop("The value of argument 'rowsPerChunk' cannot exceed 1 billion.")
+		}
+
+		n_chunks = ceiling(nrow(x) / rowsPerChunk)
+	} else if(!missing(chunkMB)){
+		DO_RESIZE = TRUE
+		use_rows = FALSE
+		if(class(x)[1] == "fst_table"){
+			# we estimate the size of x
+			n2check = min(1000, ceiling(nrow(x) / 10))
+			size_x_subset = as.numeric(object.size(x[1:n2check, ]) / 1e6) # in MB
+			size_x = size_x_subset * nrow(x) / n2check
+		} else {
+			size_x = as.numeric(object_size(x) / 1e6) # in MB
+		}
+
+		n_chunks = ceiling(size_x / chunkMB)
+	}
+
+	if(DO_RESIZE){
+		# We resize x
+		# simple way: creating a new HDD file
+		tmpdir = paste0(dirDest, "/tmp_hdd_merge/")
+		if(use_rows){
+			write_hdd(x, tmpdir, rowsPerChunk = rowsPerChunk, replace = TRUE)
+		} else {
+			write_hdd(x, tmpdir, chunkMB = chunkMB, replace = TRUE)
+		}
+
+		x = hdd(tmpdir)
+	}
+
+	#
 	# Merging
+	#
+
 	all_files_x = x$.fileName
 
 	ADD = FALSE
@@ -1442,7 +1696,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 			all_files_y = y$.fileName
 			for(fname_y in all_files_y){
 				y_chunk = read_fst(fname_y, as.data.table = TRUE)
-				res_chunk = merge(x_chunk, y_chunk, by = by, all = all, all.x = all.x, all.y = all.y)
+				res_chunk = merge(x_chunk, y_chunk, by = by, all = all, all.x = all.x, all.y = all.y, allow.cartesian = allow.cartesian)
 				if(nrow(res_chunk) > 0){
 					no_obs = FALSE
 					write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE, call_txt = call_txt)
@@ -1451,7 +1705,7 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 			}
 
 		} else {
-			res_chunk = merge(x_chunk, y, by = by, all = all, all.x = all.x, all.y = all.y)
+			res_chunk = merge(x_chunk, y, by = by, all = all, all.x = all.x, all.y = all.y, allow.cartesian = allow.cartesian)
 			if(nrow(res_chunk) > 0){
 				no_obs = FALSE
 				write_hdd(res_chunk, dirDest, chunkMB = Inf, add = ADD, replace = TRUE, call_txt = call_txt)
@@ -1465,6 +1719,13 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 		message(ifelse(verbose > 0, "\n", ""), "No key", ifsingle(by, "", "s"), " in common found in the two data sets.")
 	}
 
+	if(DO_RESIZE){
+		# Cleaning up
+		files2clean = list.files(tmpdir, full.names = TRUE)
+		for(fname in files2clean) unlink(fname)
+		unlink(tmpdir, recursive = TRUE)
+	}
+
 }
 
 
@@ -1473,46 +1734,69 @@ hdd_merge = function(x, y, newfile, all = FALSE, all.x = all, all.y = all, repla
 #'
 #' Imports text data and saves it into a HDD file. It uses \code{\link[readr]{read_delim_chunked}} to extract the data. It also allows to preprocess the data.
 #'
+#' @inherit hdd seealso
+#'
 #' @param path Path where the data is.
 #' @param dirDest The destination directory, where the new HDD data should be saved.
-#' @param chunkMB The chunk sizes in MB, no default.
+#' @param chunkMB The chunk sizes in MB, defaults to 500MB. Instead of using this argument, you can alternatively use the argument \code{rowsPerChunk} which decides the size of chunks in terms of lines.
+#' @param rowsPerChunk Number of rows per chunk. By default it is missing: its value is deduced from argument \code{chunkMB} and the size of the file. If provided, replaces any value provided in \code{chunkMB}.
 #' @param col_names The column names, by default is uses the ones of the data set. If the data set lacks column names, you must provide them.
 #' @param col_types The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} to find them.
 #' @param nb_skip Number of lines to skip.
 #' @param delim The delimiter. By default the function tries to find the delimiter, but sometimes it fails.
 #' @param preprocessfun A function that is applied to the data before saving. Default is missing. Note that if a function is provided, it MUST return a data.frame, anything other than data.frame is ignored.
 #' @param replace If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.
-#' @param verbose Integer. If verbose > 0, then the evolution of the importing process is reported.
+#' @param verbose Integer. If verbose > 0, then the evolution of the importing process is reported. By default: equal to 1 when the expected number of chunks is greater than 1.
 #' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, \code{quote = ""} can be interesting sometimes.
+#'
+#' @details
+#' This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr} to read a large text file per chunk, and generate a HDD data set.
+#'
+#' Since the main function for importation uses \code{readr}, the column specification must also be in readr's style (namely \code{\link[readr]{cols}} or \code{\link[readr]{cols_only}}).
+#'
+#' By default a guess of the column types is made on the first 10,000 rows. The guess is the application of \code{\link[hdd]{guess_col_types}} on these rows.
+#'
+#' Note that by default, columns that are found to be integers are imported as double (in want of integer64 type in readr). Note that for large data sets, sometimes integer-like identifiers can be larger than 16 digits: in these case you must import them as character not to lose information.
+#'
+#' The delimiter is found with the function \code{\link[hdd]{guess_delim}}, which uses the guessing from \code{\link[data.table]{fread}}. Note that fixed width delimited files are not supported.
 #'
 #' @author Laurent Berge
 #'
 #' @examples
 #'
-#' \dontrun{
+#' # Toy example with iris data
 #'
-#' # Example in the context of publication data.
-#' # Assume we have a large text file containing the following variables:
-#' # - publication_id: unique publication identifier
-#' # - abstract: the abstract of the publicaiton
-#' # - ...: many other variables
-#' #
-#' # We want to import the data, but keep only the observations for which
-#' # the abstract is written in English.
-#' # We have created beforehand the function 'check_english' which checks if
-#' # a text is in English language.
+#' # we create a text file on disk
+#' iris_path = tempfile()
+#' fwrite(iris, iris_path)
 #'
-#' # To import the original data, but only with English abstract,
-#' # you can do:
+#' # destination path
+#' hdd_path = tempfile()
+#' # reading the text file with HDD, with approx. 50 rows per chunk:
+#' txt2hdd(iris_path, dirDest = hdd_path, rowsPerChunk = 50)
+#'
+#' base_hdd = hdd(hdd_path)
+#' summary(base_hdd)
+#'
+#' # Same example with preprocessing
+#' sl_keep = sort(unique(sample(iris$Sepal.Length, 40)))
 #' fun = function(x){
-#'   x[check_english(abstract)]
+#' 	# we keep only some observations & vars + renaming
+#' 	res = x[Sepal.Length %in% sl_keep, .(sl = Sepal.Length, Species)]
+#' 	# we create some variables
+#' 	res[, sl2 := sl**2]
+#' 	res
 #' }
+#' # reading with preprocessing
+#' hdd_path_preprocess = tempfile()
+#' txt2hdd(iris_path, hdd_path_preprocess,
+#' 		preprocessfun = fun, rowsPerChunk = 50)
 #'
-#' txt2hdd("abstracts.txt", "path/pub_english", chunkMB = 1000, preprocessfun = fun)
-#' }
+#' base_hdd_preprocess = hdd(hdd_path_preprocess)
+#' summary(base_hdd_preprocess)
 #'
 #'
-txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim, preprocessfun, replace = FALSE, verbose = 1, ...){
+txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_types, nb_skip, delim, preprocessfun, replace = FALSE, verbose, ...){
 	# This function reads a large text file thanks to readr
 	# and trasforms it into a HDD document
 
@@ -1528,6 +1812,9 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 	check_arg(delim, "singleCharacter")
 	check_arg(replace, "singleLogical")
 	check_arg(verbose, "singleNumeric")
+	check_arg(rowsPerChunk, "singleIntegerGE1")
+
+	mc = match.call()
 
 
 	DO_PREPROCESS = FALSE
@@ -1588,23 +1875,48 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 	#
 
 	if(missing(delim)){
-		delim = guess_delim(first_lines[1:100])
+		fl = head(first_lines, 100)
+		attr(fl, "from_hdd") = TRUE
+		delim = guess_delim(fl)
+		if(is.null(delim)){
+			stop("The delimiter could not be automatically determined. Please provide argument 'delim'. FYI, here is the first line:\n", first_lines[1])
+		}
 	}
 	delimiter = delim
 
-
-	# # The chunked readr function
-	# fun2read = ifelse(isTsv, read_tsv_chunked, read_csv_chunked)
-
-	control_variable(chunkMB, "singleNumericGT0", mustBeThere = TRUE)
-
 	# Just for information on nber of chunks
 	fileSize = file.size(path) / 1e6
-	nbChunks_approx = fileSize / chunkMB
-	if(verbose > 0) message("Approx. number of chunks:", ceiling(nbChunks_approx), "\n")
 
-	# Nber of rows per extraction
-	rowPerChunk = ceiling(10000 / as.numeric(object.size(sample_table) / 1e6) * chunkMB)
+	if(!missing(rowsPerChunk)){
+		if("chunkMB" %in% names(mc)) warning("The value of argument 'chunkMB' is neglected since argument 'rowsPerChunk' is provided.")
+
+		if(rowsPerChunk > 1e9){
+			# prevents readr hard bug
+			stop("Argument 'rowsPerChunk' cannot be greater than one billion.")
+		}
+
+		# getting the nber of chunks
+		chunkMB_approx = ceiling(as.numeric(object.size(sample_table) / 1e6) / nrow(sample_table) * rowsPerChunk)
+
+		nbChunks_approx = ceiling(fileSize / chunkMB_approx)
+
+		if(missing(verbose)) verbose = nbChunks_approx > 1
+
+		if(verbose > 0) message("Approx. number of chunks: ", nbChunks_approx, " (", ifelse(chunkMB_approx <= 1, "< 1", paste0("~", addCommas(chunkMB_approx))), "MB per chunk)")
+
+	} else {
+		nbChunks_approx = fileSize / chunkMB
+
+		# Nber of rows per extraction (works for small files too)
+		rowsPerChunk = ceiling(nrow(sample_table) / as.numeric(object.size(sample_table) / 1e6) * min(chunkMB, 100*fileSize))
+		# Limit of 500M lines
+		rowsPerChunk = min(rowsPerChunk, 500e6)
+
+		if(missing(verbose)) verbose = nbChunks_approx > 1
+
+		if(verbose > 0) message("Approx. number of chunks: ", ceiling(nbChunks_approx), " (", addCommas(rowsPerChunk), " rows per chunk)")
+	}
+
 
 	# Function to apply to each chunk
 
@@ -1661,7 +1973,7 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 
 	}
 
-	readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
+	readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowsPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
 
 	invisible(NULL)
 }
@@ -1678,17 +1990,31 @@ txt2hdd = function(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 #'
 #' @author Laurent Berge
 #'
+#' @details
+#'
+#' The guessing of the column types is based on the 10,000 (set with argument \code{n}) first rows.
+#'
+#' Note that by default, columns that are found to be integers are imported as double (in want of integer64 type in readr). Note that for large data sets, sometimes integer-like identifiers can be larger than 16 digits: in these case you must import them as character not to lose information.
+#'
 #' @return
-#' It returns a \code{cols} object a la \code{readr.}
+#' It returns a \code{\link[readr]{cols}} object a la \code{readr}.
+#'
+#' @seealso
+#' See \code{\link[hdd]{peek}} to have a convenient look at the first lines of a text file. See \code{\link[hdd]{guess_delim}} to guess the delimiter of a text data set. See \code{\link[hdd]{guess_col_types}} to guess the column types of a text data set.
+#'
+#'
+#' See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+#'
+#'
 #'
 #' @examples
 #'
-#' \dontrun{
+#' # Example with the iris data set
+#' iris_path = tempfile()
+#' fwrite(iris, iris_path)
 #'
-#' # Find the columns of a text file
-#' guess_cols("path/my_data.txt")
-#'
-#' }
+#' # returns a readr columns set:
+#' guess_col_types(iris_path)
 #'
 #'
 guess_col_types = function(dt_or_path, col_names, n = 10000){
@@ -1752,6 +2078,8 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 #'
 #' This function uses \code{\link[data.table]{fread}} to guess the delimiter of a text file.
 #'
+#' @inherit guess_col_types seealso
+#'
 #' @param path The path to a text file containing a rectangular data set.
 #'
 #' @return
@@ -1761,13 +2089,11 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 #'
 #' @examples
 #'
-#' \dontrun{
+#' # Example with the iris data set
+#' iris_path = tempfile()
+#' fwrite(iris, iris_path)
 #'
-#' # Say you have data in the text file "path/data.txt".
-#' # To guess the delimiter:
-#' guess_delim("path/data.txt")
-#'
-#' }
+#' guess_delim(iris_path)
 #'
 guess_delim = function(path){
 
@@ -1775,9 +2101,10 @@ guess_delim = function(path){
 	check_arg(path, "characterVector", "Argument path must be a valid path. REASON")
 
 	# importing a sample
-
-	if(length(path) == 100){
+	FROM_HDD = FALSE
+	if(!is.null(attr(path, "from_hdd"))){
 		first_lines = path
+		FROM_HDD = TRUE
 	} else if(length(path) > 1){
 		stop("Argument path must be a valid path. Currenlty it is of length ", length(path), ".")
 	} else {
@@ -1795,12 +2122,14 @@ guess_delim = function(path){
 		find_candidate = function(x){
 			tx = table(strsplit(gsub(" ", "", x), ""))
 			candidate = tx[tx >= ncol(sample_dt) - 1]
-			names(candidate[!grepl("[[:alnum:]\"'-]", names(candidate))])
+			names(candidate[!grepl("[[:alnum:]]|\"|'|-|\\.", names(candidate))])
 		}
 		l1_candidate = find_candidate(first_lines[1])
 
-		delim = ifelse(length(l1_candidate) == 1, l1_candidate, NULL)
-		if(length(l1_candidate) > 1){
+		delim = NULL
+		if(length(l1_candidate) == 1){
+			delim = l1_candidate
+		} else if(length(l1_candidate) > 1){
 			candid_all = lapply(first_lines, find_candidate)
 			t_cand = table(unlist(candid_all))
 			t_cand = names(t_cand)[t_cand == length(first_lines)]
@@ -1809,15 +2138,8 @@ guess_delim = function(path){
 			}
 		}
 
-		if(is.null(delim)){
+		if(is.null(delim) && !FROM_HDD){
 			stop("Could not determine the delimiter. Here is the first line:\n", first_lines[1])
-		} else {
-			if(delim == ","){
-				info = "CSV"
-			} else if(delim == "\t"){
-				info = "TSV"
-			}
-			# cat("Delimiter: ", info, "\n")
 		}
 	} else {
 		delim = ","
@@ -1831,6 +2153,8 @@ guess_delim = function(path){
 #'
 #' This function looks at the first elements of a file, format it into a data frame and displays it. It can also just show the first lines of the file without formatting into a DF.
 #'
+#' @inherit guess_col_types seealso
+#'
 #' @param path Path linking to the text file.
 #' @param onlyLines Default is \code{FALSE}. If \code{TRUE}, then the first \code{n} lines are directly displayed without formatting.
 #' @param n Integer. The number of lines to extract from the file. Default is 100 or 5 if \code{onlyLine = TRUE}.
@@ -1843,15 +2167,21 @@ guess_delim = function(path){
 #'
 #' @examples
 #'
-#' \dontrun{
+#' # Example with the iris data set
+#' iris_path = tempfile()
+#' fwrite(iris, iris_path)
 #'
-#' # Let's have a look at the first observations from "path/data.txt")
-#' peek("path/data.txt")
-#'
-#' # Sometimes, it can be useful to look at the unformatted lines:
-#' peek("path/data.txt", onlyLines = TRUE)
-#'
+#' \donttest{
+#' # The first lines of the text file on viewer
+#' peek(iris_path)
 #' }
+#'
+#' # displaying the first lines:
+#' peek(iris_path, onlyLines = TRUE)
+#'
+#' # only getting the data from the first observations
+#' base = peek(iris_path, view = FALSE)
+#' head(base)
 #'
 peek = function(path, onlyLines = FALSE, n, view = TRUE){
 
@@ -1876,9 +2206,6 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 	first_lines = readLines(path, n = n)
 
 	if(onlyLines){
-
-		# cat(first_lines, sep = "\n")
-
 		return(first_lines)
 	}
 
@@ -1890,43 +2217,83 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 
 	if(ncol(sample_dt) >= 2){
 
-		# very simple check -- real work here is made by fread
-		find_candidate = function(x){
-			tx = table(strsplit(gsub(" ", "", x), ""))
-			candidate = tx[tx >= ncol(sample_dt) - 1]
-			names(candidate[!grepl("[[:alnum:]\"'-/]", names(candidate))])
-		}
-		l1_candidate = find_candidate(first_lines[1])
-
-		delim = NULL
-		if(length(l1_candidate) == 1){
-			delim = l1_candidate
-		} else if(length(l1_candidate) > 1){
-			candid_all = lapply(first_lines, find_candidate)
-			t_cand = table(unlist(candid_all))
-			t_cand = names(t_cand)[t_cand == length(first_lines)]
-			if(length(t_cand) == 1){
-				delim = t_cand
-			}
-		}
+		fl = head(first_lines, 100)
+		attr(fl, "from_hdd") = TRUE
+		delim = guess_delim(fl)
 
 		if(is.null(delim)){
-			message("Could not determine the delimiter. Here is the first line:\n")
-			message(first_lines[1])
+			message("Could not determine the delimiter. FYI, here is the first line:\n", first_lines[1])
 		} else {
 			if(delim == ","){
 				delim = "CSV"
 			} else if(delim == "\t"){
 				delim = "TSV"
 			}
-			message("Delimiter:", delim)
+			message("Delimiter: ", delim)
 		}
 	}
 
-	dt_name = paste0("peek_", gsub("\\..+", "", gsub("^.+/", "", path)))
+	dt_name = paste0("peek_", gsub("\\..+", "", gsub("^.+/", "", gsub("\\", "/", path, fixed = TRUE))))
 
-	if(view) myView(sample_dt, dt_name)
+	if(view) {
+		myView <- get("View", envir = as.environment("package:utils"))
+		myView(x = sample_dt, title = dt_name)
+	}
 	invisible(sample_dt)
+}
+
+
+
+#' Extracts the origin of a HDD object
+#'
+#' Use this function to extract the information on how the HDD data set was created.
+#'
+#' @inherit hdd seealso
+#'
+#' @param x A HDD object.
+#'
+#' @details
+#'
+#' Each HDD lives on disk and a \dQuote{_hdd.txt} is always present in the folder containing summary information. The function \code{origin} extracts the log from this information file.
+#'
+#' @return
+#' A character vector, if the HDD data set has been created with several instances of \code{\link[hdd]{write_hdd}} its length will be greater than 1.
+#'
+#' @examples
+#'
+#' # Toy example with iris data
+#'
+#' hdd_path = tempfile()
+#' write_hdd(iris, hdd_path, rowsPerChunk = 20)
+#'
+#' base_hdd = hdd(hdd_path)
+#' origin(base_hdd)
+#'
+#' # Let's add something
+#' write_hdd(head(iris), hdd_path, add = TRUE)
+#' write_hdd(iris, hdd_path, add = TRUE, rowsPerChunk = 50)
+#'
+#' base_hdd = hdd(hdd_path)
+#' origin(base_hdd)
+#'
+#'
+origin = function(x){
+
+	if(!"hdd" %in% class(x)){
+		stop("Argument 'x' must be a HDD object.")
+	}
+
+	dir = gsub("/[^/]+$", "/", x$.fileName[1])
+	infoFile = paste0(dir, "_hdd.txt")
+	if(file.exists(infoFile)){
+		info = readLines(infoFile)
+		qui = which(grepl("^log:", info))
+		all_log = info[(qui+1):length(info)]
+	} else {
+		all_log = "The HDD data did not have a _hdd.txt file. Was deleted by the user?"
+	}
+
+	all_log
 }
 
 
@@ -1938,21 +2305,15 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 #'
 #' Gets the dimension of a hard drive data set (HDD).
 #'
+#' @inherit hdd examples
+#'
 #' @param x A \code{HDD} object.
 #'
 #' @return
-#' It returns a vector of length 2 containing the number of rows and the columns.
+#' It returns a vector of length 2 containing the number of rows and the number of columns of the HDD object.
 #'
 #' @author Laurent Berge
 #'
-#' @examples
-#'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' dim(data_hdd)
-#'
-#' }
 #'
 dim.hdd = function(x){
 	n = length(x$.size)
@@ -1963,21 +2324,17 @@ dim.hdd = function(x){
 #'
 #' Gets the variable names of a hard drive data set (HDD).
 #'
+#' @inherit hdd seealso
+#'
 #' @inheritParams dim.hdd
+#' @inherit hdd examples
 #'
 #' @author Laurent Berge
 #'
 #' @return
 #' A character vector.
 #'
-#' @examples
 #'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' names(data_hdd)
-#'
-#' }
 #'
 names.hdd = function(x){
 	x_tmp = fst(x$.fileName[1])
@@ -1989,22 +2346,19 @@ names.hdd = function(x){
 #' This functions displays the first and last lines of a hard drive data set (HDD).
 #'
 #' @inheritParams dim.hdd
+#' @inherit hdd examples
+#' @inherit hdd seealso
 #'
 #' @param ... Not currently used.
+#'
+#' @details
+#' Returns the first and last 3 lines of a HDD object. Also formats the values displayed on screen (typically: add commas to increase the readability of large integers).
 #'
 #' @author Laurent Berge
 #'
 #' @return
 #' Nothing is returned.
 #'
-#' @examples
-#'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' print(data_hdd)
-#'
-#' }
 #'
 print.hdd = function(x, ...){
 	n = nrow(x)
@@ -2012,7 +2366,7 @@ print.hdd = function(x, ...){
 		print(x[])
 	} else {
 		quoi = as.data.frame(rbindlist(list(head(x, 4), tail(x, 3))))
-		quoi = formatTable(quoi)
+		quoi = formatTable(quoi, d = 3)
 		quoi[4, ] = rep(" " , ncol(quoi))
 		nmax = tail(x$.row_cum, 1)
 		dmax = log10(nmax) + 1
@@ -2026,25 +2380,26 @@ print.hdd = function(x, ...){
 #' Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (HDD).
 #'
 #' @inheritParams dim.hdd
+#' @inherit hdd examples
+#' @inherit hdd seealso
 #'
 #' @param object A HDD object.
 #' @param ... Not currently used.
 #'
+#' @details
+#' Displays concisely general information on the HDD object: its size on disk, the number of files it is made of, its location on disk and the number of rows and columns.
+#'
+#' Note that each HDD object contain the text file \dQuote{_hdd.txt} in their folder also containing this information.
+#'
+#' To obtain how the HDD object was constructed, use function \code{\link[hdd]{origin}}.
+#'
 #' @author Laurent Berge
 #'
 #'
-#' @examples
-#'
-#' \dontrun{
-#' # your data set is in the hard drive, in hdd format already
-#' data_hdd = hdd("path/my_big_data")
-#' summary(data_hdd)
-#'
-#' }
 #'
 summary.hdd = function(object, ...){
 	n = length(object$.size)
-	cat("Hard drive data of ", osize(object), " Made of ", n, " files.\n", sep = "")
+	cat("Hard drive data of ", osize(object), " Made of ", n, " file", ifelse(n>1, "s", ""), ".\n", sep = "")
 
 	key = attr(object, "key")
 	if(!is.null(key)){
