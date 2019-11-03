@@ -1,6 +1,6 @@
 ---
 title: "hdd walkthrough"
-author: "Laurent Berge"
+author: "Laurent Bergé"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -15,6 +15,23 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!-- output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false -->
+      
+      
+<!-- fontsize: 12pt
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -61,6 +78,10 @@ peek("_path/authors.txt")
 
 ```{r, results='asis'}
 tab = head(peek("C:/Users/laurent.berge/DATA/MAG/Authors.txt", view = FALSE))
+if("pdf_document" %in% rmarkdown::all_output_formats(knitr::current_input())){
+  # tab = as.data.table(lapply(tab, function(x) fplot:::truncate_string(iconv(x, to="ASCII", sub = "£"), method = "trimMid", trunc = 16)))
+  tab = as.data.table(lapply(tab, iconv, to="ASCII", sub = "£"))
+}
 knitr::kable(tab)
 
 ```
@@ -70,10 +91,12 @@ We can see that the data set contains 8 variables, some are text, other are nume
 Now let's import the data. From the documentation, we can retrieve the variable names, and we will use them:
 
 ```{r, echo = TRUE, eval = FALSE}
-col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", "LastKnownAffiliationId", 
+col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", 
+			  "LastKnownAffiliationId", 
 			  "PaperCount", "CitationCount", "CreatedDate")
 txt2hdd("_path/authors.txt", # The text file
-		dirDest = "_path/hdd_authors", # The destination of the HDD data => must be a directory
+		# dirDest: The destination of the HDD data => must be a directory
+		dirDest = "_path/hdd_authors", 
 		chunkMB = 500, col_names = col_names)
 ```
 
@@ -117,7 +140,8 @@ fun_ascii = function(x){
 	res[!is.na(iconv(NormalizedName, to = "ASCII"))]
 }
 
-col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", "LastKnownAffiliationId", 
+col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", 
+			  "LastKnownAffiliationId", 
 			  "PaperCount", "CitationCount", "CreatedDate")
 txt2hdd("_path/authors.txt", dirDest = "_path/hdd_authors_ascii", 
 		chunkMB = 500, col_names = col_names,
@@ -145,7 +169,8 @@ You can manipulate the data as with any other `data.table`, but the extraction m
 By default, the results are put into memory. Using the previous `author` data, let's find out all the author names containing the word "Einstein":
 
 ```{r, echo = TRUE, eval = FALSE}
-names_einstein = authors[grepl("\\beinstein\\b", NormalizedName), NormalizedName]
+names_einstein = authors[grepl("\\beinstein\\b", NormalizedName), 
+						 NormalizedName]
 length(names_einstein)
 head(names_einstein)
 ```
@@ -161,7 +186,8 @@ That's it, the algorithm has gone through the 217 million rows and found 1700 au
 But what if the result of the query does not fit into memory? You can still perform the query by adding the argument `newfile`. Now the result will be a `hdd` data set located in the path provided by the argument `newfile`.  As in the `"Importing with preprocessing"` section, let's create the data set containing the first three columns and dropping all names with non-ASCII characters. We can do as follows:
 
 ```{r, echo = TRUE, eval = FALSE}
-authors[!is.na(iconv(NormalizedName, to = "ASCII")), 1:3, newfile = "_path/hdd_authors_ascii"]
+authors[!is.na(iconv(NormalizedName, to = "ASCII")), 1:3, 
+		newfile = "_path/hdd_authors_ascii"]
 ```
 
 The result is a new `hdd` data set located in `"_path/hdd_authors_ascii"`, which can be of any size.
@@ -203,6 +229,43 @@ base_authors = readfst("_path/hdd_authors")
 authors_hdd = hdd("_path/hdd_authors")
 base_authors = authors_hdd[]
 ```
+
+# Slicing 
+
+Imagine you dispose of an in-memory data set to which you want to apply some function -- say for instance that you will have to apply a cartesian merge. However the result of this function does not fit in memomy. The function `hdd_slice` deals with it: it applies the function to slices of the original data, and save the results in a `hdd` data set. You'll be then able to deal with the result with `hdd`. 
+
+Let's have an example with a cartesian merge:
+
+```{r, echo = TRUE, eval = FALSE}
+# x: the original data set
+# y: the data set you want to merge to x
+cartesian_merge = function(x){
+	merge(x, y, allow.cartesian = TRUE)
+}
+
+hdd_slice(x, fun = cartesian_merge, 
+		  dir = "_path/result_merge", chunkMB = 100)
+
+```
+
+Here the data `x` will be split in 100MB chunks and the function `cartesian_merge` will be applied to each of these chunks. The results will be saved in a `hdd` data set located in `_path/result_merge`. You'll then be able to manipulate the data in `_path/result_merge` as a regular `hdd` data set.
+
+This example involved a merging operation only, but you can apply any kind of function (for example `x` can be a vector of text and the function can be the creation of ngrams, etc...).
+
+# Speed considerations and limitations
+
+## In-memory operations will always be faster
+
+Manipulating in-memory data will always be orders of mmagnitude faster than manipulating on-disk data. This comes from the simple fact that read/write operations on disk are about 100 times slower than read/write in RAM -- further the read and write on disk also involves compression/decompression incurring increased CPU use. This is however the only way to deal with very large data sets (except of course if you have very deep pockets allowing you to have big RAM computers!).
+
+This means that at the moment your final data set reaches a memory-workable size, stop using `hdd` and start using regular `R`. Package `hdd` exists to make the transition from too-large-a-data-set to a memory-workable-data-set and is not intended to be a tool for regular data manipulation.
+
+## On aggregation
+
+Since `hdd` data sets are split into multiple files, the user cannot perform aggregate operations on some variable (i.e. using the `by` clause in `data.table` language) and obtain "valid" results. Indeed, the aggregate operations will be performed chunk per chunk and **not** on the entirety of the data set (which is not possible because of the size).
+
+To circumvent this issue, the data set must be sorted by the variable(s) on which aggregation is done -- in which case the chunk by chunk operations will be valid. To sort `hdd` data sets, the function `hdd_setkey` has been created -- in particular it ensures that the keys do not spill across multiple files (to ensure consistency of the chunk by chunk aggregation). But beware, it is extremely slow (it involves multiple on-disk copying of the *full* data set).
+
 
 
 # References
