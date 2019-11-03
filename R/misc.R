@@ -88,15 +88,16 @@ find_split = function(x){
 		} else if(v_left != x[1]){
 			obs_mid = which.max(x[1:obs_mid] == v_left) - 1
 		} else {
-			stop("No middle value found. The two files could not be split, revise the code to allow merging the files automatically.")
+			# stop("No middle value found. The two files could not be split, revise the code to allow merging the files automatically.")
+			return(NULL)
 		}
 		return(obs_mid)
 	}
 }
 
 find_n_split = function(x, key, nfiles){
-	# This function to find where to cut a file.
-	# we do not want the same value to be in two different files
+	# finds where to cut files.
+	# we do not want the same key value to be in two different files
 	# nfiles: the new number of files
 	# returns a vector of the beginning observations
 
@@ -107,10 +108,8 @@ find_n_split = function(x, key, nfiles){
 	start = floor(seq(1, n_all, by = n_all/nfiles))
 	start = c(start[1:nfiles], n_all)
 
-	DELTA = 10000 # value of the increment
-	if(n_all/nfiles + 2 < DELTA){
-		DELTA = floor(n_all/nfiles) - 1
-	}
+	# increment: 5% of file size
+	DELTA = max(floor(n_all/nfiles * 0.05), 1)
 
 	# We find the right starting point of each file
 	for(i in 2:nfiles){
@@ -180,9 +179,6 @@ obs = function(x, file){
 	unlist(res)
 }
 
-myView <- function(x, title){
-	get("View", envir = as.environment("package:utils"))(x, title)
-}
 
 
 
@@ -198,7 +194,7 @@ addCommas = function(x){
 
 		# This is an internal function => the main is addCommas
 
-		if(!is.finite(x)) return(as.character(x))
+		if(!is.finite(x) || log10(abs(x)) < 0) return(as.character(x))
 
 		s = sign(x)
 		x = abs(x)
