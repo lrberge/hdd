@@ -4,7 +4,7 @@
 #
 
 # Main
-export(hdd, hdd_slice, hdd_merge, readfst, hdd_setkey, txt2hdd, write_hdd)
+export(hdd, hdd_slice, hdd_merge, readfst, hdd_setkey, txt2hdd, write_hdd, origin)
 export(guess_col_types, guess_delim, peek)
 
 # Setters/Getters
