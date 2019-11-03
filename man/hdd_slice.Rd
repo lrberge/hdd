@@ -4,7 +4,8 @@
 \alias{hdd_slice}
 \title{Applies a function to slices of data to create a HDD data set}
 \usage{
-hdd_slice(x, fun, dir, chunkMB = 500, replace = FALSE, ...)
+hdd_slice(x, fun, dir, chunkMB = 500, rowsPerChunk, replace = FALSE,
+  verbose = 1, ...)
 }
 \arguments{
 \item{x}{A data set (data.frame, HDD).}
@@ -15,7 +16,11 @@ hdd_slice(x, fun, dir, chunkMB = 500, replace = FALSE, ...)
 
 \item{chunkMB}{The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additional information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.}
 
+\item{rowsPerChunk}{Integer, default is missing. Alternative to the argument \code{chunkMB}. If provided, the functions will be applied to chunks of \code{rowsPerChunk} of \code{x}.}
+
 \item{replace}{Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.}
+
+\item{verbose}{Integer, defaults to 1. If greater than 0 then the progress is displayed.}
 
 \item{...}{Other parameters to be passed to \code{fun}.}
 }
@@ -25,39 +30,48 @@ It doesn't return anything, the output is a "hard drive data" saved in the hard 
 \description{
 This function is useful to apply complex R functions to large data sets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a HDD data set.
 }
+\details{
+This function splits the original data into several slices and then apply a function to each of them, saving the results into a HDD data set.
+
+You can perform merging operations with \code{hdd_slice}, but for regular merges not that you have the function \code{\link[hdd]{hdd_merge}} that may prove more convenient (not need to write a ad hoc function).
+}
 \examples{
 
-\dontrun{
+# Toy example with iris data.
+# Say you want to perform a cartesian merge
+# If the results of the function is out of memory
+# you can use hdd_slice (not the case for this example)
 
-# Example in the context of patent data.
+# preparing the cartesian merge
+iris_bis = iris
+names(iris_bis) = c(paste0("x_", 1:4), "species_bis")
 
-# Assume you have a data set, pat_abstract, with two variables:
-# - patent_id: an identification number (here a patent number)
-# - abstract: the abstract of the patent
-# You want to create the data set, pat_word, with three variables:
-# - patent_id: same as before
-# - word: a word appearing in the patent abstract
-# - word_freq: the number of times the word appeared in the patent abstract
 
-# Typically, if you have millions of patents, it will
-# create a data set that won't fit in memory.
-# This is what hdd_slice is for.
-
-# Now the code:
-fun = function(x){
-  abstract_split = strsplit(x$abstract, " ")
-  base_split = data.table(patent_id = rep(x$patent_id,
-                                          lengths(abstract_split)),
-                          word = unlist(abstract_split))
-
-  res = base_split[, .(word_freq = .N), by = .(patent_id, word)]
-  res
+fun_cartesian = function(x){
+	# Note that x is treated as a data.table
+	# => we need the argument allow.cartesian
+	merge(x, iris_bis, allow.cartesian = TRUE)
 }
 
-hdd_slice(pat_abstract, fun, "path/pat_word")
+hdd_result = tempfile() # => folder where results are saved
+hdd_slice(iris, fun_cartesian, dir = hdd_result, rowsPerChunk = 30)
+
+# Let's look at the result
+base_hdd = hdd(hdd_result)
+summary(base_hdd)
+head(base_hdd)
+
+
 
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

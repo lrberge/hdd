@@ -23,18 +23,53 @@ hdd_setkey(x, key, newfile, chunkMB = 500, replace = FALSE,
 \description{
 This function sets a key to a HDD file. It creates a copy of the HDD file sorted by the key. Note that the sorting process is very time consuming.
 }
+\details{
+This function is provided for convenience reason: it does the job of sorting the data and ensuring consistency across files, but it is very slow since it involves copying several times the entire data set. To be used parsimoniously.
+}
 \examples{
 
-\dontrun{
-# your data set is in the hard drive, in hdd format already.
-# Say this data is made of two variables: x and id.
-data_hdd = hdd("path/big_data")
+# Toy example with iris data
 
-# We want to create a new HDD file, sorted by id:
-hdd_setkey(data_hdd, "id", "path/big_data_sorted")
+# Creating HDD data to be sorted
+hdd_path = tempfile() # => folder where the data will be saved
+write_hdd(iris, hdd_path)
+# Let's add data to it
+for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
+
+base_hdd = hdd(hdd_path)
+summary(base_hdd)
+
+# Sorting by Sepal.Width
+hdd_sorted = tempfile()
+# we use a very small chunkMB to show how the function works
+hdd_setkey(base_hdd, key = "Sepal.Width",
+		   newfile = hdd_sorted, chunkMB = 0.010)
+
+
+base_hdd_sorted = hdd(hdd_sorted)
+summary(base_hdd_sorted) # => additional line "Sorted by:"
+print(base_hdd_sorted)
+
+# Sort with two keys:
+hdd_sorted = tempfile()
+# we use a very small chunkMB to show how the function works
+hdd_setkey(base_hdd, key = c("Species", "Sepal.Width"),
+		   newfile = hdd_sorted, chunkMB = 0.010)
+
+
+base_hdd_sorted = hdd(hdd_sorted)
+summary(base_hdd_sorted)
+print(base_hdd_sorted)
 
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

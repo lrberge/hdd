@@ -10,19 +10,35 @@
 \item{x}{A \code{HDD} object.}
 }
 \value{
-It returns a vector of length 2 containing the number of rows and the columns.
+It returns a vector of length 2 containing the number of rows and the number of columns of the HDD object.
 }
 \description{
 Gets the dimension of a hard drive data set (HDD).
 }
 \examples{
 
-\dontrun{
-# your data set is in the hard drive, in hdd format already
-data_hdd = hdd("path/my_big_data")
-dim(data_hdd)
+# Toy example with iris data
+iris_path = tempfile()
+fwrite(iris, iris_path)
 
-}
+# destination path
+hdd_path = tempfile()
+
+# reading the text file with 50 rows chunks:
+txt2hdd(iris_path, dirDest = hdd_path, rowsPerChunk = 50)
+
+# creating a HDD object
+base_hdd = hdd(hdd_path)
+
+# Summary information on the whole data set
+summary(base_hdd)
+
+# Looking at it like a regular data.frame
+print(base_hdd)
+dim(base_hdd)
+names(base_hdd)
+
+
 
 }
 \author{

@@ -10,23 +10,49 @@ hdd(dir)
 \item{dir}{The directory where the hard drive data set is.}
 }
 \description{
-This function connects to a hard drive data set (HDD). You can access the hard drive data in a similar way as a \code{data.table}.
+This function connects to a hard drive data set (HDD). You can access the hard drive data in a similar way to a \code{data.table}.
 }
 \details{
-Once you have a HDD data set, then you can perform extraction operations with \code{\link[hdd]{sub-.hdd}}.
+HDD has been created to deal with out of memory data sets. The data set exists in the hard drive, split in multiple files -- each file being workable in memory.
+
+You can perform extraction and manipulation operations as with a regular data set with \code{\link[hdd]{sub-.hdd}}. Each operation is performed chunk-by-chunk behind the scene.
+
+In terms of performance, working with complete data sets in memory will always be faster. This is because read/write operations on disk are order of magnitude slower than read/write in memory. However, this might be the only way to deal with out of memory data.
 }
 \examples{
 
-\dontrun{
-# your data set is in the hard drive, in hdd format already
-data_hdd = hdd("path/my_big_data")
-summary(data_hdd)
+# Toy example with iris data
+iris_path = tempfile()
+fwrite(iris, iris_path)
 
-head(data_hdd)
+# destination path
+hdd_path = tempfile()
+
+# reading the text file with 50 rows chunks:
+txt2hdd(iris_path, dirDest = hdd_path, rowsPerChunk = 50)
+
+# creating a HDD object
+base_hdd = hdd(hdd_path)
+
+# Summary information on the whole data set
+summary(base_hdd)
+
+# Looking at it like a regular data.frame
+print(base_hdd)
+dim(base_hdd)
+names(base_hdd)
+
+
 
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

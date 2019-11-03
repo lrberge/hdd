@@ -22,21 +22,29 @@ This is the function \code{\link[fst]{read_fst}} but with automatic conversion t
 }
 \examples{
 
-\dontrun{
-base = readfst("path.fst")
-# is exactly equivalent to:
-base = read_fst("path.fst", as.data.table = TRUE)
+# Toy example with the iris data set
 
-# reading the full data from a HDD file
-base = readfst("hdd_path")
+# writing a hdd file
+hdd_path = tempfile()
+write_hdd(iris, hdd_path, rowsPerChunk = 30)
+
+# reading the full data in memory
+base_mem = readfst(hdd_path)
+
 # is equivalent to:
-base = hdd("hdd_path")[]
+base_hdd = hdd(hdd_path)
+base_mem_bis = base_hdd[]
+
 
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
 
-
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

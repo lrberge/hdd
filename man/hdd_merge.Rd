@@ -4,21 +4,28 @@
 \alias{hdd_merge}
 \title{Merges data to a HDD file}
 \usage{
-hdd_merge(x, y, newfile, all = FALSE, all.x = all, all.y = all,
+hdd_merge(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE,
+  all.x = all, all.y = all, allow.cartesian = FALSE,
   replace = FALSE, verbose)
 }
 \arguments{
-\item{x}{A hdd file.}
+\item{x}{A HDD object or a \code{data.frame}.}
 
 \item{y}{A data set either a data.frame of a HDD object.}
 
 \item{newfile}{Destination of the result, i.e., a destination folder that will receive the HDD data.}
+
+\item{chunkMB}{Numeric, default is missing. If provided, the data 'x' is split in chunks of 'chunkMB' MB and the merge is applied chunkwise.}
+
+\item{rowsPerChunk}{Integer, default is missing. If provided, the data 'x' is split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.}
 
 \item{all}{Default is \code{FALSE}.}
 
 \item{all.x}{Default is \code{all}.}
 
 \item{all.y}{Default is \code{all}.}
+
+\item{allow.cartesian}{Logical: whether to allow cartesian merge. Defaults to \code{FALSE}.}
 
 \item{replace}{Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.}
 
@@ -27,17 +34,41 @@ hdd_merge(x, y, newfile, all = FALSE, all.x = all, all.y = all,
 \description{
 This function merges in-memory/HDD data to a HDD file.
 }
+\details{
+If \code{x} (resp \code{y}) is a HDD object, then the merging will be operated chunkwise, with the original chunks of the objects. To change the size of the chunks for \code{x}: you can use the argument \code{chunkMB} or \code{rowsPerChunk.}
+
+To change the chunk size of \code{y}, you can rewrite \code{y} with a new chunk size using \code{\link[hdd]{write_hdd}}.
+
+Note that the merging operation could also be achieved with \code{\link[hdd]{hdd_slice}} (although it would require setting up a ad hoc function).
+}
 \examples{
 
-\dontrun{
+# Toy example with iris data
 
-y = data.frame(xx = 1:3, Species = c("virginica", "setosa", "versicolor"))
-iris_hdd = hdd("iris_hdd")
+# Cartesian merge example
+iris_bis = iris
+names(iris_bis) = c(paste0("x_", 1:4), "species_bis")
+# We must have a common key on which to merge
+iris_bis$id = iris$id = 1
 
-hdd_merge(iris_hdd, y, "iris_merged_with_y")
+# merge, we chunk 'x' by 50 rows
+hdd_path = tempfile()
+hdd_merge(iris, iris_bis, newfile = hdd_path,
+		  rowsPerChunk = 50, allow.cartesian = TRUE)
+
+base_merged = hdd(hdd_path)
+summary(base_merged)
+print(base_merged)
 
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

@@ -14,21 +14,32 @@ guess_col_types(dt_or_path, col_names, n = 10000)
 \item{n}{Number of observations used to make the guess. By default, \code{n = 100000}.}
 }
 \value{
-It returns a \code{cols} object a la \code{readr.}
+It returns a \code{\link[readr]{cols}} object a la \code{readr}.
 }
 \description{
 This function is a facility to guess the column types of a text document. It returns columns formatted a la readr.
 }
+\details{
+The guessing of the column types is based on the 10,000 (set with argument \code{n}) first rows.
+
+Note that by default, columns that are found to be integers are imported as double (in want of integer64 type in readr). Note that for large data sets, sometimes integer-like identifiers can be larger than 16 digits: in these case you must import them as character not to lose information.
+}
 \examples{
 
-\dontrun{
+# Example with the iris data set
+iris_path = tempfile()
+fwrite(iris, iris_path)
 
-# Find the columns of a text file
-guess_cols("path/my_data.txt")
+# returns a readr columns set:
+guess_col_types(iris_path)
+
 
 }
+\seealso{
+See \code{\link[hdd]{peek}} to have a convenient look at the first lines of a text file. See \code{\link[hdd]{guess_delim}} to guess the delimiter of a text data set. See \code{\link[hdd]{guess_col_types}} to guess the column types of a text data set.
 
 
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 }
 \author{
 Laurent Berge

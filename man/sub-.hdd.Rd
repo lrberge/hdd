@@ -28,46 +28,71 @@ Returns a data.table extracted from a HDD file (except if newwfile is not missin
 \description{
 This function extract data from HDD files, in a similar fashion as data.table but with more arguments.
 }
+\details{
+The extraction of variables look like a regular \code{data.table} extraction but in fact all operations are made chunk-by-chunk behind the scene.
+
+The extra arguments \code{file}, \code{newfile} and \code{replace} are added to a regular \code{\link[data.table]{data.table}} call. Argument \code{file} is used to select the chunks, you can use the special variable \code{.N} to identify the last chunk.
+
+By default, the operation loads the data in memory. But if the expected size is still too large, you can use the argument \code{newfile} to create a new HDD data set without size restriction. If a HDD data set already exists in the \code{newfile} destination, you can use the argument \code{replace=TRUE} to override it.
+}
 \examples{
 
-\dontrun{
+# Toy example with iris data
+
+# First we create a hdd data set to run the example
+hdd_path = tempfile()
+write_hdd(iris, hdd_path, rowsPerChunk = 40)
 
 # your data set is in the hard drive, in hdd format already.
-# Say this data is made of two variables: x and id.
-data_hdd = hdd("path/big_data")
+data_hdd = hdd(hdd_path)
+
+# summary information on the whole file:
+summary(data_hdd)
 
 # You can use the argument 'file' to subselect slices.
 # Let's have some descriptive statistics of the first slice of HDD
 summary(data_hdd[, file = 1])
+
 # It extract the data from the first HDD slice and
 # returns a data.table in memory, we then apply summary to it
-
 # You can use the special argument .N, as in data.table.
+
 # the following query shows the first and last lines of
 # each slice of the HDD data set:
 data_hdd[c(1, .N), file = 1:.N]
 
-# Extraction of observations for which variable x is equal to 1
-data_hdd[x == 1, ]
+# Extraction of observations for which the variable
+# Petal.Width is lower than 0.1
+data_hdd[Petal.Width < 0.2, ]
 
 # You can apply data.table syntax:
-data_hdd[, .(x, mean_x = mean(x))]
+data_hdd[, .(pl = Petal.Length)]
+
+# and create variables
+data_hdd[, pl2 := Petal.Length**2]
 
 # You can use the by clause, but then
 # the by is applied slice by slice, NOT on the full data set:
-data_hdd[, .(mean_x = mean(x)), by = id]
+data_hdd[, .(mean_pl = mean(Petal.Length)), by = Species]
 
 # If the data you extract does not fit into memory,
 # you can create a new HDD file with the argument 'newfile':
-data_hdd[, .(x, mean_x = mean(x)), newfile = "path/big_data_bis"]
+hdd_path_new = tempfile()
+data_hdd[, pl2 := Petal.Length**2, newfile = hdd_path_new]
 # check the result:
-data_hdd_bis = hdd("path/big_data_bis")
+data_hdd_bis = hdd(hdd_path_new)
 summary(data_hdd_bis)
 print(data_hdd_bis)
 
-
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

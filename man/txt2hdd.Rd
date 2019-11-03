@@ -4,15 +4,17 @@
 \alias{txt2hdd}
 \title{Transforms text data into a HDD file}
 \usage{
-txt2hdd(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
-  preprocessfun, replace = FALSE, verbose = 1, ...)
+txt2hdd(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_types,
+  nb_skip, delim, preprocessfun, replace = FALSE, verbose, ...)
 }
 \arguments{
 \item{path}{Path where the data is.}
 
 \item{dirDest}{The destination directory, where the new HDD data should be saved.}
 
-\item{chunkMB}{The chunk sizes in MB, no default.}
+\item{chunkMB}{The chunk sizes in MB, defaults to 500MB. Instead of using this argument, you can alternatively use the argument \code{rowsPerChunk} which decides the size of chunks in terms of lines.}
+
+\item{rowsPerChunk}{Number of rows per chunk. By default it is missing: its value is deduced from argument \code{chunkMB} and the size of the file. If provided, replaces any value provided in \code{chunkMB}.}
 
 \item{col_names}{The column names, by default is uses the ones of the data set. If the data set lacks column names, you must provide them.}
 
@@ -26,38 +28,67 @@ txt2hdd(path, dirDest, chunkMB, col_names, col_types, nb_skip, delim,
 
 \item{replace}{If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.}
 
-\item{verbose}{Integer. If verbose > 0, then the evolution of the importing process is reported.}
+\item{verbose}{Integer. If verbose > 0, then the evolution of the importing process is reported. By default: equal to 1 when the expected number of chunks is greater than 1.}
 
 \item{...}{Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, \code{quote = ""} can be interesting sometimes.}
 }
 \description{
 Imports text data and saves it into a HDD file. It uses \code{\link[readr]{read_delim_chunked}} to extract the data. It also allows to preprocess the data.
 }
+\details{
+This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr} to read a large text file per chunk, and generate a HDD data set.
+
+Since the main function for importation uses \code{readr}, the column specification must also be in readr's style (namely \code{\link[readr]{cols}} or \code{\link[readr]{cols_only}}).
+
+By default a guess of the column types is made on the first 10,000 rows. The guess is the application of \code{\link[hdd]{guess_col_types}} on these rows.
+
+Note that by default, columns that are found to be integers are imported as double (in want of integer64 type in readr). Note that for large data sets, sometimes integer-like identifiers can be larger than 16 digits: in these case you must import them as character not to lose information.
+
+The delimiter is found with the function \code{\link[hdd]{guess_delim}}, which uses the guessing from \code{\link[data.table]{fread}}. Note that fixed width delimited files are not supported.
+}
 \examples{
 
-\dontrun{
+# Toy example with iris data
 
-# Example in the context of publication data.
-# Assume we have a large text file containing the following variables:
-# - publication_id: unique publication identifier
-# - abstract: the abstract of the publicaiton
-# - ...: many other variables
-#
-# We want to import the data, but keep only the observations for which
-# the abstract is written in English.
-# We have created beforehand the function 'check_english' which checks if
-# a text is in English language.
+# we create a text file on disk
+iris_path = tempfile()
+fwrite(iris, iris_path)
 
-# To import the original data, but only with English abstract,
-# you can do:
+# destination path
+hdd_path = tempfile()
+# reading the text file with HDD, with approx. 50 rows per chunk:
+txt2hdd(iris_path, dirDest = hdd_path, rowsPerChunk = 50)
+
+base_hdd = hdd(hdd_path)
+summary(base_hdd)
+
+# Same example with preprocessing
+sl_keep = sort(unique(sample(iris$Sepal.Length, 40)))
 fun = function(x){
-  x[check_english(abstract)]
+	# we keep only some observations & vars + renaming
+	res = x[Sepal.Length \%in\% sl_keep, .(sl = Sepal.Length, Species)]
+	# we create some variables
+	res[, sl2 := sl**2]
+	res
 }
+# reading with preprocessing
+hdd_path_preprocess = tempfile()
+txt2hdd(iris_path, hdd_path_preprocess,
+		preprocessfun = fun, rowsPerChunk = 50)
 
-txt2hdd("abstracts.txt", "path/pub_english", chunkMB = 1000, preprocessfun = fun)
+base_hdd_preprocess = hdd(hdd_path_preprocess)
+summary(base_hdd_preprocess)
+
+
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

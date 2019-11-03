@@ -23,16 +23,28 @@ This function looks at the first elements of a file, format it into a data frame
 }
 \examples{
 
-\dontrun{
+# Example with the iris data set
+iris_path = tempfile()
+fwrite(iris, iris_path)
 
-# Let's have a look at the first observations from "path/data.txt")
-peek("path/data.txt")
-
-# Sometimes, it can be useful to look at the unformatted lines:
-peek("path/data.txt", onlyLines = TRUE)
-
+\donttest{
+# The first lines of the text file on viewer
+peek(iris_path)
 }
 
+# displaying the first lines:
+peek(iris_path, onlyLines = TRUE)
+
+# only getting the data from the first observations
+base = peek(iris_path, view = FALSE)
+head(base)
+
+}
+\seealso{
+See \code{\link[hdd]{peek}} to have a convenient look at the first lines of a text file. See \code{\link[hdd]{guess_delim}} to guess the delimiter of a text data set. See \code{\link[hdd]{guess_col_types}} to guess the column types of a text data set.
+
+
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 }
 \author{
 Laurent Berge

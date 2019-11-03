@@ -14,15 +14,47 @@
 \description{
 Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (HDD).
 }
+\details{
+Displays concisely general information on the HDD object: its size on disk, the number of files it is made of, its location on disk and the number of rows and columns.
+
+Note that each HDD object contain the text file \dQuote{_hdd.txt} in their folder also containing this information.
+
+To obtain how the HDD object was constructed, use function \code{\link[hdd]{origin}}.
+}
 \examples{
 
-\dontrun{
-# your data set is in the hard drive, in hdd format already
-data_hdd = hdd("path/my_big_data")
-summary(data_hdd)
+# Toy example with iris data
+iris_path = tempfile()
+fwrite(iris, iris_path)
+
+# destination path
+hdd_path = tempfile()
+
+# reading the text file with 50 rows chunks:
+txt2hdd(iris_path, dirDest = hdd_path, rowsPerChunk = 50)
+
+# creating a HDD object
+base_hdd = hdd(hdd_path)
+
+# Summary information on the whole data set
+summary(base_hdd)
+
+# Looking at it like a regular data.frame
+print(base_hdd)
+dim(base_hdd)
+names(base_hdd)
+
+
 
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

@@ -4,8 +4,8 @@
 \alias{write_hdd}
 \title{Saves or appends a data set into a HDD file}
 \usage{
-write_hdd(x, dir, chunkMB = Inf, compress = 50, add = FALSE,
-  replace = FALSE, showWarning, ...)
+write_hdd(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50,
+  add = FALSE, replace = FALSE, showWarning, ...)
 }
 \arguments{
 \item{x}{A data set.}
@@ -13,6 +13,8 @@ write_hdd(x, dir, chunkMB = Inf, compress = 50, add = FALSE,
 \item{dir}{The HDD repository, i.e. the directory where the HDD data is.}
 
 \item{chunkMB}{If the data has to be split in several files of \code{chunkMB} sizes. Default is \code{Inf}.}
+
+\item{rowsPerChunk}{Integer, default is missing. Alternative to the argument \code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk} rows.}
 
 \item{compress}{Compression rate to be applied by \code{\link[fst]{write_fst}}. Default is 50.}
 
@@ -27,23 +29,38 @@ write_hdd(x, dir, chunkMB = Inf, compress = 50, add = FALSE,
 \description{
 This function saves in-memory/HDD data sets into HDD repositories. Useful to append several data sets.
 }
+\details{
+Creating a HDD data set with this function always create an additional file named \dQuote{_hdd.txt} in the HDD folder. This file contains summary information on the data: the number of rows, the number of variables, the first five lines and a log of how the HDD data set has been created. To access the log directly from \code{R}, use the function \code{\link[hdd]{origin}}.
+}
 \examples{
 
-\dontrun{
+# Toy example with iris data
 
-# Say you have a data set split into 25 different files.
-# You want to save them all in a single HDD file:
-write_hdd(data_01, "path/big_data")
-write_hdd(data_02, "path/big_data", add = TRUE)
-# etc...
-write_hdd(data_25, "path/big_data", add = TRUE)
+# Let's create a HDD data set from iris data
+hdd_path = tempfile() # => folder where the data will be saved
+write_hdd(iris, hdd_path)
+# Let's add data to it
+for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
 
-# Now say you want to reformat a HDD file
-# to increase the chunk sizes:
-write_hdd("path/big_data", "path/big_data_smallChunk", chunkMB = 1000)
+base_hdd = hdd(hdd_path)
+summary(base_hdd) # => 11 files, 1650 lines, 48.7KB on disk
+
+# Let's save the iris data by chunks of 1KB
+# we use replace = TRUE to delete the previous data
+write_hdd(iris, hdd_path, chunkMB = 0.001, replace = TRUE)
+
+base_hdd = hdd(hdd_path)
+summary(base_hdd) # => 8 files, 150 lines, 10.2KB on disk
 
 }
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

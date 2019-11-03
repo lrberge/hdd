@@ -17,35 +17,56 @@ It returns a vector.
 \description{
 This method extracts a single variable from a hard drive data set (HDD). There is an automatic protection to avoid extracting too large data into memory. The bound is set by the function \code{\link[hdd]{setHdd_extract.cap}}.
 }
+\details{
+By default if the expected size of the variable to extract is greater than the value given by \code{\link[hdd]{getHdd_extract.cap}} an error is raised.
+For numeric variables, the expected size is exact. For non-numeric data, the expected size is a guess that considers all the non-numeric variables being of the same size. This may lead to an over or under estimation depending on the cases.
+In any case, if your variable is large and you don't want to change the extraction cap (\code{\link[hdd]{setHdd_extract.cap}}), you can still extract the variable with \code{\link[hdd]{sub-.hdd}} for which there is no such protection.
+
+Note that you cannot create variables with \code{$}, e.g. like \code{base_hdd$x_new <- something}. To create variables, use the \code{[} instead (see \code{\link[hdd]{sub-.hdd}}).
+}
 \examples{
 
-\dontrun{
-# your data set is in the hard drive, in hdd format already.
-# Say this data is made of two variables: x and id.
-# 'x' is integer and 'id' is of type character.
-data_hdd = hdd("path/big_data")
+# Toy example with iris data
+# We first create a hdd dataset with approx. 100KB
+hdd_path = tempfile() # => folder where the data will be saved
+write_hdd(iris, hdd_path)
+for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
 
-# The two variables, if loaded into memory, would be of size:
-# - x :  800MB
-# - id: 5000MB
+base_hdd = hdd(hdd_path)
+summary(base_hdd) # => 11 files
 
-# There is a protection for not loading variable that are too large.
-# By default, the cap is set at 1000MB, you can change it
-# with setHdd_extract.cap(new_cap).
+# we can extract the data from the 11 files with '$':
+pl = base_hdd$Sepal.Length
 
-# By default, the following would run:
-x = data_hdd$x
+\donttest{
+#
+# Illustration of the protection mechanism:
+#
 
-# But this would raise an error:
-id = data_hdd$id
+# By default you cannot extract a variable with '$'
+# when its size would be too large (default is greater than 1000MB)
+# You can set the cap with setHdd_extract.cap.
 
-# To make it would you need at least to set a 5GB cap:
-setHdd_extract.cap(6000)
-id = data_hdd$id
-# Now it would work (provided you have enough memory!!!)
+# Following code raises an error:
+setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
+pl = base_hdd$Sepal.Length
 
+# To extract the variable without changing the cap:
+pl = base_hdd[, Sepal.Length] # => no size control is performed
+
+# Resetting the default cap
+setHdd_extract.cap()
 }
 
+}
+\seealso{
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+
+To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+
+To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

@@ -17,14 +17,18 @@ This function uses \code{\link[data.table]{fread}} to guess the delimiter of a t
 }
 \examples{
 
-\dontrun{
+# Example with the iris data set
+iris_path = tempfile()
+fwrite(iris, iris_path)
 
-# Say you have data in the text file "path/data.txt".
-# To guess the delimiter:
-guess_delim("path/data.txt")
+guess_delim(iris_path)
 
 }
+\seealso{
+See \code{\link[hdd]{peek}} to have a convenient look at the first lines of a text file. See \code{\link[hdd]{guess_delim}} to guess the delimiter of a text data set. See \code{\link[hdd]{guess_col_types}} to guess the column types of a text data set.
 
+
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 }
 \author{
 Laurent Berge
