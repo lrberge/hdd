@@ -11,9 +11,12 @@
 
 #' Sets/gets the size cap when extracting hdd data
 #'
-#' Sets/gets the default size cap when extracting HDD variables with \code{\link[hdd]{cash-.hdd}} or when importing full HDD data sets with \code{\link[hdd]{readfst}}.. If the size exceeds the cap, then an error is raised, which can be bypassed by using the argument \code{confirm}.
+#' Sets/gets the default size cap when extracting HDD variables with \code{\link[hdd]{cash-.hdd}} or when importing full HDD data sets with \code{\link[hdd]{readfst}}.
 #'
 #' @param sizeMB Size cap in MB. Default is 1000.
+#'
+#' @details
+#' In \code{\link[hdd]{readfst}}, if the size expected size exceeds the cap, then an error is raised, which can be bypassed by using the argument \code{confirm}.
 #'
 #' @return
 #' The size cap, a numeric scalar.
