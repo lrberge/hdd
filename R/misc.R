@@ -11,12 +11,47 @@
 
 #' Sets/gets the size cap when extracting hdd data
 #'
-#' Sets/gets the default size cap when extracting \code{hdd} data. If the size exceeds the cap, then an error is raised, which can be bypassed by using the argument \code{confirm}.
+#' Sets/gets the default size cap when extracting HDD variables with \code{\link[hdd]{cash-.hdd}} or when importing full HDD data sets with \code{\link[hdd]{readfst}}.. If the size exceeds the cap, then an error is raised, which can be bypassed by using the argument \code{confirm}.
 #'
-#' @param sizeMB Size cap in MB. Default to 1000.
+#' @param sizeMB Size cap in MB. Default is 1000.
 #'
 #' @return
 #' The size cap, a numeric scalar.
+#'
+#' @examples
+#'
+#' # Toy example with iris data
+#' # We first create a hdd dataset with approx. 100KB
+#' hdd_path = tempfile() # => folder where the data will be saved
+#' write_hdd(iris, hdd_path)
+#' for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
+#'
+#' base_hdd = hdd(hdd_path)
+#' summary(base_hdd) # => 11 files
+#'
+#' # we can extract the data from the 11 files with '$':
+#' pl = base_hdd$Sepal.Length
+#'
+#' \donttest{
+#' #
+#' # Illustration of the protection mechanism:
+#' #
+#'
+#' # By default you cannot extract a variable with '$'
+#' # when its size would be too large (default is greater than 1000MB)
+#' # You can set the cap with setHdd_extract.cap.
+#'
+#' # Following code raises an error:
+#' setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
+#' pl = base_hdd$Sepal.Length
+#'
+#' # To extract the variable without changing the cap:
+#' pl = base_hdd[, Sepal.Length] # => no size control is performed
+#'
+#' # Resetting the default cap
+#' setHdd_extract.cap()
+#' }
+#'
 #'
 setHdd_extract.cap = function(sizeMB = 1000){
 
@@ -180,7 +215,11 @@ obs = function(x, file){
 }
 
 
-
+clean_path = function(x){
+	# we just want proper /
+	x = gsub("\\", "/", x, fixed = TRUE)
+	gsub("/+", "/", x)
+}
 
 ####
 #### Other Utilities ####
