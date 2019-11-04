@@ -213,14 +213,15 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk, replace = FALSE, 
 	end = c(start[-1] - 1, n)
 
 	# The directory
-	dir = gsub("([^/])$", "\\1/", dir)
+	dir = clean_path(dir)
+	dir = gsub("/?$", "/", dir)
 
 	if(!dir.exists(dir)){
 		dir.create(dir)
 	}
 
 	# cleaning (if necessary)
-	all_files = list.files(dir, full.names = TRUE)
+	all_files = clean_path(list.files(dir, full.names = TRUE))
 	all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt|info\\.txt)$", all_files)]
 	if(length(all_files2clean) > 0){
 		if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
@@ -324,24 +325,24 @@ hdd = function(dir){
 	# NOTA: The HDD files are all named "sliceXX.fst"
 
 	check_arg(dir, "singleCharacterMbt")
+	dir = clean_path(dir)
 
 	# The directory + prefix
-	if(grepl("\\.fst", dir)) {
-		dir = gsub("[[:digit:]]+\\.fst", "", dir)
+	if(grepl("\\.fst$", dir)) {
+		# we get the directory where the file is
+		dir = gsub("/[^/]+$", "/", dir)
 	} else {
-		dir = paste0(gsub("([^/])$", "\\1/", dir), "slice")
+		# regular directory: we add / at the end
+		dir = gsub("/?$", "/", dir)
 	}
-
-	dir = gsub("/[^/]+$", "/", dir)
-	file_head = paste0(dir, "slice_")
 
 	if(!dir.exists(dir)){
 		stop("In argument 'dir': The directory ", dir, " does not exists.")
 	}
 
 	# all_files: valid files containing data: i.e. dir/slice_xx.fst
-	all_files = list.files(dir, full.names = TRUE)
-	all_files = sort(all_files[grepl(file_head, all_files, fixed = TRUE) & grepl("\\.fst$", all_files)])
+	all_files = clean_path(list.files(dir, full.names = TRUE))
+	all_files = sort(all_files[grepl("/slice_[[:digit:]]+\\.fst$", all_files)])
 
 	if(length(all_files) == 0){
 		stop("The current directory is not a valid HDD data set (i.e. no HDD files in it).")
@@ -528,14 +529,14 @@ hdd = function(dir){
 		# we save in a new document
 		doWrite = TRUE
 
-		dir = newfile
-		if(grepl("\\.fst", dir)) {
-			dir = gsub("[[:digit:]]+\\.fst", "", dir)
+		dir = clean_path(newfile)
+		if(grepl("\\.fst$", dir)) {
+			# we get the directory where the file is
+			dir = gsub("/[^/]+$", "/", dir)
 		} else {
-			dir = paste0(gsub("([^/])$", "\\1/", dir), "slice")
+			# regular directory: we add / at the end
+			dir = gsub("([^/])$", "\\1/", dir)
 		}
-
-		dir = gsub("/[^/]+$", "/", dir)
 	}
 
 	if(!missing(file)){
@@ -992,17 +993,19 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 	}
 
 	# The repository
-	if(grepl("\\.fst", dir)) {
-		dir = gsub("[[:digit:]]+\\.fst", "", dir)
+	dir = clean_path(dir)
+	if(grepl("\\.fst$", dir)) {
+		# we get the directory where the file is
+		dir = gsub("/[^/]+$", "/", dir)
 	} else {
-		dir = paste0(gsub("([^/])$", "\\1/", dir), "slice_")
+		# regular directory: we add / at the end
+		dir = gsub("([^/])$", "\\1/", dir)
 	}
 
-	dir = gsub("/[^/]+$", "/", dir)
 	file_head = paste0(dir, "slice_")
 	dirExists = dir.exists(dir)
-	all_files = list.files(dir, full.names = TRUE)
-	all_files_fst = ggrepl("\\.fst", all_files)
+	all_files = clean_path(list.files(dir, full.names = TRUE))
+	all_files_fst = ggrepl("/slice_[[:digit:]]+\\.fst$", all_files)
 
 	hddExists = dirExists && length(all_files_fst) > 0
 
@@ -1011,7 +1014,7 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 			if(!replace){
 				stop("A hdd data set already exists in ", dir, ". To replace it, use replace = TRUE.")
 			} else {
-				for(fname in ggrepl("\\.fst", all_files)) unlink(fname)
+				for(fname in all_files_fst) unlink(fname)
 			}
 		}
 	} else {
@@ -1205,6 +1208,7 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 
 			# update rows
 			x = hdd(dir)
+			old_rows = as.numeric(gsub("[^[:digit:]]", "", gsub(" rows.+", "", info[3])))
 			info[3] = paste0(numberFormat(nrow(x)), " rows and ", ncol(x), " variables.")
 
 			# update log
@@ -1226,7 +1230,7 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 					nb_show = paste0(nb_files_existing + 1, "-", nb_files_existing + n_chunks)
 				}
 
-				log_msg = paste0("# ", nb_show, " ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
+				log_msg = paste0("# ", nb_show, " ; ", numberFormat(nrow(x) - old_rows), " rows ; ", call_txt)
 				info = c(info, log_msg)
 				# We DON'T reformat the line numbers because we don't know what's before
 				# it is then too risky
@@ -1326,9 +1330,10 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 		stop("The key must be a variable name. This is not the case for ", enumerate_items(setdiff(key, names(x)), verb = FALSE), ".")
 	}
 
+	newfile = clean_path(newfile)
 	if(dir.exists(newfile)){
 		# cleaning (if necessary)
-		all_files = list.files(newfile, full.names = TRUE)
+		all_files = clean_path(list.files(newfile, full.names = TRUE))
 		all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt)$", all_files)]
 		if(length(all_files2clean) > 0){
 			if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
@@ -1372,7 +1377,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 	end = c(start[-1] - 1, n)
 
 	tmpdir = paste0(gsub("/[^/]+$", "/", x$.fileName[1]), "tmp_hdd_setkey/")
-	all_files = list.files(tmpdir, full.names = TRUE)
+	all_files = clean_path(list.files(tmpdir, full.names = TRUE))
 	for(fname in all_files) unlink(fname)
 
 	# flag for warning if key spans multiple files
@@ -1410,7 +1415,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 	}
 
 	# finding all the file names
-	all_files = list.files(tmpdir, full.names = TRUE)
+	all_files = clean_path(list.files(tmpdir, full.names = TRUE))
 	all_files_fst = ggrepl("\\.fst", all_files)
 
 	changeFileNames = function(new_order){
@@ -1620,19 +1625,20 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 
 
 	# Formatting the repository of destination
-	control_variable(newfile, "singleCharacter", mustBeThere = TRUE)
-	dir = newfile
-	if(grepl("\\.fst", dir)) {
-		dir = gsub("[[:digit:]]+\\.fst", "", dir)
+	dir = clean_path(newfile)
+	if(grepl("\\.fst$", dir)) {
+		# we get the directory where the file is
+		dir = gsub("/[^/]+$", "/", dir)
 	} else {
-		dir = paste0(gsub("([^/])$", "\\1/", dir), "slice")
+		# regular directory: we add / at the end
+		dir = gsub("/?$", "/", dir)
 	}
 
-	dirDest = gsub("/[^/]+$", "/", dir)
+	dirDest = dir
 
 	if(dir.exists(dirDest)){
 		# cleaning (if necessary)
-		all_files = list.files(dirDest, full.names = TRUE)
+		all_files = clean_path(list.files(dirDest, full.names = TRUE))
 		all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt)$", all_files)]
 		if(length(all_files2clean) > 0){
 			if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
@@ -1920,6 +1926,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 
 	# Function to apply to each chunk
 
+	dirDest = clean_path(dirDest)
 	REP_PBLM = gsub("/?$", "/problems", dirDest)
 	REP_DEST = dirDest
 	ADD = FALSE
@@ -1929,7 +1936,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	if(dir.exists(REP_DEST)){
 
 		# cleaning (if necessary)
-		all_files = list.files(REP_DEST, full.names = TRUE)
+		all_files = clean_path(list.files(REP_DEST, full.names = TRUE))
 		all_files2clean = all_files[grepl("/(slice_[[:digit:]]+\\.fst|_hdd\\.txt)$", all_files)]
 		if(length(all_files2clean) > 0){
 			if(!replace) stop("The destination diretory contains existing information. To replace it use argument replace=TRUE.")
@@ -2233,7 +2240,7 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 		}
 	}
 
-	dt_name = paste0("peek_", gsub("\\..+", "", gsub("^.+/", "", gsub("\\", "/", path, fixed = TRUE))))
+	dt_name = paste0("peek_", gsub("\\.[^\\.]+$", "", gsub("^.+/", "", clean_path(path))))
 
 	if(view) {
 		myView <- get("View", envir = as.environment("package:utils"))
@@ -2290,7 +2297,7 @@ origin = function(x){
 		qui = which(grepl("^log:", info))
 		all_log = info[(qui+1):length(info)]
 	} else {
-		all_log = "The HDD data did not have a _hdd.txt file. Was deleted by the user?"
+		all_log = "The HDD data did not have a _hdd.txt file. Was it deleted by the user?"
 	}
 
 	all_log
