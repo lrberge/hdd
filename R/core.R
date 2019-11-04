@@ -23,7 +23,7 @@
 #' @param columns Column names to read. The default is to read all columns. Ignored for \code{hdd} files.
 #' @param from Read data starting from this row number. Ignored for \code{hdd} files.
 #' @param to Read data up until this row number. The default is to read to the last row of the stored data set. Ignored for \code{hdd} files.
-#' @param confirm If the hdd file is larger than the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.
+#' @param confirm If the HDD file is larger than the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.
 #'
 #' @author Laurent Berge
 #'
