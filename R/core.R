@@ -76,7 +76,7 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 		mc = match.call()
 		qui_pblm = intersect(names(mc), c("columns", "from", "to"))
 		if(length(qui_pblm) > 0){
-			stop("When 'path' leads to a HDD file, the full data set is read. Thus the argument", enumerate_items(qui_pblm, addS = TRUE), " ignored: for sub-selections use hdd(path) instead.")
+			stop("When 'path' leads to a HDD file, the full data set is read. Thus the argument", enumerate_items(qui_pblm, "s.is"), " ignored: for sub-selections use hdd(path) instead.")
 		}
 
 		res_size = object_size(res) / 1e6
@@ -516,7 +516,7 @@ hdd = function(dir){
 	# 		} else if(length(vars_by) == 1 && vars_by == key[1]) {
 	# 			# fine (I take that case into account in hdd_setkey())
 	# 		} else {
-	# 			message("Note that the '", clause, "' clause is applied chunk by chunk, this is not a '", clause, "' on the whole data set. Currently the key", enumerate_items(key, addS = TRUE, start_verb = TRUE), " while the ", clause, " clause requires ", enumerate_items(vars_by, verb = FALSE), ". You may have to re-run hdd_setkey().")
+	# 			message("Note that the '", clause, "' clause is applied chunk by chunk, this is not a '", clause, "' on the whole data set. Currently the key", enumerate_items(key, "s.is.start"), " while the ", clause, " clause requires ", enumerate_items(vars_by), ". You may have to re-run hdd_setkey().")
 	# 		}
 	# 	} else {
 	# 		message("Note that the '", clause, "' clause is applied chunk by chunk, this is not a '", clause, "' on the whole data set. To have a result on the 'whole' data set, the data must be sorted beforehand with hdd_setkey() on the appropriate key.")
@@ -1327,7 +1327,7 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 	}
 
 	if(!all(key %in% names(x))){
-		stop("The key must be a variable name. This is not the case for ", enumerate_items(setdiff(key, names(x)), verb = FALSE), ".")
+		stop("The key must be a variable name. This is not the case for ", enumerate_items(setdiff(key, names(x))), ".")
 	}
 
 	newfile = clean_path(newfile)
