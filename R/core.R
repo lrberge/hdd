@@ -1939,7 +1939,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	}
 
 	# Information on the number of files found (if needed)
-	if(INFORM_PATTERN && (verbose > 0 || (missing(verbose) && fileSize > 2000))){
+	if(INFORM_PATTERN && ((!missing(verbose) && verbose > 0) || (missing(verbose) && fileSize > 2000))){
 		message(n, " files (", signif_plus(fileSize), " MB)")
 	}
 
