@@ -4,8 +4,17 @@
 \alias{write_hdd}
 \title{Saves or appends a data set into a HDD file}
 \usage{
-write_hdd(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50,
-  add = FALSE, replace = FALSE, showWarning, ...)
+write_hdd(
+  x,
+  dir,
+  chunkMB = Inf,
+  rowsPerChunk,
+  compress = 50,
+  add = FALSE,
+  replace = FALSE,
+  showWarning,
+  ...
+)
 }
 \arguments{
 \item{x}{A data set.}

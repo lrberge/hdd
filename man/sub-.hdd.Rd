@@ -4,8 +4,7 @@
 \alias{[.hdd}
 \title{Extraction of HDD data}
 \usage{
-\method{[}{hdd}(x, index, ..., file, newfile, replace = FALSE,
-  all.vars = FALSE)
+\method{[}{hdd}(x, index, ..., file, newfile, replace = FALSE, all.vars = FALSE)
 }
 \arguments{
 \item{x}{A hdd file.}

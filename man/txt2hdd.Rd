@@ -4,11 +4,23 @@
 \alias{txt2hdd}
 \title{Transforms text data into a HDD file}
 \usage{
-txt2hdd(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_types,
-  nb_skip, delim, preprocessfun, replace = FALSE, verbose, ...)
+txt2hdd(
+  path,
+  dirDest,
+  chunkMB = 500,
+  rowsPerChunk,
+  col_names,
+  col_types,
+  nb_skip,
+  delim,
+  preprocessfun,
+  replace = FALSE,
+  verbose,
+  ...
+)
 }
 \arguments{
-\item{path}{Path where the data is.}
+\item{path}{Character vector that represents the path to the data. Note that it can be equal to patterns if multiple files with the same name are to be imported (if so it must be a fixed pattern, NOT a regular expression).}
 
 \item{dirDest}{The destination directory, where the new HDD data should be saved.}
 

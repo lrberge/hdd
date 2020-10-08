@@ -15,7 +15,7 @@ readfst(path, columns = NULL, from = 1, to = NULL, confirm = FALSE)
 
 \item{to}{Read data up until this row number. The default is to read to the last row of the stored data set. Ignored for \code{hdd} files.}
 
-\item{confirm}{If the hdd file is larger than the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.}
+\item{confirm}{If the HDD file is larger than ten times the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.}
 }
 \description{
 This is the function \code{\link[fst]{read_fst}} but with automatic conversion to data.table. It also allows to read \code{hdd} data.

@@ -4,9 +4,19 @@
 \alias{hdd_merge}
 \title{Merges data to a HDD file}
 \usage{
-hdd_merge(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE,
-  all.x = all, all.y = all, allow.cartesian = FALSE,
-  replace = FALSE, verbose)
+hdd_merge(
+  x,
+  y,
+  newfile,
+  chunkMB,
+  rowsPerChunk,
+  all = FALSE,
+  all.x = all,
+  all.y = all,
+  allow.cartesian = FALSE,
+  replace = FALSE,
+  verbose
+)
 }
 \arguments{
 \item{x}{A HDD object or a \code{data.frame}.}

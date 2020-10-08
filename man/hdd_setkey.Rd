@@ -4,8 +4,7 @@
 \alias{hdd_setkey}
 \title{Sorts HDD objects}
 \usage{
-hdd_setkey(x, key, newfile, chunkMB = 500, replace = FALSE,
-  verbose = 1)
+hdd_setkey(x, key, newfile, chunkMB = 500, replace = FALSE, verbose = 1)
 }
 \arguments{
 \item{x}{A hdd file.}

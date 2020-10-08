@@ -4,8 +4,16 @@
 \alias{hdd_slice}
 \title{Applies a function to slices of data to create a HDD data set}
 \usage{
-hdd_slice(x, fun, dir, chunkMB = 500, rowsPerChunk, replace = FALSE,
-  verbose = 1, ...)
+hdd_slice(
+  x,
+  fun,
+  dir,
+  chunkMB = 500,
+  rowsPerChunk,
+  replace = FALSE,
+  verbose = 1,
+  ...
+)
 }
 \arguments{
 \item{x}{A data set (data.frame, HDD).}
