@@ -1221,7 +1221,7 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 				#	- they MUST create a new document
 				#	- hence we're sure the last line contains the word "file"
 				# we take the last line and update it
-				log_msg = paste0(nb_files_existing, " files ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
+				log_msg = paste0(length(x$.nrow), " files ; ", numberFormat(nrow(x)), " rows ; ", call_txt)
 				# we replace the line
 				info[grepl("^[^;]+files? ;", info)] = log_msg
 
@@ -1791,26 +1791,55 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	# Control
 	#
 
-	check_arg(path, "singleCharacterMbt")
-	check_arg(dirDest, "singleCharacterMbt")
-	check_arg(chunkMB, "singleNumericGT0Mbt")
-	check_arg(col_names, "characterVector")
-	check_arg(nb_skip, "singleIntegerGE0")
-	check_arg(delim, "singleCharacter")
-	check_arg(replace, "singleLogical")
-	check_arg(verbose, "singleNumeric")
-	check_arg(rowsPerChunk, "singleIntegerGE1")
+	check_arg(path, dirDest, "character vector mbt no na")
+	check_arg(chunkMB, "numeric scalar GT{0}")
+	check_arg(col_names, "character vector no na")
+	check_arg(nb_skip, "integer scalar GE{0}")
+	check_arg(delim, "character scalar")
+	check_arg(replace, "logical scalar")
+	check_arg(verbose, "numeric scalar")
+	check_arg(rowsPerChunk, "integer scalar GE{1}")
+	check_arg(preprocessfun, "function arg(1)")
+
+	path_all = path
+
+	INFORM_PATTERN = FALSE
+
+	path_all_list = list()
+
+	for(i in seq_along(path_all)){
+		path = path_all[i]
+
+		if(path %in% c(".", "")) path = "./"
+
+		path_clean = gsub("\\\\", "/", path)
+		path_clean = gsub("/+", "/", path_clean)
+		root = gsub("/[^/]+$", "/", path_clean)
+
+		all_files = list.files(root, full.names = TRUE)
+		# Dropping directories
+		dir_names = setdiff(all_files, list.files(root, full.names = TRUE, recursive = TRUE))
+		all_files = setdiff(all_files, dir_names)
+
+		fpattern = gsub(".+/", "", path_clean)
+		all_files_clean = gsub(".+/", "", all_files)
+
+		qui = which(grepl(fpattern, all_files_clean, fixed = TRUE))
+		if(length(qui) == 0){
+			stop("The path '", path, "' leads to no file.")
+		} else if(length(qui) > 1){
+			INFORM_PATTERN = TRUE
+		}
+
+		path_all_list[[i]] = all_files[qui]
+
+	}
+
+	path_all = unique(unlist(path_all_list))
 
 	mc = match.call()
 
-
-	DO_PREPROCESS = FALSE
-	if(!missing(preprocessfun)){
-		if(!is.function(preprocessfun)){
-			stop("Argument 'preprocessfun' must be a function.")
-		}
-		DO_PREPROCESS = TRUE
-	}
+	DO_PREPROCESS = !missing(preprocessfun)
 
 	if(!missing(col_types) && (!length(class(col_types) == 1) || class(col_types) != "col_spec")){
 		stop("Argument 'col_types' must be a 'col_spec' object, obtained from, e.g., readr::cols() or readr::cols_only(), or from guess_cols_type()).")
@@ -1820,59 +1849,100 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	# Preliminary stuff
 	#
 
-	# sample DT to get first information
-	first_lines = readr::read_lines(path, n_max = 10000)
-	sample_table = data.table::fread(paste0(first_lines, collapse = "\n"))
+	# If multiple files: we check the consistency
+	n = length(path_all)
+	fileSize_all = numeric(n)
+	nb_col_all = numeric(n)
+	col_names_all = list()
 
-	nb_col = ncol(sample_table)
+	for(i in seq_along(path_all)){
+		path = path_all[i]
 
-	if(missing(col_types)){
-		col_types = guess_col_types(sample_table, col_names)
-	} else if(length(col_types$cols) == nb_col){
+		# sample DT to get first information
+		first_lines = readr::read_lines(path, n_max = 10000)
+		sample_table = data.table::fread(paste0(first_lines, collapse = "\n"))
+
+		nb_col = ncol(sample_table)
+		nb_col_all[i] = nb_col
+
+		if(missing(col_types)){
+			col_types = guess_col_types(sample_table, col_names)
+		} else if(length(col_types$cols) == nb_col){
+			if(missing(col_names)){
+				col_names = names(col_types$cols)
+			}
+		}
+
+		# are there column names?
+		is_col_names = ifelse(all(grepl("^V", names(sample_table))), FALSE, TRUE)
+
+		if(missing(nb_skip)){
+			if(is_col_names){
+				nb_skip = 1
+			} else {
+				nb_skip = 0
+			}
+		}
+
+		prefix = ifelse(n == 1, "", paste0("[file ", i, ": ", path, "] "))
 		if(missing(col_names)){
-			col_names = names(col_types$cols)
-		}
-	}
-
-	# are there column names?
-	is_col_names = ifelse(all(grepl("^V", names(sample_table))), FALSE, TRUE)
-
-	if(missing(nb_skip)){
-		if(is_col_names){
-			nb_skip = 1
+			if(!is_col_names){
+				stop(prefix, "The text file has no header, you MUST provide ", nb_col, " column names (col_names).")
+			} else {
+				col_names = names(sample_table)
+			}
 		} else {
-			nb_skip = 0
+			if(length(col_names) != nb_col){
+				if(i > 1){
+					stop(prefix, "The data has ", nb_col, " columns instead of ", length(col_names), " like the previous files.")
+				} else {
+					stop(prefix, "The variable col_names should be of length ", nb_col, ". (At the moment it is of length ", length(col_names), ").")
+				}
+
+			}
 		}
+
+		col_names_all[[i]] = col_names
+
+		#
+		# finding out the delimiter
+		#
+
+		if(i == 1){
+			if(missing(delim)){
+				fl = head(first_lines, 100)
+				attr(fl, "from_hdd") = TRUE
+				delim = guess_delim(fl)
+				if(is.null(delim)){
+					stop("The delimiter could not be automatically determined. Please provide argument 'delim'. FYI, here is the first line:\n", first_lines[1])
+				}
+			}
+			delimiter = delim
+		}
+
+		# Just for information on nber of chunks
+		fileSize_all[i] = file.size(path)
+
 	}
 
-	if(missing(col_names)){
-		if(!is_col_names){
-			stop("The text file has no header, you MUST provide ", nb_col, " column names (col_names).")
-		} else {
-			col_names = names(sample_table)
-		}
-	} else {
-		if(length(col_names) != nb_col){
-			stop("The variable col_names should be of length ", nb_col, ". (At the moment it is of length ", length(col_names), ".")
-		}
+	fileSize = sum(fileSize_all) / 1e6
+
+	# Consistency across multiple files
+	if(!all(nb_col_all == nb_col_all[1])) {
+		qui = which.max(nb_col_all != nb_col_all[1])
+		stop("The number of columns across files differ: file 1 has ", nb_col_all[1], " columns while file ", qui, " has ", nb_col_all[qui], " columns (", path_all[1], " vs ", path_all[qui], ").")
 	}
 
-	#
-	# finding out the delimiter
-	#
-
-	if(missing(delim)){
-		fl = head(first_lines, 100)
-		attr(fl, "from_hdd") = TRUE
-		delim = guess_delim(fl)
-		if(is.null(delim)){
-			stop("The delimiter could not be automatically determined. Please provide argument 'delim'. FYI, here is the first line:\n", first_lines[1])
-		}
+	if(!all(sapply(col_names_all, function(x) x == col_names_all[[1]]))) {
+		qui = which.max(sapply(col_names_all, function(x) x != col_names_all[[1]]))
+		stop("The column names across files differ:\n File 1:", paste(col_names_all[[1]], collapse = ", "), "\nFile ", qui, ": ", paste(col_names_all[[qui]], collapse = ", "))
 	}
-	delimiter = delim
 
-	# Just for information on nber of chunks
-	fileSize = file.size(path) / 1e6
+	# Information on the number of files found (if needed)
+	if(INFORM_PATTERN && (verbose > 0 || (missing(verbose) && fileSize > 2000))){
+		message(n, " files (", signif_plus(fileSize), " MB)")
+	}
+
 
 	if(!missing(rowsPerChunk)){
 		if("chunkMB" %in% names(mc)) warning("The value of argument 'chunkMB' is neglected since argument 'rowsPerChunk' is provided.")
@@ -2035,7 +2105,7 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 	}
 
 	# guessing the types of each column
-	all_classes = sapply(sample_dt, class)
+	all_classes = sapply(sample_dt, function(x) tolower(class(x)[length(class(x))]))
 	qui_int = which(all_classes == "integer")
 	qui_int64 = which(all_classes == "integer64")
 	qui_double = which(all_classes == "double")
