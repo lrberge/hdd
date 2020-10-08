@@ -23,7 +23,7 @@
 #' @param columns Column names to read. The default is to read all columns. Ignored for \code{hdd} files.
 #' @param from Read data starting from this row number. Ignored for \code{hdd} files.
 #' @param to Read data up until this row number. The default is to read to the last row of the stored data set. Ignored for \code{hdd} files.
-#' @param confirm If the HDD file is larger than the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.
+#' @param confirm If the HDD file is larger than ten times the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.
 #'
 #' @author Laurent Berge
 #'
@@ -80,9 +80,9 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 		}
 
 		res_size = object_size(res) / 1e6
-		size_cap = getHdd_extract.cap()
+		size_cap = getHdd_extract.cap() * 10
 		if(res_size > size_cap && isFALSE(confirm)){
-			stop("Currently the size of the hdd data is ", numberFormat(res_size), "MB which exceeds the cap of ", size_cap, "MB. Please use argument 'confirm' to proceed.")
+			stop("Currently the size of the hdd data is ", numberFormat(res_size), "MB which exceeds the cap of ", signif_plus(size_cap), "MB. Please use argument 'confirm' to proceed.")
 		}
 
 		res = res[]
