@@ -47,10 +47,10 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 	# it avoids adding as.data.table = TRUE
 	# + reads hdd files
 
-	check_arg(path, "singleCharacter")
-	check_arg(from, "singleIntegerGE1")
-	check_arg(to, "nullSingleIntegerGE1")
-	check_arg(confirm, "singleLogical")
+	check_arg(path, "character scalar")
+	check_arg(from, "integer scalar GE{1}")
+	check_arg(to, "null integer scalar GE{1}")
+	check_arg(confirm, "logical scalar")
 
 	if(grepl("\\.fst", path)){
 
@@ -168,10 +168,10 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk, replace = FALSE, 
 		stop("Argument 'fun' must be a function. Currently its class is ", class(fun)[[1]], ".")
 	}
 
-	check_arg(dir, "singleCharacterMbt")
-	check_arg(chunkMB, "singleNumericGT0")
-	check_arg(rowsPerChunk, "singleIntegerGE1")
-	check_arg(replace, "singleLogical")
+	check_arg(dir, "character scalar mbt")
+	check_arg(chunkMB, "numeric scalar GT{0}")
+	check_arg(rowsPerChunk, "integer scalar GE{1}")
+	check_arg(replace, "logical scalar")
 
 	if(is.null(dim(x))){
 		isTable = FALSE
@@ -324,7 +324,7 @@ hdd = function(dir){
 	# This function creates a link to a repository containing fst files
 	# NOTA: The HDD files are all named "sliceXX.fst"
 
-	check_arg(dir, "singleCharacterMbt")
+	check_arg(dir, "character scalar mbt")
 	dir = clean_path(dir)
 
 	# The directory + prefix
@@ -471,10 +471,10 @@ hdd = function(dir){
 	mc = match.call()
 	call_txt = deparse_long(mc)
 
-	# check_arg(file, "integerVector")
-	check_arg(newfile, "singleCharacter", "Argument 'newfile' must be a valid path to a directory. REASON")
-	check_arg(replace, "singleLogical")
-	check_arg(all.vars, "singleLogical")
+	# check_arg(file, "integer vector")
+	check_arg(newfile, "character scalar", .message = "Argument 'newfile' must be a valid path to a directory.")
+	check_arg(replace, "logical scalar")
+	check_arg(all.vars, "logical scalar")
 
 	mc_small = mc[!names(mc) %in% c("x", "index", "file", "all.vars")]
 	if(all.vars || length(mc_small) == 1){
@@ -569,7 +569,10 @@ hdd = function(dir){
 
 			if(missing(index)){
 				# easy case
+				# cat("i = ", i, sep = "")
+				p = proc.time()
 				x_tmp = read_fst(fileName, as.data.table = TRUE, columns = var2select)
+				# cat(", in ", (proc.time()-p)[3], "s.\n", sep = "")
 				res[[i]] = x_tmp[, ...]
 			} else {
 				# now we have to see if it's worth of downloading everything
@@ -956,15 +959,15 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 	mc = match.call()
 
 	# controls
-	check_arg(dir, "singleCharacterMbt", "Argument 'dir' must be a valid path. REASON")
-	check_arg(chunkMB, "singleNumericGT0")
-	check_arg(rowsPerChunk, "singleIntegerGE1")
-	check_arg(compress, "singleIntegerGE0LE100")
-	check_arg(add, "singleLogical")
-	check_arg(replace, "singleLogical")
-	check_arg(showWarning, "singleLogical")
+	check_arg(dir, "character scalar mbt", .message = "Argument 'dir' must be a valid path.")
+	check_arg(chunkMB, "numeric scalar GT{0}")
+	check_arg(rowsPerChunk, "integer scalar GE{1}")
+	check_arg(compress, "integer scalar GE{0} LE{100}")
+	check_arg(add, "logical scalar")
+	check_arg(replace, "logical scalar")
+	check_arg(showWarning, "logical scalar")
 
-	control_variable(x, "data.frame", mustBeThere = TRUE)
+	check_arg(x, "data.frame mbt")
 
 	# hidden arguments
 	dots = list(...)
@@ -1312,23 +1315,12 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 
 	# key can be a data.table call? No, not at the moment
 
-	check_arg(key, "characterVectorMbt")
-	check_arg(newfile, "singleCharacterMbt")
-	check_arg(chunkMB, "singleNumericGT0")
-	check_arg(replace, "singleLogical")
-	check_arg(verbose, "singleNumeric")
-
-	if(missing(x)){
-		stop("Argument 'x' must be a HDD object, but it is currently missing.")
-	}
-
-	if(!"hdd" %in% class(x)){
-		stop("x must be a HDD object.")
-	}
-
-	if(!all(key %in% names(x))){
-		stop("The key must be a variable name. This is not the case for ", enumerate_items(setdiff(key, names(x))), ".")
-	}
+	check_arg(x, "class(hdd) mbt")
+	check_arg_plus(key, "multi match", .choices = names(x), .message = "The key must be a variable name (partial matching on).")
+	check_arg(newfile, "character scalar mbt")
+	check_arg(chunkMB, "numeric scalar GT{0}")
+	check_arg(replace, "logical scalar")
+	check_arg(verbose, "numeric scalar")
 
 	newfile = clean_path(newfile)
 	if(dir.exists(newfile)){
@@ -1575,22 +1567,13 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 
 	mc = match.call()
 
-	if(missing(x)) stop("Argument 'x' is required.")
-	if(missing(y)) stop("Argument 'y' is required.")
-	check_arg(newfile, "singleCharacter", "Argument 'newfile' must be a path to a directory. REASON")
+	check_arg(x, y, "class(hdd) | data.frame mbt")
+	check_arg(newfile, "character scalar", .message = "Argument 'newfile' must be a path to a directory.")
 
-	check_arg(all, "singleLogical")
-	check_arg(all.x, "singleLogical")
-	check_arg(all.y, "singleLogical")
-	check_arg(replace, "singleLogical")
-	check_arg(allow.cartesian, "singleLogical")
-	check_arg(verbose, "singleNumeric")
+	check_arg(all, all.x, all.y, replace, allow.cartesian, "logical scalar")
+	check_arg(verbose, "numeric scalar")
 
 	call_txt = deparse_long(match.call())
-
-	if(!is.data.frame(x)){
-		stop("x must be a HDD object or a data.frame!")
-	}
 
 	if(missing(verbose)){
 		verbose = object_size(x)/1e6 > 1000
@@ -1599,8 +1582,6 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 	y_hdd = FALSE
 	if("hdd" %in% class(y)){
 		y_hdd = TRUE
-	} else if(!"data.frame" %in% class(y)){
-		stop("y must be either a data.frame or a HDD file.")
 	}
 
 	IS_HDD = "hdd" %in% class(x)
@@ -1742,7 +1723,7 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 #'
 #' @inherit hdd seealso
 #'
-#' @param path Path where the data is.
+#' @param path Character vector that represents the path to the data. Note that it can be equal to patterns if multiple files with the same name are to be imported (if so it must be a fixed pattern, NOT a regular expression).
 #' @param dirDest The destination directory, where the new HDD data should be saved.
 #' @param chunkMB The chunk sizes in MB, defaults to 500MB. Instead of using this argument, you can alternatively use the argument \code{rowsPerChunk} which decides the size of chunks in terms of lines.
 #' @param rowsPerChunk Number of rows per chunk. By default it is missing: its value is deduced from argument \code{chunkMB} and the size of the file. If provided, replaces any value provided in \code{chunkMB}.
@@ -1980,7 +1961,9 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 
 	}
 
-	readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowsPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
+	for(path in path_all){
+		readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowsPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
+	}
 
 	invisible(NULL)
 }
@@ -2038,8 +2021,8 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 		stop("Object dt_or_path must be a data.frame or a path.")
 	}
 
-	check_arg(col_names, "characterVector")
-	check_arg(n, "singleIntegerGE1")
+	check_arg(col_names, "character vector")
+	check_arg(n, "integer scalar GE{1}")
 
 	# The column names
 	if(missing(col_names)){
@@ -2065,7 +2048,7 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 
 	for(v in qui_character){
 		new_type = readr::guess_parser(sample_dt[[v]])
-		if(grepl("date", new_type)){
+		if(any(grepl("(?i)date", new_type))){
 			all_classes[v] = "date"
 		}
 	}
@@ -2105,7 +2088,7 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 guess_delim = function(path){
 
 
-	check_arg(path, "characterVector", "Argument path must be a valid path. REASON")
+	check_arg(path, "character vector", .message = "Argument path must be a valid path.")
 
 	# importing a sample
 	FROM_HDD = FALSE
@@ -2194,13 +2177,12 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 
 	# Controls
 
-	check_arg(path, "singleCharacterMbt")
-	check_arg(onlyLines, "singleLogical")
-	check_arg(view, "singleLogical")
-	check_arg(n, "singleIntegerGE1")
+	check_arg(path, "character scalar mbt")
+	check_arg(onlyLines, "logical scalar")
+	check_arg(view, "logical scalar")
+	check_arg(n, "integer scalar GE{1}")
 
 	if(!file.exists(path)) stop("The path does not lead to an existing file.")
-
 
 	if(missing(n)){
 		if(onlyLines){

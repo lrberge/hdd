@@ -1,9 +1,9 @@
 Package: hdd
 Type: Package
 Title: Easy Manipulation of Out of Memory Data Sets
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: person("Laurent", "Berge", email = "laurent.berge@uni.lu", role = c("aut", "cre"))
-Imports: fst, utils, readr
+Imports: fst, utils, readr, dreamerr
 Depends: data.table
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
@@ -11,4 +11,4 @@ Description: Hard drive data: Class of data allowing the easy importation/manipu
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1

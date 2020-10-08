@@ -58,7 +58,7 @@
 #'
 setHdd_extract.cap = function(sizeMB = 1000){
 
-	check_arg(sizeMB, "singleNumericGT0")
+	check_arg(sizeMB, "numeric scalar GT{0}")
 
 	options("hdd_extract.cap" = sizeMB)
 }
@@ -196,7 +196,7 @@ obs = function(x, file){
 	}
 
 	n = length(x$.nrow)
-	control_variable(file, "integerVectorGT0")
+	check_arg(file, "integer vector GT{0}")
 	if(any(file > n)){
 		stop("file cannot exceed ", n, ".")
 	}
@@ -369,11 +369,14 @@ ggrepl = function(pattern, x){
 }
 
 
-
-
-
-
-
+deparse_long = function (x){
+	dep_x = deparse(x)
+	if (length(dep_x) == 1) {
+		return(dep_x)
+	} else {
+		return(paste(gsub("^ +", "", dep_x), collapse = ""))
+	}
+}
 
 
 
