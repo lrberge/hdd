@@ -1839,7 +1839,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 
 	DO_PREPROCESS = !missing(preprocessfun)
 
-	if(!missing(col_types) && (length(class(col_types)) != 1 || class(col_types) != "col_spec")){
+	if(!missing(col_types) && !inherits(col_types, "col_spec")){
 		stop("Argument 'col_types' must be a 'col_spec' object, obtained from, e.g., readr::cols() or readr::cols_only(), or from guess_cols_type()).")
 	}
 
