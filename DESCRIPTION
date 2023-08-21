@@ -11,5 +11,5 @@ Description: Hard drive data: Class of data allowing the easy importation/manipu
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)

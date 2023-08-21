@@ -27,7 +27,6 @@ guess_delim(iris_path)
 \seealso{
 See \code{\link[hdd]{peek}} to have a convenient look at the first lines of a text file. See \code{\link[hdd]{guess_delim}} to guess the delimiter of a text data set. See \code{\link[hdd]{guess_col_types}} to guess the column types of a text data set.
 
-
 See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 }
 \author{

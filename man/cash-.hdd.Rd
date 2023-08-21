@@ -38,7 +38,6 @@ summary(base_hdd) # => 11 files
 # we can extract the data from the 11 files with '$':
 pl = base_hdd$Sepal.Length
 
-\donttest{
 #
 # Illustration of the protection mechanism:
 #
@@ -49,14 +48,13 @@ pl = base_hdd$Sepal.Length
 
 # Following code raises an error:
 setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
-pl = base_hdd$Sepal.Length
+try(pl <- base_hdd$Sepal.Length)
 
 # To extract the variable without changing the cap:
-pl = base_hdd[, Sepal.Length] # => no size control is performed
+pl <- base_hdd[, Sepal.Length] # => no size control is performed
 
 # Resetting the default cap
 setHdd_extract.cap()
-}
 
 }
 \seealso{
