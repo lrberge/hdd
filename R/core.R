@@ -820,7 +820,6 @@ hdd = function(dir){
 #' # we can extract the data from the 11 files with '$':
 #' pl = base_hdd$Sepal.Length
 #'
-#' \donttest{
 #' #
 #' # Illustration of the protection mechanism:
 #' #
@@ -831,14 +830,13 @@ hdd = function(dir){
 #'
 #' # Following code raises an error:
 #' setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
-#' pl = base_hdd$Sepal.Length
+#' try(pl <- base_hdd$Sepal.Length)
 #'
 #' # To extract the variable without changing the cap:
-#' pl = base_hdd[, Sepal.Length] # => no size control is performed
+#' pl <- base_hdd[, Sepal.Length] # => no size control is performed
 #'
 #' # Resetting the default cap
 #' setHdd_extract.cap()
-#' }
 #'
 "$.hdd" = function(x, name){
 
@@ -1841,7 +1839,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 
 	DO_PREPROCESS = !missing(preprocessfun)
 
-	if(!missing(col_types) && (!length(class(col_types) == 1) || class(col_types) != "col_spec")){
+	if(!missing(col_types) && (length(class(col_types)) != 1 || class(col_types) != "col_spec")){
 		stop("Argument 'col_types' must be a 'col_spec' object, obtained from, e.g., readr::cols() or readr::cols_only(), or from guess_cols_type()).")
 	}
 
