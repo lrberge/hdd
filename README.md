@@ -6,4 +6,4 @@ Say you're a `R` user and have this 150GB text file containing a great data set,
 
 The idea of `hdd` is very simple and similar to other DBMS: The data sets are located on disk and split into multiple files (chunks), each "workable" in memory. Within `R`, `hdd` data sets look like in-memory and all operations are performed "chunk-wise" behind the scene. No more excuse not to work with large data sets in R!
 
-For a step-by-step example, please see the [walk-through](https://cran.r-project.org/package=hdd/vignettes/hdd_walkthrough.html).
+For a step-by-step example, please see the [walk-through](https://lrberge.github.io/hdd/articles/hdd_walkthrough.html).
