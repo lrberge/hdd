@@ -13,10 +13,12 @@
 #'
 #' Sets/gets the default size cap when extracting HDD variables with \code{\link[hdd]{cash-.hdd}} or when importing full HDD data sets with \code{\link[hdd]{readfst}}.
 #'
-#' @param sizeMB Size cap in MB. Default is 1000.
+#' @param sizeMB Size cap in MB. Default is 3000.
 #'
 #' @details
-#' In \code{\link[hdd]{readfst}}, if the size expected size exceeds the cap, then an error is raised, which can be bypassed by using the argument \code{confirm}.
+#' In \code{\link[hdd]{readfst}}, if the expected size of the data set exceeds the cap then, 
+#' in interactive mode, a confirmation is asked. When not in interactive mode, no confirmation is asked. 
+#' This can also be bypassed by using the argument \code{confirm}.
 #'
 #' @return
 #' The size cap, a numeric scalar.
@@ -35,28 +37,27 @@
 #' # we can extract the data from the 11 files with '$':
 #' pl = base_hdd$Sepal.Length
 #'
-#' \donttest{
 #' #
 #' # Illustration of the protection mechanism:
 #' #
 #'
-#' # By default you cannot extract a variable with '$'
-#' # when its size would be too large (default is greater than 1000MB)
+#' # By default when extracting a variable with '$'
+#' # and the size exceeds the cap (default is greater than 3GB)
+#' # a confirmation is needed.
 #' # You can set the cap with setHdd_extract.cap.
 #'
-#' # Following code raises an error:
+#' # Following code asks a confirmation:
 #' setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
-#' pl = base_hdd$Sepal.Length
+#' try(pl <- base_hdd$Sepal.Length)
 #'
 #' # To extract the variable without changing the cap:
 #' pl = base_hdd[, Sepal.Length] # => no size control is performed
 #'
 #' # Resetting the default cap
 #' setHdd_extract.cap()
-#' }
 #'
 #'
-setHdd_extract.cap = function(sizeMB = 1000){
+setHdd_extract.cap = function(sizeMB = 3000){
 
 	check_arg(sizeMB, "numeric scalar GT{0}")
 

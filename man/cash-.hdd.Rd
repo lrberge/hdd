@@ -42,16 +42,17 @@ pl = base_hdd$Sepal.Length
 # Illustration of the protection mechanism:
 #
 
-# By default you cannot extract a variable with '$'
-# when its size would be too large (default is greater than 1000MB)
+# By default when extracting a variable with '$'
+# and the size exceeds the cap (default is greater than 3GB)
+# a confirmation is needed.
 # You can set the cap with setHdd_extract.cap.
 
-# Following code raises an error:
+# Following asks for confirmation in interactive mode:
 setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
-try(pl <- base_hdd$Sepal.Length)
+pl = base_hdd$Sepal.Length
 
 # To extract the variable without changing the cap:
-pl <- base_hdd[, Sepal.Length] # => no size control is performed
+pl = base_hdd[, Sepal.Length] # => no size control is performed
 
 # Resetting the default cap
 setHdd_extract.cap()

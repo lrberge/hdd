@@ -76,13 +76,20 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 		mc = match.call()
 		qui_pblm = intersect(names(mc), c("columns", "from", "to"))
 		if(length(qui_pblm) > 0){
-			stop("When 'path' leads to a HDD file, the full data set is read. Thus the argument", enumerate_items(qui_pblm, "s.is"), " ignored: for sub-selections use hdd(path) instead.")
+			stop("When 'path' leads to a HDD file, the full data set is read. Thus the argument", 
+			     enumerate_items(qui_pblm, "s.is"), " ignored: for sub-selections use hdd(path) instead.")
 		}
 
 		res_size = object_size(res) / 1e6
 		size_cap = getHdd_extract.cap() * 10
-		if(res_size > size_cap && isFALSE(confirm)){
-			stop("Currently the size of the hdd data is ", numberFormat(res_size), "MB which exceeds the cap of ", signif_plus(size_cap), "MB. Please use argument 'confirm' to proceed.")
+		if(res_size > size_cap && isFALSE(confirm) && interactive()){
+			cat("The size of the hdd data is ", numberFormat(res_size), " MB, greater than the 'no-confirm' cap of ",
+				  addCommas(size_cap), " MB. Use `confirm = TRUE` to bypass confirmation. ",
+				  "FYI you can change the cap using setHdd_extract.cap(new_cap).", sep = "")
+			confirm = get_confirmation()
+			if(isFALSE(confirm)){
+				return(invisible(NULL))
+			}
 		}
 
 		res = res[]
@@ -822,21 +829,23 @@ hdd = function(dir){
 #' # Illustration of the protection mechanism:
 #' #
 #'
-#' # By default you cannot extract a variable with '$'
-#' # when its size would be too large (default is greater than 1000MB)
+#' # By default when extracting a variable with '$'
+#' # and the size exceeds the cap (default is greater than 3GB)
+#' # a confirmation is needed.
 #' # You can set the cap with setHdd_extract.cap.
 #'
-#' # Following code raises an error:
+#' # Following asks for confirmation in interactive mode:
 #' setHdd_extract.cap(sizeMB = 0.005) # new cap of 5KB
-#' try(pl <- base_hdd$Sepal.Length)
+#' pl = base_hdd$Sepal.Length
 #'
 #' # To extract the variable without changing the cap:
-#' pl <- base_hdd[, Sepal.Length] # => no size control is performed
+#' pl = base_hdd[, Sepal.Length] # => no size control is performed
 #'
 #' # Resetting the default cap
 #' setHdd_extract.cap()
 #'
 "$.hdd" = function(x, name){
+	#### $.hdd ####
 
 	# meta information
 	meta_vars = c(".nrow", ".row_cum", ".ncol", ".size", ".size_cum", ".fileName")
@@ -892,14 +901,33 @@ hdd = function(dir){
 	current_sizeMB = current_size / 1e6
 
 	size_cap = getHdd_extract.cap()
-	if(current_sizeMB > size_cap){
-		stop("Cannot extract variable ", name, " because its ", ifelse(TRUE_SIZE, "", " approximated "), "size (", addCommas(mysignif(current_sizeMB, r = 0)), " MB) is greater than the cap of ", addCommas(size_cap), " MB. You can change the cap using setHdd_extract.cap(new_cap).")
+	if(current_sizeMB > size_cap && interactive()){
+		cat("The variable `", name, "` has ", ifelse(TRUE_SIZE, "a", "an approximated"), 
+		    " size of ", addCommas(mysignif(current_sizeMB, r = 0)), " MB, greater than the 'no-confirm' cap of ",
+				addCommas(size_cap), " MB. FYI you can change the cap using setHdd_extract.cap(new_cap).\n", 
+				sep = "")
+		confirm = get_confirmation()
+		if(isFALSE(confirm)){
+			return(invisible(NULL))
+		}
 	}
 
 	# now extraction
 	res = eval(parse(text = paste0("x[, ", name, "]")))
 
 	res
+}
+
+
+get_confirmation = function(){
+	msg = ""
+	
+	while(!msg %in% c("y", "yes", "n", "no")){
+		msg = readline("Confirm extraction? y/yes or q/n/no: ")
+		msg = tolower(msg)
+	}
+	
+	msg %in% c("y", "yes")
 }
 
 
