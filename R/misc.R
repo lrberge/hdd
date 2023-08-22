@@ -229,7 +229,7 @@ clean_path = function(x){
 #### Other Utilities ####
 ####
 
-format_difftime = function(x, options = character()){
+format_difftime = function(x){
   # x: number of seconds or difftime or time
 
   if(is.character(x)){
@@ -240,12 +240,6 @@ format_difftime = function(x, options = character()){
       # When the data is not conform:
       # - should there be an error?
       # - should I return NA?
-
-      if(!opt_equal(options, "silent")){
-        warn_hook("Operation `difftime` could not be applied since the data",
-                  " was not numeric, nor a POSIX time, nor a time-difference.",
-                  "\n (To avoid this warning, use the option `silent`: `difftime.silent`.)")
-      }
 
       return(rep("(difftime: NA)", length(x)))
     }
@@ -264,39 +258,23 @@ format_difftime = function(x, options = character()){
       xi = as.double(xi, units = "secs")
     }
     
-    if(opt_equal(options, "full")){
-      # we don't go at the micro second precision: don't makes sense
-      s = trunc(xi)
-      if(s > 0){
-        s_fmt = sprintf("% 3ss", s)
-      } else {
-        s_fmt = "    "
-      }
-      
-      ms = sprintf("%.1f", (xi - s) * 1e3)
-      ms_fmt = sprintf("% 5s", ms)
-      
-      res[i] = paste0(s_fmt, " ", ms_fmt, "ms")
-      
-    } else {
-      if(xi > 3600){
-        n_hour = xi %/% 3600
-        rest_s = floor(xi %% 3600)
-        n_min = rest_s %/% 60
-        res[i] = string_magic("{n ? n_hour} hour{#s} {%02i ? n_min} min")
-      } else if(xi > 60){
-        n_min = xi %/% 60
-        n_sec = floor(xi %% 60)
-        res[i] = string_magic("{n ? n_min} min {%02i ? n_sec} sec")
-      } else if(xi > 0.9){
-        res[i] = paste0(fsignif(xi, 2, 1), "s")
-      } else if(xi > 1e-3){
-        res[i] = paste0(fsignif(xi * 1000, 2, 0), "ms")
-      } else {
-        res[i] = "<1 ms"
-      }
-    }
-  }
+    if(xi > 3600){
+			n_hour = xi %/% 3600
+			rest_s = floor(xi %% 3600)
+			n_min = rest_s %/% 60
+			res[i] = string_magic("{n ? n_hour} hour{#s} {%02i ? n_min} min")
+		} else if(xi > 60){
+			n_min = xi %/% 60
+			n_sec = floor(xi %% 60)
+			res[i] = string_magic("{n ? n_min} min {%02i ? n_sec} sec")
+		} else if(xi > 0.9){
+			res[i] = paste0(fsignif(xi, 2, 1), "s")
+		} else if(xi > 1e-3){
+			res[i] = paste0(fsignif(xi * 1000, 2, 0), "ms")
+		} else {
+			res[i] = "<1 ms"
+		}
+	}
   
   res
 }

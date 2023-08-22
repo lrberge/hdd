@@ -2112,8 +2112,6 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 		write_hdd(x, dir = REP_DEST, replace = TRUE, add = ADD, call_txt = CALL_TXT)
 
 		if(!ADD) ADD <<- TRUE
-
-
 	}
 	
 	# the locale + the encoding
@@ -2130,7 +2128,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	}
 	
 	if(verbose){
-		message("Importation in ", format_difftime(time_start))
+		message("Importation in ", format_difftime(time_start), ".")
 	}
 
 	invisible(NULL)
