@@ -88,20 +88,11 @@ peek("_path/authors.txt")
 
 
 ```{r, results='asis'}
-# tab = head(peek("C:/Users/laurent.berge/DATA/MAG/Authors.txt", view = FALSE))
-# if("pdf_document" %in% rmarkdown::all_output_formats(knitr::current_input())){
-#   # tab = as.data.table(lapply(tab, function(x) fplot:::truncate_string(iconv(x, to="ASCII", sub = "£"), method = "trimMid", trunc = 16)))
-#   tab = as.data.table(lapply(tab, iconv, to="ASCII", sub = "£"))
-# }
-tab = structure(list(V1 = c(4242L, 4630L, 4975L, 5211L, 5726L), V2 = c(21038L, 
-20184L, 19821L, 17100L, 18421L), V3 = c("enid bagnold", "arash idelchi",
-"judith bonaduce", "mark d aupperlee", "douglas c sundet"), V4 = c("Enid Bagnold",
-"Arash Idelchi", "Judith Bonaduce", "Mark D. Aupperlee", "Douglas C. Sundet"
-), V5 = structure(c(0, 0, 0, 0,
-0), class = "integer64"), V6 = c(1L, 1L, 3L, 20L, 8L), V7 = c(0L,
-11L, 2L, 521L, 61L), V8 = structure(c(16976L, 16976L, 16976L,
-16976L, 16976L), class = c("IDate", "Date"))), row.names = c(NA,
--5L), class = "data.frame")
+tab = head(peek("C:/Users/laurent.berge/DATA/MAG/Authors.txt", view = FALSE))
+if("pdf_document" %in% rmarkdown::all_output_formats(knitr::current_input())){
+  # tab = as.data.table(lapply(tab, function(x) fplot:::truncate_string(iconv(x, to="ASCII", sub = "£"), method = "trimMid", trunc = 16)))
+  tab = as.data.table(lapply(tab, iconv, to="ASCII", sub = "£"))
+}
 knitr::kable(tab)
 
 ```
@@ -146,11 +137,8 @@ summary(authors)
 ```
 
 ```{r}
-# authors = hdd("C:/Users/laurent.berge/DATA/MAG/HDD/authors")
-# summary(authors)
-cat("Hard drive data of 5,518 MB. Made of 45 files.",
-    "Location: C:/Users/lrberge/DATA/MAG/HDD/authors/",
-    "202,913,367 lines, 5 variables.", sep = "\n")
+authors = hdd("C:/Users/laurent.berge/DATA/MAG/HDD/authors")
+summary(authors)
 ```
 
 The summary provides some general information: the location of the data in 
