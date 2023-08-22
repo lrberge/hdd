@@ -5,6 +5,7 @@
 
  - `txt2hdd`: argument path now accepts vectors and even patterns. All files matching the pattern will be imported to the `hdd` format.
 - `txt2hdd`: gains the arguments `encoding` and `locale`.
+- `txt2hdd`: messages are more informative, in particular import time is reported.
 
 ## Minor bug fixes
 
