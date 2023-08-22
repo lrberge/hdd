@@ -1743,33 +1743,57 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 
 #' Transforms text data into a HDD file
 #'
-#' Imports text data and saves it into a HDD file. It uses \code{\link[readr]{read_delim_chunked}} to extract the data. It also allows to preprocess the data.
+#' Imports text data and saves it into a HDD file. It uses \code{\link[readr]{read_delim_chunked}} 
+#' to extract the data. It also allows to preprocess the data.
 #'
 #' @inherit hdd seealso
 #'
-#' @param path Character vector that represents the path to the data. Note that it can be equal to patterns if multiple files with the same name are to be imported (if so it must be a fixed pattern, NOT a regular expression).
+#' @param path Character vector that represents the path to the data. Note that 
+#' it can be equal to patterns if multiple files with the same name are to be imported 
+#' (if so it must be a fixed pattern, NOT a regular expression).
 #' @param dirDest The destination directory, where the new HDD data should be saved.
-#' @param chunkMB The chunk sizes in MB, defaults to 500MB. Instead of using this argument, you can alternatively use the argument \code{rowsPerChunk} which decides the size of chunks in terms of lines.
-#' @param rowsPerChunk Number of rows per chunk. By default it is missing: its value is deduced from argument \code{chunkMB} and the size of the file. If provided, replaces any value provided in \code{chunkMB}.
-#' @param col_names The column names, by default is uses the ones of the data set. If the data set lacks column names, you must provide them.
-#' @param col_types The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} to find them.
+#' @param chunkMB The chunk sizes in MB, defaults to 500MB. Instead of using this 
+#' argument, you can alternatively use the argument \code{rowsPerChunk} which decides 
+#' the size of chunks in terms of lines.
+#' @param rowsPerChunk Number of rows per chunk. By default it is missing: its value 
+#' is deduced from argument \code{chunkMB} and the size of the file. If provided, 
+#' replaces any value provided in \code{chunkMB}.
+#' @param col_names The column names, by default is uses the ones of the data set. 
+#' If the data set lacks column names, you must provide them.
+#' @param col_types The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} 
+#' to find them.
 #' @param nb_skip Number of lines to skip.
 #' @param delim The delimiter. By default the function tries to find the delimiter, but sometimes it fails.
-#' @param preprocessfun A function that is applied to the data before saving. Default is missing. Note that if a function is provided, it MUST return a data.frame, anything other than data.frame is ignored.
-#' @param replace If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.
-#' @param verbose Integer. If verbose > 0, then the evolution of the importing process is reported. By default: equal to 1 when the expected number of chunks is greater than 1.
-#' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, \code{quote = ""} can be interesting sometimes.
+#' @param preprocessfun A function that is applied to the data before saving. Default 
+#' is missing. Note that if a function is provided, it MUST return a data.frame, 
+#' anything other than data.frame is ignored.
+#' @param replace If the destination directory already exists, you need to set the 
+#' argument \code{replace=TRUE} to overwrite all the HDD files in it.
+#' @param verbose Logical scalar or `NULL` (default). If `TRUE`, then the evolution of 
+#' the importing process as well as the time to import are reported.
+#' If `NULL`, it becomes `TRUE` when the data to import is greater than 5GB or there are
+#' more than one chunk.
+#' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, 
+#' \code{quote = ""} can be interesting sometimes.
 #'
 #' @details
-#' This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr} to read a large text file per chunk, and generate a HDD data set.
+#' This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr} 
+#' to read a large text file per chunk, and generate a HDD data set.
 #'
-#' Since the main function for importation uses \code{readr}, the column specification must also be in readr's style (namely \code{\link[readr]{cols}} or \code{\link[readr]{cols_only}}).
+#' Since the main function for importation uses \code{readr}, the column specification 
+#' must also be in readr's style (namely \code{\link[readr]{cols}} or \code{\link[readr]{cols_only}}).
 #'
-#' By default a guess of the column types is made on the first 10,000 rows. The guess is the application of \code{\link[hdd]{guess_col_types}} on these rows.
+#' By default a guess of the column types is made on the first 10,000 rows. The 
+#' guess is the application of \code{\link[hdd]{guess_col_types}} on these rows.
 #'
-#' Note that by default, columns that are found to be integers are imported as double (in want of integer64 type in readr). Note that for large data sets, sometimes integer-like identifiers can be larger than 16 digits: in these case you must import them as character not to lose information.
+#' Note that by default, columns that are found to be integers are imported as double 
+#' (in want of integer64 type in readr). Note that for large data sets, sometimes 
+#' integer-like identifiers can be larger than 16 digits: in these case you must 
+#' import them as character not to lose information.
 #'
-#' The delimiter is found with the function \code{\link[hdd]{guess_delim}}, which uses the guessing from \code{\link[data.table]{fread}}. Note that fixed width delimited files are not supported.
+#' The delimiter is found with the function \code{\link[hdd]{guess_delim}}, which 
+#' uses the guessing from \code{\link[data.table]{fread}}. Note that fixed width 
+#' delimited files are not supported.
 #'
 #' @author Laurent Berge
 #'
@@ -1807,7 +1831,8 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 #' summary(base_hdd_preprocess)
 #'
 #'
-txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_types, nb_skip, delim, preprocessfun, replace = FALSE, verbose, ...){
+txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_types, 
+                   nb_skip, delim, preprocessfun, replace = FALSE, verbose = 0, ...){
 	# This function reads a large text file thanks to readr
 	# and trasforms it into a HDD document
 
@@ -1821,13 +1846,15 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	check_arg(nb_skip, "integer scalar GE{0}")
 	check_arg(delim, "character scalar")
 	check_arg(replace, "logical scalar")
-	check_arg(verbose, "numeric scalar")
+	check_arg_plus(verbose, "NULL logical scalar conv")
 	check_arg(rowsPerChunk, "integer scalar GE{1}")
 	check_arg(preprocessfun, "function arg(1)")
 
 	path_all = path
 
 	INFORM_PATTERN = FALSE
+	
+	time_start = Sys.time()
 
 	path_all_list = list()
 
@@ -1866,7 +1893,8 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	DO_PREPROCESS = !missing(preprocessfun)
 
 	if(!missing(col_types) && !inherits(col_types, "col_spec")){
-		stop("Argument 'col_types' must be a 'col_spec' object, obtained from, e.g., readr::cols() or readr::cols_only(), or from guess_cols_type()).")
+		stop("Argument 'col_types' must be a 'col_spec' object, obtained from, e.g., ", 
+		     "readr::cols() or readr::cols_only(), or from guess_cols_type()).")
 	}
 
 	#
@@ -1918,9 +1946,11 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 		} else {
 			if(length(col_names) != nb_col){
 				if(i > 1){
-					stop(prefix, "The data has ", nb_col, " columns instead of ", length(col_names), " like the previous files.")
+					stop(prefix, "The data has ", nb_col, " columns instead of ", 
+					     length(col_names), " like the previous files.")
 				} else {
-					stop(prefix, "The variable col_names should be of length ", nb_col, ". (At the moment it is of length ", length(col_names), ").")
+					stop(prefix, "The variable col_names should be of length ", nb_col, 
+					     ". (At the moment it is of length ", length(col_names), ").")
 				}
 
 			}
@@ -1950,26 +1980,35 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	}
 
 	fileSize = sum(fileSize_all) / 1e6
+	
+	if(is.null(verbose) && fileSize > 2000){
+		verbose = TRUE
+	}
 
 	# Consistency across multiple files
 	if(!all(nb_col_all == nb_col_all[1])) {
 		qui = which.max(nb_col_all != nb_col_all[1])
-		stop("The number of columns across files differ: file 1 has ", nb_col_all[1], " columns while file ", qui, " has ", nb_col_all[qui], " columns (", path_all[1], " vs ", path_all[qui], ").")
+		stop("The number of columns across files differ: file 1 has ", nb_col_all[1], 
+		     " columns while file ", qui, " has ", nb_col_all[qui], 
+				 " columns (", path_all[1], " vs ", path_all[qui], ").")
 	}
 
 	if(!all(sapply(col_names_all, function(x) x == col_names_all[[1]]))) {
 		qui = which.max(sapply(col_names_all, function(x) x != col_names_all[[1]]))
-		stop("The column names across files differ:\n File 1:", paste(col_names_all[[1]], collapse = ", "), "\nFile ", qui, ": ", paste(col_names_all[[qui]], collapse = ", "))
+		stop("The column names across files differ:\n File 1:", 
+		     paste(col_names_all[[1]], collapse = ", "), "\nFile ", qui, ": ", 
+				 paste(col_names_all[[qui]], collapse = ", "))
 	}
 
 	# Information on the number of files found (if needed)
-	if(INFORM_PATTERN && ((!missing(verbose) && verbose > 0) || (missing(verbose) && fileSize > 2000))){
+	if(INFORM_PATTERN && isTRUE(verbose)){
 		message(n, " files (", signif_plus(fileSize), " MB)")
 	}
 
-
 	if(!missing(rowsPerChunk)){
-		if("chunkMB" %in% names(mc)) warning("The value of argument 'chunkMB' is neglected since argument 'rowsPerChunk' is provided.")
+		if("chunkMB" %in% names(mc)){
+			warning("The value of argument 'chunkMB' is neglected since argument 'rowsPerChunk' is provided.")
+		}
 
 		if(rowsPerChunk > 1e9){
 			# prevents readr hard bug
@@ -1981,9 +2020,15 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 
 		nbChunks_approx = ceiling(fileSize / chunkMB_approx)
 
-		if(missing(verbose)) verbose = nbChunks_approx > 1
+		if(is.null(verbose)){
+			verbose = nbChunks_approx > 1
+		}
 
-		if(verbose > 0) message("Approx. number of chunks: ", nbChunks_approx, " (", ifelse(chunkMB_approx <= 1, "< 1", paste0("~", addCommas(chunkMB_approx))), "MB per chunk)")
+		if(verbose){
+			message("Approx. number of chunks: ", nbChunks_approx, " (", 
+			        ifelse(chunkMB_approx <= 1, "< 1", paste0("~", addCommas(chunkMB_approx))), 
+							"MB per chunk)")
+		}
 
 	} else {
 		nbChunks_approx = fileSize / chunkMB
@@ -1993,9 +2038,14 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 		# Limit of 500M lines
 		rowsPerChunk = min(rowsPerChunk, 500e6)
 
-		if(missing(verbose)) verbose = nbChunks_approx > 1
+		if(is.null(verbose)){
+			verbose = nbChunks_approx > 1
+		}
 
-		if(verbose > 0) message("Approx. number of chunks: ", ceiling(nbChunks_approx), " (", addCommas(rowsPerChunk), " rows per chunk)")
+		if(verbose > 0){
+			message("Approx. number of chunks: ", ceiling(nbChunks_approx), " (", 
+			        addCommas(rowsPerChunk), " rows per chunk)")
+		}
 	}
 
 
@@ -2056,7 +2106,13 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	}
 
 	for(path in path_all){
-		readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowsPerChunk, col_names = col_names, col_types = col_types, skip = nb_skip, delim = delimiter, ...)
+		readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowsPerChunk, 
+		                          col_names = col_names, col_types = col_types, 
+															skip = nb_skip, delim = delimiter, ...)
+	}
+	
+	if(verbose){
+		message("Importation in ", format_difftime(time_start))
 	}
 
 	invisible(NULL)

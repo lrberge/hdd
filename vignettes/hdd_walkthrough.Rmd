@@ -57,18 +57,29 @@ library(hdd)
 
 
 
-`hdd` provides a class of data, *hard drive data*, allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to [data.table](<https://github.com/Rdatatable/data.table/wiki>). Operations are performed "chunk-wise" behind the scene. Here is a brief presentation of the main features.
+`hdd` provides a class of data, *hard drive data*, allowing the easy 
+importation/manipulation of out of memory data sets. The data sets are located 
+on disk but look like in-memory, the syntax for manipulation is similar to 
+[data.table](<https://github.com/Rdatatable/data.table/wiki>). Operations 
+are performed "chunk-wise" behind the scene. Here is a brief presentation of the main features.
 
 # Example with publication data
 
-Throughout this document, we will use the example of the Microsoft Academic Graph data (<https://www.microsoft.com/en-us/research/project/microsoft-academic-graph/>). This large and freely available data set contains all scientific publications meta information (like authors, titles, institutions, etc...) as collected by Microsoft and used in [microsoft academic](<https://aka.ms/microsoft-academic>).
+Throughout this document, we will use the example of the Microsoft Academic Graph 
+data (<https://www.microsoft.com/en-us/research/project/microsoft-academic-graph/>). 
+This large and freely available data set contains all scientific publications meta 
+information (like authors, titles, institutions, etc...) as collected by Microsoft 
+and used in (the now defunct) microsoft academic.
 
-The data is in the form of a relational data base of usually large text files (well over 10GB). We'll see how to deal with them in `R` with `hdd`.
+The data is in the form of a relational data base of usually large text files (well over 10GB). 
+We'll see how to deal with them in `R` with `hdd`.
 
 
 ## Importation
 
-First we have to import the data into `R` through a `hdd` data set. We're interested in importing the information on authors. We'll use the `txt2hdd` function. But first let's have a look at the data.
+First we have to import the data into `R` through a `hdd` data set. We're interested 
+in importing the information on authors. We'll use the `txt2hdd` function. But first
+ let's have a look at the data.
 
 ```{r, echo = TRUE, eval = FALSE}
 library(hdd)
@@ -77,18 +88,30 @@ peek("_path/authors.txt")
 
 
 ```{r, results='asis'}
-tab = head(peek("C:/Users/laurent.berge/DATA/MAG/Authors.txt", view = FALSE))
-if("pdf_document" %in% rmarkdown::all_output_formats(knitr::current_input())){
-  # tab = as.data.table(lapply(tab, function(x) fplot:::truncate_string(iconv(x, to="ASCII", sub = "£"), method = "trimMid", trunc = 16)))
-  tab = as.data.table(lapply(tab, iconv, to="ASCII", sub = "£"))
-}
+# tab = head(peek("C:/Users/laurent.berge/DATA/MAG/Authors.txt", view = FALSE))
+# if("pdf_document" %in% rmarkdown::all_output_formats(knitr::current_input())){
+#   # tab = as.data.table(lapply(tab, function(x) fplot:::truncate_string(iconv(x, to="ASCII", sub = "£"), method = "trimMid", trunc = 16)))
+#   tab = as.data.table(lapply(tab, iconv, to="ASCII", sub = "£"))
+# }
+tab = structure(list(V1 = c(4242L, 4630L, 4975L, 5211L, 5726L), V2 = c(21038L, 
+20184L, 19821L, 17100L, 18421L), V3 = c("enid bagnold", "arash idelchi",
+"judith bonaduce", "mark d aupperlee", "douglas c sundet"), V4 = c("Enid Bagnold",
+"Arash Idelchi", "Judith Bonaduce", "Mark D. Aupperlee", "Douglas C. Sundet"
+), V5 = structure(c(0, 0, 0, 0,
+0), class = "integer64"), V6 = c(1L, 1L, 3L, 20L, 8L), V7 = c(0L,
+11L, 2L, 521L, 61L), V8 = structure(c(16976L, 16976L, 16976L,
+16976L, 16976L), class = c("IDate", "Date"))), row.names = c(NA,
+-5L), class = "data.frame")
 knitr::kable(tab)
 
 ```
 
-We can see that the data set contains 8 variables, some are text, other are numeric. By default, the function `peek` also displays the delimiter of the data, here it is a tab delimited text file. 
+We can see that the data set contains 8 variables, some are text, other are numeric.
+ By default, the function `peek` also displays the delimiter of the data, here it is a 
+ tab delimited text file. 
 
-Now let's import the data. From the documentation, we can retrieve the variable names, and we will use them:
+Now let's import the data. From the documentation, we can retrieve the variable names, 
+and we will use them:
 
 ```{r, echo = TRUE, eval = FALSE}
 col_names = c("AuthorId", "Rank", "NormalizedName", "DisplayName", 
@@ -100,9 +123,20 @@ txt2hdd("_path/authors.txt", # The text file
 		chunkMB = 500, col_names = col_names)
 ```
 
-By default, the types of the variables are automatically set, based on the guess of the function `fread` from package `data.table`. Note that 64bits integers variables are imported as doubles. You can set the column types yourself using the function `cols` or `cols_only` from package `readr`. In any case, if there are importing problems, a specific repository, which is itself a hdd file, reporting all importing problems is created (in the example, it there were problems, it would be located at `"_path/hdd_authors/problems"`).
+By default, the types of the variables are automatically set, based on the guess 
+of the function `fread` from package `data.table`. Note that 64bits integers 
+variables are imported as doubles. You can set the column types yourself using the 
+function `cols` or `cols_only` from package `readr`. In any case, if there are 
+importing problems, a specific repository, which is itself a hdd file, reporting all 
+importing problems is created (in the example, it there were problems, it would be 
+located at `"_path/hdd_authors/problems"`).
 
-The function `txt2hdd` creates a folder on disk containing the full data set divided into several files named `slice_XX.fst` with XX its number. The `.fst` files are in a format for fast reading/writing on disk (see `fst` [homepage](<http://www.fstpackage.org/>)). Every time a `hdd` data set is created, the associated folder on disk includes a file `_hdd.txt` containing: i) a summary of the data (number of rows/columns, first five observations) and ii) the log of the commands which created it.
+The function `txt2hdd` creates a folder on disk containing the full data set divided 
+into several files named `slice_XX.fst` with XX its number. The `.fst` files are 
+in a format for fast reading/writing on disk (see `fst` [homepage](<http://www.fstpackage.org/>)). 
+Every time a `hdd` data set is created, the associated folder on disk includes a 
+file `_hdd.txt` containing: i) a summary of the data (number of rows/columns, 
+first five observations) and ii) the log of the commands which created it.
 
 Now that the data is imported into a `hdd` file, let's have a look at it:
 
@@ -112,11 +146,18 @@ summary(authors)
 ```
 
 ```{r}
-authors = hdd("C:/Users/laurent.berge/DATA/MAG/HDD/authors")
-summary(authors)
+# authors = hdd("C:/Users/laurent.berge/DATA/MAG/HDD/authors")
+# summary(authors)
+cat("Hard drive data of 5,518 MB. Made of 45 files.",
+    "Location: C:/Users/lrberge/DATA/MAG/HDD/authors/",
+    "202,913,367 lines, 5 variables.", sep = "\n")
 ```
 
-The summary provides some general information: the location of the data in the hard drive (note that this is the location on my hard drive!), the size of the data set on disk (which is lower that what it would be in-memory due to compression), here 13GB, the number of chunks, here 69, the number of lines, here 217 millions, and the numer of variables.
+The summary provides some general information: the location of the data in 
+the hard drive (note that this is the location on my hard drive!), the size of the 
+data set on disk (which is lower that what it would be in-memory due to compression), 
+here 13GB, the number of chunks, here 69, the number of lines, here 217 millions, and 
+the numer of variables.
 
 Now let's have a quick look at the first lines of the data:
 
@@ -164,9 +205,11 @@ head(authors_ascii)
 
 ## Manipulation
 
-You can manipulate the data as with any other `data.table`, but the extraction method for `hdd` objects (`[.hdd`) includes a few extra arguments.
+You can manipulate the data as with any other `data.table`, but the extraction method 
+for `hdd` objects (`[.hdd`) includes a few extra arguments.
 
-By default, the results are put into memory. Using the previous `author` data, let's find out all the author names containing the word "Einstein":
+By default, the results are put into memory. Using the previous `author` data, 
+let's find out all the author names containing the word "Einstein":
 
 ```{r, echo = TRUE, eval = FALSE}
 names_einstein = authors[grepl("\\beinstein\\b", NormalizedName), 
@@ -181,27 +224,37 @@ length(names_einstein)
 head(names_einstein)
 ```
 
-That's it, the algorithm has gone through the 217 million rows and found 1700 author names containing "Einstein". You can see that the command is the same as for a regular `data.table`.
+That's it, the algorithm has gone through the 217 million rows and found 1700 author names 
+containing "Einstein". You can see that the command is the same as for a regular `data.table`.
 
-But what if the result of the query does not fit into memory? You can still perform the query by adding the argument `newfile`. Now the result will be a `hdd` data set located in the path provided by the argument `newfile`.  As in the `"Importing with preprocessing"` section, let's create the data set containing the first three columns and dropping all names with non-ASCII characters. We can do as follows:
+But what if the result of the query does not fit into memory? You can still perform 
+the query by adding the argument `newfile`. Now the result will be a `hdd` data set 
+located in the path provided by the argument `newfile`.  As in the 
+`"Importing with preprocessing"` section, let's create the data set containing the 
+first three columns and dropping all names with non-ASCII characters. We can do as follows:
 
 ```{r, echo = TRUE, eval = FALSE}
 authors[!is.na(iconv(NormalizedName, to = "ASCII")), 1:3, 
 		newfile = "_path/hdd_authors_ascii"]
 ```
 
-The result is a new `hdd` data set located in `"_path/hdd_authors_ascii"`, which can be of any size.
+The result is a new `hdd` data set located in `"_path/hdd_authors_ascii"`, 
+which can be of any size.
 
 ## Exploring a hdd data set
 
-A `hdd` data set is made of several chunks, or files. You can explore each of them individually using the argument `file`. Further, you can use the special variable `.N` to refer to the total number of files making the data set. For example, let's select the first name of each chunk (or file):
+A `hdd` data set is made of several chunks, or files. You can explore each of 
+them individually using the argument `file`. Further, you can use the special 
+variable `.N` to refer to the total number of files making the data set. For example, 
+let's select the first name of each chunk (or file):
 
 ```{r, echo = TRUE}
 names_first = authors[1, NormalizedName, file = 1:.N]
 head(names_first)
 ```
 
-When you use the argument `file`, you can also use the special variable `.N` in the index. Here by selecting the last lines of each file:
+When you use the argument `file`, you can also use the special variable `.N` in the index. 
+Here by selecting the last lines of each file:
 
 ```{r, echo = TRUE}
 names_last = authors[.N, NormalizedName, file = 1:.N]
@@ -210,17 +263,24 @@ head(names_last)
 
 ## Extracting a full variable
 
-Of course you can extract a full variable with `$`, but the algorithm will proceed only if the expected size is not too large. For example the following code will raise an error because the expected size of the variable, 7GB, is deemed too large:
+Of course you can extract a full variable with `$`, but the algorithm will 
+proceed only if the expected size is not too large. For example the following 
+code will raise an error because the expected size of the variable, 7GB, is deemed too large:
 
 ```{r, echo = TRUE, error = TRUE}
 author_id = authors$AuthorId
 ```
 
-By default the cap at which this error is raised is 1GB. To drop the cap, just set `setHdd_extract.cap(Inf)`, but then beware of memory issues!
+By default the cap at which this error is raised is 1GB. To drop the cap, 
+just set `setHdd_extract.cap(Inf)`, but then beware of memory issues!
 
 ## Reading full hdd data sets from disk to memory
 
-Use the function `readfst` to read `hdd` files located on disk to memory. Of course the `hdd` file should be *small* enough to fit in memory. An error will be raised if the expected size of the data exceeds the value of `getHdd_extract.cap(new_cap)` (default is 1GB), which you can set with `setHdd_extract.cap(new_cap)`. For example:
+Use the function `readfst` to read `hdd` files located on disk to memory. Of 
+course the `hdd` file should be *small* enough to fit in memory. An error will 
+be raised if the expected size of the data exceeds the value of 
+`getHdd_extract.cap(new_cap)` (default is 1GB), which you can 
+set with `setHdd_extract.cap(new_cap)`. For example:
 
 ```{r, echo = TRUE, eval = FALSE}
 # to read the full data set into memory:
@@ -232,7 +292,11 @@ base_authors = authors_hdd[]
 
 # Slicing 
 
-Imagine you dispose of an in-memory data set to which you want to apply some function -- say for instance that you will have to apply a cartesian merge. However the result of this function does not fit in memomy. The function `hdd_slice` deals with it: it applies the function to slices of the original data, and save the results in a `hdd` data set. You'll be then able to deal with the result with `hdd`. 
+Imagine you dispose of an in-memory data set to which you want to apply some 
+function -- say for instance that you will have to apply a cartesian merge. 
+However the result of this function does not fit in memomy. The function `hdd_slice` 
+deals with it: it applies the function to slices of the original data, and save the
+ results in a `hdd` data set. You'll be then able to deal with the result with `hdd`. 
 
 Let's have an example with a cartesian merge:
 
@@ -248,23 +312,45 @@ hdd_slice(x, fun = cartesian_merge,
 
 ```
 
-Here the data `x` will be split in 100MB chunks and the function `cartesian_merge` will be applied to each of these chunks. The results will be saved in a `hdd` data set located in `_path/result_merge`. You'll then be able to manipulate the data in `_path/result_merge` as a regular `hdd` data set.
+Here the data `x` will be split in 100MB chunks and the function `cartesian_merge` 
+will be applied to each of these chunks. The results will be saved in a `hdd` data 
+set located in `_path/result_merge`. You'll then be able to manipulate the data 
+in `_path/result_merge` as a regular `hdd` data set.
 
-This example involved a merging operation only, but you can apply any kind of function (for example `x` can be a vector of text and the function can be the creation of ngrams, etc...).
+This example involved a merging operation only, but you can apply any kind of 
+function (for example `x` can be a vector of text and the function can be the 
+creation of ngrams, etc...).
 
 # Speed considerations and limitations
 
 ## In-memory operations will always be faster
 
-Manipulating in-memory data will always be orders of mmagnitude faster than manipulating on-disk data. This comes from the simple fact that read/write operations on disk are about 100 times slower than read/write in RAM -- further the read and write on disk also involves compression/decompression incurring increased CPU use. This is however the only way to deal with very large data sets (except of course if you have very deep pockets allowing you to have big RAM computers!).
+Manipulating in-memory data will always be orders of mmagnitude faster than 
+manipulating on-disk data. This comes from the simple fact that read/write operations
+ on disk are about 100 times slower than read/write in RAM -- further the read and 
+ write on disk also involves compression/decompression incurring increased CPU use. 
+ This is however the only way to deal with very large data sets (except of course if 
+ you have very deep pockets allowing you to have big RAM computers!).
 
-This means that at the moment your final data set reaches a memory-workable size, stop using `hdd` and start using regular `R`. Package `hdd` exists to make the transition from too-large-a-data-set to a memory-workable-data-set and is not intended to be a tool for regular data manipulation.
+This means that at the moment your final data set reaches a memory-workable size, 
+stop using `hdd` and start using regular `R`. Package `hdd` exists to make the 
+transition from too-large-a-data-set to a memory-workable-data-set and is not intended 
+to be a tool for regular data manipulation.
 
 ## On aggregation
 
-Since `hdd` data sets are split into multiple files, the user cannot perform aggregate operations on some variable (i.e. using the `by` clause in `data.table` language) and obtain "valid" results. Indeed, the aggregate operations will be performed chunk per chunk and **not** on the entirety of the data set (which is not possible because of the size).
+Since `hdd` data sets are split into multiple files, the user cannot perform 
+aggregate operations on some variable (i.e. using the `by` clause in `data.table` 
+language) and obtain "valid" results. Indeed, the aggregate operations will be 
+performed chunk per chunk and **not** on the entirety of the data set (which is not 
+possible because of the size).
 
-To circumvent this issue, the data set must be sorted by the variable(s) on which aggregation is done -- in which case the chunk by chunk operations will be valid. To sort `hdd` data sets, the function `hdd_setkey` has been created -- in particular it ensures that the keys do not spill across multiple files (to ensure consistency of the chunk by chunk aggregation). But beware, it is extremely slow (it involves multiple on-disk copying of the *full* data set).
+To circumvent this issue, the data set must be sorted by the variable(s) on which 
+aggregation is done -- in which case the chunk by chunk operations will be valid. 
+To sort `hdd` data sets, the function `hdd_setkey` has been created -- in particular 
+it ensures that the keys do not spill across multiple files (to ensure consistency of 
+the chunk by chunk aggregation). But beware, it is extremely slow (it involves 
+multiple on-disk copying of the *full* data set).
 
 
 
@@ -272,6 +358,10 @@ To circumvent this issue, the data set must be sorted by the variable(s) on whic
 
 On the Microsoft Academic Graph data:
 
-Arnab Sinha, Zhihong Shen, Yang Song, Hao Ma, Darrin Eide, Bo-June (Paul) Hsu, and Kuansan Wang. 2015. An Overview of Microsoft Academic Service (MAS) and Applications. In Proceedings of the 24th International Conference on World Wide Web (WWW 15 Companion). ACM, New York, NY, USA, 243-246. DOI=<http://dx.doi.org/10.1145/2740908.2742839>
+Arnab Sinha, Zhihong Shen, Yang Song, Hao Ma, Darrin Eide, Bo-June (Paul) Hsu, 
+and Kuansan Wang. 2015. An Overview of Microsoft Academic Service (MAS) and 
+Applications. In Proceedings of the 24th International Conference on World Wide 
+Web (WWW 15 Companion). ACM, New York, NY, USA, 243-246.
+ DOI=<http://dx.doi.org/10.1145/2740908.2742839>
 
 

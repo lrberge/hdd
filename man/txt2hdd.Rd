@@ -15,48 +15,72 @@ txt2hdd(
   delim,
   preprocessfun,
   replace = FALSE,
-  verbose,
+  verbose = 0,
   ...
 )
 }
 \arguments{
-\item{path}{Character vector that represents the path to the data. Note that it can be equal to patterns if multiple files with the same name are to be imported (if so it must be a fixed pattern, NOT a regular expression).}
+\item{path}{Character vector that represents the path to the data. Note that
+it can be equal to patterns if multiple files with the same name are to be imported
+(if so it must be a fixed pattern, NOT a regular expression).}
 
 \item{dirDest}{The destination directory, where the new HDD data should be saved.}
 
-\item{chunkMB}{The chunk sizes in MB, defaults to 500MB. Instead of using this argument, you can alternatively use the argument \code{rowsPerChunk} which decides the size of chunks in terms of lines.}
+\item{chunkMB}{The chunk sizes in MB, defaults to 500MB. Instead of using this
+argument, you can alternatively use the argument \code{rowsPerChunk} which decides
+the size of chunks in terms of lines.}
 
-\item{rowsPerChunk}{Number of rows per chunk. By default it is missing: its value is deduced from argument \code{chunkMB} and the size of the file. If provided, replaces any value provided in \code{chunkMB}.}
+\item{rowsPerChunk}{Number of rows per chunk. By default it is missing: its value
+is deduced from argument \code{chunkMB} and the size of the file. If provided,
+replaces any value provided in \code{chunkMB}.}
 
-\item{col_names}{The column names, by default is uses the ones of the data set. If the data set lacks column names, you must provide them.}
+\item{col_names}{The column names, by default is uses the ones of the data set.
+If the data set lacks column names, you must provide them.}
 
-\item{col_types}{The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}} to find them.}
+\item{col_types}{The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}}
+to find them.}
 
 \item{nb_skip}{Number of lines to skip.}
 
 \item{delim}{The delimiter. By default the function tries to find the delimiter, but sometimes it fails.}
 
-\item{preprocessfun}{A function that is applied to the data before saving. Default is missing. Note that if a function is provided, it MUST return a data.frame, anything other than data.frame is ignored.}
+\item{preprocessfun}{A function that is applied to the data before saving. Default
+is missing. Note that if a function is provided, it MUST return a data.frame,
+anything other than data.frame is ignored.}
 
-\item{replace}{If the destination directory already exists, you need to set the argument \code{replace=TRUE} to overwrite all the HDD files in it.}
+\item{replace}{If the destination directory already exists, you need to set the
+argument \code{replace=TRUE} to overwrite all the HDD files in it.}
 
-\item{verbose}{Integer. If verbose > 0, then the evolution of the importing process is reported. By default: equal to 1 when the expected number of chunks is greater than 1.}
+\item{verbose}{Logical scalar or \code{NULL} (default). If \code{TRUE}, then the evolution of
+the importing process as well as the time to import are reported.
+If \code{NULL}, it becomes \code{TRUE} when the data to import is greater than 5GB or there are
+more than one chunk.}
 
-\item{...}{Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, \code{quote = ""} can be interesting sometimes.}
+\item{...}{Other arguments to be passed to \code{\link[readr]{read_delim_chunked}},
+\code{quote = ""} can be interesting sometimes.}
 }
 \description{
-Imports text data and saves it into a HDD file. It uses \code{\link[readr]{read_delim_chunked}} to extract the data. It also allows to preprocess the data.
+Imports text data and saves it into a HDD file. It uses \code{\link[readr]{read_delim_chunked}}
+to extract the data. It also allows to preprocess the data.
 }
 \details{
-This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr} to read a large text file per chunk, and generate a HDD data set.
+This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr}
+to read a large text file per chunk, and generate a HDD data set.
 
-Since the main function for importation uses \code{readr}, the column specification must also be in readr's style (namely \code{\link[readr]{cols}} or \code{\link[readr]{cols_only}}).
+Since the main function for importation uses \code{readr}, the column specification
+must also be in readr's style (namely \code{\link[readr]{cols}} or \code{\link[readr]{cols_only}}).
 
-By default a guess of the column types is made on the first 10,000 rows. The guess is the application of \code{\link[hdd]{guess_col_types}} on these rows.
+By default a guess of the column types is made on the first 10,000 rows. The
+guess is the application of \code{\link[hdd]{guess_col_types}} on these rows.
 
-Note that by default, columns that are found to be integers are imported as double (in want of integer64 type in readr). Note that for large data sets, sometimes integer-like identifiers can be larger than 16 digits: in these case you must import them as character not to lose information.
+Note that by default, columns that are found to be integers are imported as double
+(in want of integer64 type in readr). Note that for large data sets, sometimes
+integer-like identifiers can be larger than 16 digits: in these case you must
+import them as character not to lose information.
 
-The delimiter is found with the function \code{\link[hdd]{guess_delim}}, which uses the guessing from \code{\link[data.table]{fread}}. Note that fixed width delimited files are not supported.
+The delimiter is found with the function \code{\link[hdd]{guess_delim}}, which
+uses the guessing from \code{\link[data.table]{fread}}. Note that fixed width
+delimited files are not supported.
 }
 \examples{
 
