@@ -4,3 +4,4 @@ Readme.md
 ^inst\NEWS.Rd$
 ^.github$
 ^_vignettes$
+^_pkgdown\.yml$
