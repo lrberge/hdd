@@ -27,10 +27,8 @@ This function looks at the first elements of a file, format it into a data frame
 iris_path = tempfile()
 fwrite(iris, iris_path)
 
-\donttest{
 # The first lines of the text file on viewer
 peek(iris_path)
-}
 
 # displaying the first lines:
 peek(iris_path, onlyLines = TRUE)

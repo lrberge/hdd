@@ -81,7 +81,7 @@ getHdd_extract.cap = function(){
 ####
 
 object_size = function(x){
-	if("hdd" %in% class(x)){
+	if(inherits(x, "hdd")){
 		res = tail(x$.size_cum, 1)
 	} else {
 		res = utils::object.size(x)
@@ -187,7 +187,7 @@ find_n_split = function(x, key, nfiles){
 obs = function(x, file){
 	# Finds the observation numbers of a hdd document by file
 
-	if(!"hdd" %in% class(x)){
+	if(!inherits(x, "hdd")){
 		stop("x must be a hdd file.")
 	}
 
@@ -302,7 +302,7 @@ checkVector = function(x){
 	if(is.vector(x)){
 		return(TRUE)
 	} else {
-		if(class(x) %in% c("integer", "numeric", "character", "factor", "Date") && is.null(dim(x))){
+		if(any(class(x) %in% c("integer", "numeric", "character", "factor", "Date")) && is.null(dim(x))){
 			return(TRUE)
 		}
 	}

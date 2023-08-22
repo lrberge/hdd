@@ -360,8 +360,6 @@ hdd = function(dir){
 
 	info_files = data.table(.nrow = all_row, .row_cum = cumsum(all_row), .ncol = all_col, .size = all_sizes, .size_cum = cumsum(all_sizes), .fileName = all_files)
 
-	# class(info_files) = c("hdd", "data.table", "data.frame")
-
 	# the result is the first 5 rows!
 	res = read_fst(info_files$.fileName[1], to = 5, as.data.table = TRUE)
 
@@ -1028,14 +1026,14 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 
 	memoryData = FALSE # flag indicating that the data is in memory
 	isKey = FALSE # flag of whether the data is sorted => Only for HDD files
-	if("fst_table" %in% class(x)){
+	if(inherits(x, "fst_table")){
 		file2copy = unclass(unclass(x)$meta)$path
-	} else if("hdd" %in% class(x)){
+	} else if(inherits(x, "hdd")){
 		file2copy = x$.fileName
 		if(!is.null(attr(x, "key"))){
 			isKey = TRUE
 		}
-	} else if("data.frame" %in% class(x)){
+	} else if(inherits(x, "data.frame")){
 		memoryData = TRUE
 	} else {
 		stop("The class of data is not supported. Only data.frame like data sets can be written in hdd.")
@@ -1100,7 +1098,7 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 		} else if(!missing(rowsPerChunk)) {
 			n_chunks = ceiling(nrow(x) / rowsPerChunk)
 		} else {
-			if("fst_table" %in% class(x)){
+			if(inherits(x, "fst_table")){
 				# we estimate the size of x
 				n2check = min(1000, ceiling(nrow(x) / 10))
 				size_x_subset = as.numeric(object.size(x[1:n2check, ]) / 1e6) # in MB
@@ -1578,11 +1576,11 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 	}
 
 	y_hdd = FALSE
-	if("hdd" %in% class(y)){
+	if(inherits(y, "hdd")){
 		y_hdd = TRUE
 	}
 
-	IS_HDD = "hdd" %in% class(x)
+	IS_HDD = inherits(x, "hdd")
 	if(!IS_HDD){
 		if(missing(rowsPerChunk) && missing(chunkMB)){
 			if(y_hdd){
@@ -2229,10 +2227,8 @@ guess_delim = function(path){
 #' iris_path = tempfile()
 #' fwrite(iris, iris_path)
 #'
-#' \donttest{
 #' # The first lines of the text file on viewer
 #' peek(iris_path)
-#' }
 #'
 #' # displaying the first lines:
 #' peek(iris_path, onlyLines = TRUE)
@@ -2292,10 +2288,11 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 
 	dt_name = paste0("peek_", gsub("\\.[^\\.]+$", "", gsub("^.+/", "", clean_path(path))))
 
-	if(view) {
+	if(view && interactive()){
 		myView <- get("View", envir = as.environment("package:utils"))
 		myView(x = sample_dt, title = dt_name)
 	}
+
 	invisible(sample_dt)
 }
 
@@ -2336,7 +2333,7 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 #'
 origin = function(x){
 
-	if(!"hdd" %in% class(x)){
+	if(!inherits(x, "hdd")){
 		stop("Argument 'x' must be a HDD object.")
 	}
 
