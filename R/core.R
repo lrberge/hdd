@@ -1773,6 +1773,15 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 #' the importing process as well as the time to import are reported.
 #' If `NULL`, it becomes `TRUE` when the data to import is greater than 5GB or there are
 #' more than one chunk.
+#' @param encoding Character scalar containing the encoding of the file to be read.
+#' By default it is "UTF-8" and is passed to the `readr` function [readr::locale()] which is used
+#' in [readr::read_delim_chunk()] (the reading function). A common encoding in Western Europe is
+#' "ISO-8859-1" (simply use "file filename" in a non-Windows console to get the encoding).
+#' 
+#' Note that this argument is ignored if the argument `locale` is not NULL.
+#' @param locale Either `NULL` (default), either an object created with [readr::locale()].
+#' This object will be passed to the reading function [readr::read_delim_chunked()] and handles
+#' how the data is imported.
 #' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, 
 #' \code{quote = ""} can be interesting sometimes.
 #'
@@ -1832,7 +1841,8 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 #'
 #'
 txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_types, 
-                   nb_skip, delim, preprocessfun, replace = FALSE, verbose = 0, ...){
+                   nb_skip, delim, preprocessfun, replace = FALSE, 
+									 encoding = "UTF-8", verbose = 0, locale = NULL, ...){
 	# This function reads a large text file thanks to readr
 	# and trasforms it into a HDD document
 
@@ -1844,11 +1854,12 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 	check_arg(chunkMB, "numeric scalar GT{0}")
 	check_arg(col_names, "character vector no na")
 	check_arg(nb_skip, "integer scalar GE{0}")
-	check_arg(delim, "character scalar")
+	check_arg(delim, encoding, "character scalar")
 	check_arg(replace, "logical scalar")
 	check_arg_plus(verbose, "NULL logical scalar conv")
 	check_arg(rowsPerChunk, "integer scalar GE{1}")
 	check_arg(preprocessfun, "function arg(1)")
+	check_arg(locale, "NULL class(locale)")
 
 	path_all = path
 
@@ -2104,10 +2115,17 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk, col_names, col_ty
 
 
 	}
+	
+	# the locale + the encoding
+	if(is.null(locale)){
+		my_locale = readr::locale(encoding = encoding)
+	} else {
+		my_locale = locale
+	}	
 
 	for(path in path_all){
 		readr::read_delim_chunked(file = path, callback = funPerChunk, chunk_size = rowsPerChunk, 
-		                          col_names = col_names, col_types = col_types, 
+		                          col_names = col_names, col_types = col_types, locale = my_locale,
 															skip = nb_skip, delim = delimiter, ...)
 	}
 	

@@ -1,9 +1,10 @@
 
-# `hdd` version 0.1.1 (2023-08-21)
+# `hdd` version 0.1.1 (2023-08-22)
 
 ## User visible changes
 
  - `txt2hdd`: argument path now accepts vectors and even patterns. All files matching the pattern will be imported to the `hdd` format.
+- `txt2hdd`: gains the arguments `encoding` and `locale`.
 
 ## Minor bug fixes
 
