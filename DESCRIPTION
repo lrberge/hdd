@@ -10,6 +10,5 @@ VignetteBuilder: knitr
 Description: Hard drive data: Class of data allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to 'data.table'. Operations are performed "chunk-wise" behind the scene.
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
