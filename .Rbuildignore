@@ -3,5 +3,6 @@
 Readme.md
 ^inst\NEWS.Rd$
 ^.github$
-^_vignettes$
+^_old_vignette$
 ^_pkgdown\.yml$
+^docs$

@@ -54,8 +54,8 @@ anything other than data.frame is ignored.}
 argument \code{replace=TRUE} to overwrite all the HDD files in it.}
 
 \item{encoding}{Character scalar containing the encoding of the file to be read.
-By default it is "UTF-8" and is passed to the \code{readr} function \code{\link[readr:locale]{readr::locale()}} which is used
-in \code{\link[readr:read_delim_chunk]{readr::read_delim_chunk()}} (the reading function). A common encoding in Western Europe is
+By default it is "UTF-8" and is passed to the \code{readr} function \code{\link[readr]{locale}} which is used
+in \code{\link[readr]{read_delim_chunked}} (the reading function). A common encoding in Western Europe is
 "ISO-8859-1" (simply use "file filename" in a non-Windows console to get the encoding).
 
 Note that this argument is ignored if the argument \code{locale} is not NULL.}
@@ -65,8 +65,8 @@ the importing process as well as the time to import are reported.
 If \code{NULL}, it becomes \code{TRUE} when the data to import is greater than 5GB or there are
 more than one chunk.}
 
-\item{locale}{Either \code{NULL} (default), either an object created with \code{\link[readr:locale]{readr::locale()}}.
-This object will be passed to the reading function \code{\link[readr:read_delim_chunked]{readr::read_delim_chunked()}} and handles
+\item{locale}{Either \code{NULL} (default), either an object created with \code{\link[readr]{locale}}.
+This object will be passed to the reading function \code{\link[readr]{read_delim_chunked}} and handles
 how the data is imported.}
 
 \item{...}{Other arguments to be passed to \code{\link[readr]{read_delim_chunked}},

@@ -229,6 +229,11 @@ clean_path = function(x){
 #### Other Utilities ####
 ####
 
+is_numeric_in_char = function(x){
+  res = tryCatch(as.numeric(x), warning = function(x) "not numeric")
+  !identical(res, "not numeric")
+}
+
 format_difftime = function(x){
   # x: number of seconds or difftime or time
 
@@ -262,11 +267,12 @@ format_difftime = function(x){
 			n_hour = xi %/% 3600
 			rest_s = floor(xi %% 3600)
 			n_min = rest_s %/% 60
-			res[i] = string_magic("{n ? n_hour} hour{#s} {%02i ? n_min} min")
+			res[i] = paste0(n_hour, " hour", ifelse(n_hour > 1, "s", ""), 
+			                " ", sprintf("%02i", n_min), " min")
 		} else if(xi > 60){
 			n_min = xi %/% 60
 			n_sec = floor(xi %% 60)
-			res[i] = string_magic("{n ? n_min} min {%02i ? n_sec} sec")
+			res[i] = paste0(n_min, " min ", sprintf("%02i", n_sec), " sec")
 		} else if(xi > 0.9){
 			res[i] = paste0(fsignif(xi, 2, 1), "s")
 		} else if(xi > 1e-3){

@@ -1774,13 +1774,13 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 #' If `NULL`, it becomes `TRUE` when the data to import is greater than 5GB or there are
 #' more than one chunk.
 #' @param encoding Character scalar containing the encoding of the file to be read.
-#' By default it is "UTF-8" and is passed to the `readr` function [readr::locale()] which is used
-#' in [readr::read_delim_chunk()] (the reading function). A common encoding in Western Europe is
+#' By default it is "UTF-8" and is passed to the `readr` function \code{\link[readr]{locale}} which is used
+#' in \code{\link[readr]{read_delim_chunked}} (the reading function). A common encoding in Western Europe is
 #' "ISO-8859-1" (simply use "file filename" in a non-Windows console to get the encoding).
 #' 
 #' Note that this argument is ignored if the argument `locale` is not NULL.
-#' @param locale Either `NULL` (default), either an object created with [readr::locale()].
-#' This object will be passed to the reading function [readr::read_delim_chunked()] and handles
+#' @param locale Either `NULL` (default), either an object created with \code{\link[readr]{locale}}.
+#' This object will be passed to the reading function \code{\link[readr]{read_delim_chunked}} and handles
 #' how the data is imported.
 #' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, 
 #' \code{quote = ""} can be interesting sometimes.
