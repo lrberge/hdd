@@ -441,7 +441,7 @@ deparse_long = function (x){
 
 
 is_r_check = function(){
-	any(grepl("_R_CHECK", names(Sys.getenv())))
+	any(grepl("_R_CHECK", names(Sys.getenv()), fixed = TRUE))
 }
 
 
