@@ -33,7 +33,7 @@ This function is provided for convenience reason: it does the job of sorting the
 hdd_path = tempfile() # => folder where the data will be saved
 write_hdd(iris, hdd_path)
 # Let's add data to it
-for(i in 1:10) write_hdd(iris, hdd_path, add = TRUE)
+for(i in 1:5) write_hdd(iris, hdd_path, add = TRUE)
 
 base_hdd = hdd(hdd_path)
 summary(base_hdd)

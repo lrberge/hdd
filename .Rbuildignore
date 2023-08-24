@@ -6,3 +6,4 @@ Readme.md
 ^_old_vignette$
 ^_pkgdown\.yml$
 ^docs$
+^\.vscode$
