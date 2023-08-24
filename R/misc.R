@@ -9,6 +9,7 @@
 #### Setters/Getters ####
 ####
 
+
 #' Sets/gets the size cap when extracting hdd data
 #'
 #' Sets/gets the default size cap when extracting HDD variables with \code{\link[hdd]{cash-.hdd}} or when importing full HDD data sets with \code{\link[hdd]{readfst}}.
@@ -77,9 +78,11 @@ getHdd_extract.cap = function(){
 	x
 }
 
+
 ####
 #### HDD utilities ####
 ####
+
 
 object_size = function(x){
 	if(inherits(x, "hdd")){
@@ -228,6 +231,7 @@ clean_path = function(x){
 ####
 #### Other Utilities ####
 ####
+
 
 is_numeric_in_char = function(x){
   res = tryCatch(as.numeric(x), warning = function(x) "not numeric")
@@ -436,7 +440,9 @@ deparse_long = function (x){
 }
 
 
-
+is_r_check = function(){
+	any(grepl("_R_CHECK", names(Sys.getenv())))
+}
 
 
 
