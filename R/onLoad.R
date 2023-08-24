@@ -8,6 +8,7 @@
 	
 	if(is_r_check()){
 		data.table::setDTthreads(1)
+		fst::threads_fst(1)
 	}
 
 	invisible()
