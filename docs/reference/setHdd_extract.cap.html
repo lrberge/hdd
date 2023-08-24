@@ -97,7 +97,7 @@ This can also be bypassed by using the argument <code>confirm</code>.</p>
 <span class="r-in"><span><span class="va">base_hdd</span> <span class="op">=</span> <span class="fu"><a href="hdd.html">hdd</a></span><span class="op">(</span><span class="va">hdd_path</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">base_hdd</span><span class="op">)</span> <span class="co"># =&gt; 11 files</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hard drive data of 48.7 KB. Made of 11 files.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: C:/Users/lrberge/AppData/Local/Temp/RtmpKImlA3/filec47875754850/</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: C:/Users/lrberge/AppData/Local/Temp/Rtmpa0wfuK/file56884ca51dd4/</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1650 lines, 5 variables.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># we can extract the data from the 11 files with '$':</span></span></span>
@@ -115,8 +115,6 @@ This can also be bypassed by using the argument <code>confirm</code>.</p>
 <span class="r-in"><span><span class="co"># Following code asks a confirmation:</span></span></span>
 <span class="r-in"><span><span class="fu">setHdd_extract.cap</span><span class="op">(</span>sizeMB <span class="op">=</span> <span class="fl">0.005</span><span class="op">)</span> <span class="co"># new cap of 5KB</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="va">pl</span> <span class="op">&lt;-</span> <span class="va">base_hdd</span><span class="op">$</span><span class="va">Sepal.Length</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Error in `$.hdd`(base_hdd, Sepal.Length) : </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Cannot extract variable Sepal.Length because its size (0.013 MB) is greater than the cap of 0.005 MB. You can change the cap using setHdd_extract.cap(new_cap).</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># To extract the variable without changing the cap:</span></span></span>
 <span class="r-in"><span><span class="va">pl</span> <span class="op">=</span> <span class="va">base_hdd</span><span class="op">[</span>, <span class="va">Sepal.Length</span><span class="op">]</span> <span class="co"># =&gt; no size control is performed</span></span></span>

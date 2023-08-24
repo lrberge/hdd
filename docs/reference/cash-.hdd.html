@@ -86,10 +86,16 @@ In any case, if your variable is large and you don't want to change the extracti
     </div>
     <div id="see-also">
     <h2>See also</h2>
-    <div class="dont-index"><p>See <code><a href="hdd.html">hdd</a></code>, <code>sub-.hdd</code> and <code>cash-.hdd</code> for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see <code><a href="txt2hdd.html">txt2hdd</a></code>.</p>
-<p>See <code><a href="hdd_slice.html">hdd_slice</a></code> to apply functions to chunks of data (and create HDD objects) and <code><a href="hdd_merge.html">hdd_merge</a></code> to merge large files.</p>
-<p>To create/reshape HDD objects from memory or from other HDD objects, see <code><a href="write_hdd.html">write_hdd</a></code>.</p>
-<p>To display general information from HDD objects: <code><a href="origin.html">origin</a></code>, <code><a href="summary.hdd.html">summary.hdd</a></code>, <code><a href="print.hdd.html">print.hdd</a></code>, <code><a href="dim.hdd.html">dim.hdd</a></code> and <code><a href="names.hdd.html">names.hdd</a></code>.</p></div>
+    <div class="dont-index"><p>See <code><a href="hdd.html">hdd</a></code>, <code>sub-.hdd</code> and <code>cash-.hdd</code>
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see <code><a href="txt2hdd.html">txt2hdd</a></code>.</p>
+<p>See <code><a href="hdd_slice.html">hdd_slice</a></code> to apply functions to chunks of data (and create
+HDD objects) and <code><a href="hdd_merge.html">hdd_merge</a></code> to merge large files.</p>
+<p>To create/reshape HDD objects from memory or from other HDD objects, see
+<code><a href="write_hdd.html">write_hdd</a></code>.</p>
+<p>To display general information from HDD objects: <code><a href="origin.html">origin</a></code>,
+<code><a href="summary.hdd.html">summary.hdd</a></code>, <code><a href="print.hdd.html">print.hdd</a></code>,
+<code><a href="dim.hdd.html">dim.hdd</a></code> and <code><a href="names.hdd.html">names.hdd</a></code>.</p></div>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -108,7 +114,7 @@ In any case, if your variable is large and you don't want to change the extracti
 <span class="r-in"><span><span class="va">base_hdd</span> <span class="op">=</span> <span class="fu"><a href="hdd.html">hdd</a></span><span class="op">(</span><span class="va">hdd_path</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">base_hdd</span><span class="op">)</span> <span class="co"># =&gt; 11 files</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hard drive data of 48.7 KB. Made of 11 files.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: C:/Users/lrberge/AppData/Local/Temp/RtmpKImlA3/filec4784294850/</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: C:/Users/lrberge/AppData/Local/Temp/Rtmpa0wfuK/file568873707213/</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1650 lines, 5 variables.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># we can extract the data from the 11 files with '$':</span></span></span>
@@ -126,7 +132,6 @@ In any case, if your variable is large and you don't want to change the extracti
 <span class="r-in"><span><span class="co"># Following asks for confirmation in interactive mode:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="setHdd_extract.cap.html">setHdd_extract.cap</a></span><span class="op">(</span>sizeMB <span class="op">=</span> <span class="fl">0.005</span><span class="op">)</span> <span class="co"># new cap of 5KB</span></span></span>
 <span class="r-in"><span><span class="va">pl</span> <span class="op">=</span> <span class="va">base_hdd</span><span class="op">$</span><span class="va">Sepal.Length</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in `$.hdd`(base_hdd, Sepal.Length):</span> Cannot extract variable Sepal.Length because its size (0.013 MB) is greater than the cap of 0.005 MB. You can change the cap using setHdd_extract.cap(new_cap).</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># To extract the variable without changing the cap:</span></span></span>
 <span class="r-in"><span><span class="va">pl</span> <span class="op">=</span> <span class="va">base_hdd</span><span class="op">[</span>, <span class="va">Sepal.Length</span><span class="op">]</span> <span class="co"># =&gt; no size control is performed</span></span></span>

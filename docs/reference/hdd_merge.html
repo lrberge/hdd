@@ -83,15 +83,18 @@
 
 
 <dt>newfile</dt>
-<dd><p>Destination of the result, i.e., a destination folder that will receive the HDD data.</p></dd>
+<dd><p>Destination of the result, i.e., a destination folder that will
+receive the HDD data.</p></dd>
 
 
 <dt>chunkMB</dt>
-<dd><p>Numeric, default is missing. If provided, the data 'x' is split in chunks of 'chunkMB' MB and the merge is applied chunkwise.</p></dd>
+<dd><p>Numeric, default is missing. If provided, the data 'x' is split
+in chunks of 'chunkMB' MB and the merge is applied chunkwise.</p></dd>
 
 
 <dt>rowsPerChunk</dt>
-<dd><p>Integer, default is missing. If provided, the data 'x' is split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.</p></dd>
+<dd><p>Integer, default is missing. If provided, the data 'x' is
+split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.</p></dd>
 
 
 <dt>all</dt>
@@ -111,25 +114,50 @@
 
 
 <dt>replace</dt>
-<dd><p>Default is <code>FALSE</code>: if the destination folder already contains data, whether to replace it.</p></dd>
+<dd><p>Default is <code>FALSE</code>: if the destination folder already contains
+data, whether to replace it.</p></dd>
 
 
 <dt>verbose</dt>
-<dd><p>Numeric. Whether information on the advancement should be displayed. If equal to 0, nothing is displayed. By default it is equal to 1 if the size of <code>x</code> is greater than 1GB.</p></dd>
+<dd><p>Numeric. Whether information on the advancement should be displayed.
+If equal to 0, nothing is displayed. By default it is equal to 1 if the size
+of <code>x</code> is greater than 1GB.</p></dd>
 
 </dl></div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>This function does not return anything. It applies the merging between
+two potentially large (out of memory) data set and saves them on disk at the location
+of <code>newfile</code>, the destination folder which will be populated with .fst files
+representing chunks of the resulting merge.</p>
+
+
+<p>To interact with the data (on disk) newly created, use the function <code><a href="hdd.html">hdd()</a></code>.</p>
+    </div>
     <div id="details">
     <h2>Details</h2>
-    <p>If <code>x</code> (resp <code>y</code>) is a HDD object, then the merging will be operated chunkwise, with the original chunks of the objects. To change the size of the chunks for <code>x</code>: you can use the argument <code>chunkMB</code> or <code>rowsPerChunk.</code></p>
-<p>To change the chunk size of <code>y</code>, you can rewrite <code>y</code> with a new chunk size using <code><a href="write_hdd.html">write_hdd</a></code>.</p>
-<p>Note that the merging operation could also be achieved with <code><a href="hdd_slice.html">hdd_slice</a></code> (although it would require setting up a ad hoc function).</p>
+    <p>If <code>x</code> (resp <code>y</code>) is a HDD object, then the merging will be operated
+chunkwise, with the original chunks of the objects. To change the size of the
+chunks for <code>x</code>: you can use the argument <code>chunkMB</code> or <code>rowsPerChunk.</code></p>
+<p>To change the chunk size of <code>y</code>, you can rewrite <code>y</code> with a new chunk
+size using <code><a href="write_hdd.html">write_hdd</a></code>.</p>
+<p>Note that the merging operation could also be achieved with <code><a href="hdd_slice.html">hdd_slice</a></code>
+(although it would require setting up an ad hoc function).</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
-    <div class="dont-index"><p>See <code><a href="hdd.html">hdd</a></code>, <code>sub-.hdd</code> and <code>cash-.hdd</code> for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see <code><a href="txt2hdd.html">txt2hdd</a></code>.</p>
-<p>See <code><a href="hdd_slice.html">hdd_slice</a></code> to apply functions to chunks of data (and create HDD objects) and <code>hdd_merge</code> to merge large files.</p>
-<p>To create/reshape HDD objects from memory or from other HDD objects, see <code><a href="write_hdd.html">write_hdd</a></code>.</p>
-<p>To display general information from HDD objects: <code><a href="origin.html">origin</a></code>, <code><a href="summary.hdd.html">summary.hdd</a></code>, <code><a href="print.hdd.html">print.hdd</a></code>, <code><a href="dim.hdd.html">dim.hdd</a></code> and <code><a href="names.hdd.html">names.hdd</a></code>.</p></div>
+    <div class="dont-index"><p>See <code><a href="hdd.html">hdd</a></code>, <code>sub-.hdd</code> and <code>cash-.hdd</code>
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see <code><a href="txt2hdd.html">txt2hdd</a></code>.</p>
+<p>See <code><a href="hdd_slice.html">hdd_slice</a></code> to apply functions to chunks of data (and create
+HDD objects) and <code>hdd_merge</code> to merge large files.</p>
+<p>To create/reshape HDD objects from memory or from other HDD objects, see
+<code><a href="write_hdd.html">write_hdd</a></code>.</p>
+<p>To display general information from HDD objects: <code><a href="origin.html">origin</a></code>,
+<code><a href="summary.hdd.html">summary.hdd</a></code>, <code><a href="print.hdd.html">print.hdd</a></code>,
+<code><a href="dim.hdd.html">dim.hdd</a></code> and <code><a href="names.hdd.html">names.hdd</a></code>.</p></div>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -155,7 +183,7 @@
 <span class="r-in"><span><span class="va">base_merged</span> <span class="op">=</span> <span class="fu"><a href="hdd.html">hdd</a></span><span class="op">(</span><span class="va">hdd_path</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">base_merged</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hard drive data of 63.9 KB. Made of 3 files.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Location: C:/Users/lrberge/AppData/Local/Temp/RtmpKImlA3/filec4784511800/</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Location: C:/Users/lrberge/AppData/Local/Temp/Rtmpa0wfuK/file56884b051eb/</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22,500 lines, 11 variables.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">base_merged</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         id Sepal.Length Sepal.Width Petal.Length Petal.Width   Species x_1 x_2</span>
