@@ -23,11 +23,14 @@ hdd_merge(
 
 \item{y}{A data set either a data.frame of a HDD object.}
 
-\item{newfile}{Destination of the result, i.e., a destination folder that will receive the HDD data.}
+\item{newfile}{Destination of the result, i.e., a destination folder that will
+receive the HDD data.}
 
-\item{chunkMB}{Numeric, default is missing. If provided, the data 'x' is split in chunks of 'chunkMB' MB and the merge is applied chunkwise.}
+\item{chunkMB}{Numeric, default is missing. If provided, the data 'x' is split
+in chunks of 'chunkMB' MB and the merge is applied chunkwise.}
 
-\item{rowsPerChunk}{Integer, default is missing. If provided, the data 'x' is split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.}
+\item{rowsPerChunk}{Integer, default is missing. If provided, the data 'x' is
+split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.}
 
 \item{all}{Default is \code{FALSE}.}
 
@@ -37,19 +40,34 @@ hdd_merge(
 
 \item{allow.cartesian}{Logical: whether to allow cartesian merge. Defaults to \code{FALSE}.}
 
-\item{replace}{Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.}
+\item{replace}{Default is \code{FALSE}: if the destination folder already contains
+data, whether to replace it.}
 
-\item{verbose}{Numeric. Whether information on the advancement should be displayed. If equal to 0, nothing is displayed. By default it is equal to 1 if the size of \code{x} is greater than 1GB.}
+\item{verbose}{Numeric. Whether information on the advancement should be displayed.
+If equal to 0, nothing is displayed. By default it is equal to 1 if the size
+of \code{x} is greater than 1GB.}
+}
+\value{
+This function does not return anything. It applies the merging between
+two potentially large (out of memory) data set and saves them on disk at the location
+of \code{newfile}, the destination folder which will be populated with .fst files
+representing chunks of the resulting merge.
+
+To interact with the data (on disk) newly created, use the function \code{\link[=hdd]{hdd()}}.
 }
 \description{
 This function merges in-memory/HDD data to a HDD file.
 }
 \details{
-If \code{x} (resp \code{y}) is a HDD object, then the merging will be operated chunkwise, with the original chunks of the objects. To change the size of the chunks for \code{x}: you can use the argument \code{chunkMB} or \code{rowsPerChunk.}
+If \code{x} (resp \code{y}) is a HDD object, then the merging will be operated
+chunkwise, with the original chunks of the objects. To change the size of the
+chunks for \code{x}: you can use the argument \code{chunkMB} or \code{rowsPerChunk.}
 
-To change the chunk size of \code{y}, you can rewrite \code{y} with a new chunk size using \code{\link[hdd]{write_hdd}}.
+To change the chunk size of \code{y}, you can rewrite \code{y} with a new chunk
+size using \code{\link[hdd]{write_hdd}}.
 
-Note that the merging operation could also be achieved with \code{\link[hdd]{hdd_slice}} (although it would require setting up a ad hoc function).
+Note that the merging operation could also be achieved with \code{\link[hdd]{hdd_slice}}
+(although it would require setting up an ad hoc function).
 }
 \examples{
 
@@ -72,13 +90,19 @@ print(base_merged)
 
 }
 \seealso{
-See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}}
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
-See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create
+HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
-To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+To create/reshape HDD objects from memory or from other HDD objects, see
+\code{\link[hdd]{write_hdd}}.
 
-To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
+To display general information from HDD objects: \code{\link[hdd]{origin}},
+\code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}},
+\code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

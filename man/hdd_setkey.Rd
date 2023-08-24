@@ -11,19 +11,31 @@ hdd_setkey(x, key, newfile, chunkMB = 500, replace = FALSE, verbose = 1)
 
 \item{key}{A character vector of the keys.}
 
-\item{newfile}{Destination of the result, i.e., a destination folder that will receive the HDD data.}
+\item{newfile}{Destination of the result, i.e., a destination folder that will
+receive the HDD data.}
 
-\item{chunkMB}{The size of chunks used to sort the data. Default is 500MB. The bigger this number the faster the sorting is (depends on your memory available though).}
+\item{chunkMB}{The size of chunks used to sort the data. Default is 500MB. The
+bigger this number the faster the sorting is (depends on your memory available though).}
 
-\item{replace}{Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.}
+\item{replace}{Default is \code{FALSE}: if the destination folder already contains
+data, whether to replace it.}
 
-\item{verbose}{Numeric, default is 1. Whether to display information on the advancement of the algorithm. If equal to 0, nothing is displayed.}
+\item{verbose}{Numeric, default is 1. Whether to display information on the advancement
+of the algorithm. If equal to 0, nothing is displayed.}
+}
+\value{
+This functions does not return anything in R, instead its result is a new
+folder populated with \code{.fst} files which represent a data set that can be loaded
+with the function \code{\link[=hdd]{hdd()}}.
 }
 \description{
-This function sets a key to a HDD file. It creates a copy of the HDD file sorted by the key. Note that the sorting process is very time consuming.
+This function sets a key to a HDD file. It creates a copy of the HDD file sorted
+by the key. Note that the sorting process is very time consuming.
 }
 \details{
-This function is provided for convenience reason: it does the job of sorting the data and ensuring consistency across files, but it is very slow since it involves copying several times the entire data set. To be used parsimoniously.
+This function is provided for convenience reason: it does the job of sorting
+the data and ensuring consistency across files, but it is very slow since it
+involves copying several times the entire data set. To be used parsimoniously.
 }
 \examples{
 
@@ -62,13 +74,19 @@ print(base_hdd_sorted)
 
 }
 \seealso{
-See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}}
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
-See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create
+HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
-To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+To create/reshape HDD objects from memory or from other HDD objects, see
+\code{\link[hdd]{write_hdd}}.
 
-To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
+To display general information from HDD objects: \code{\link[hdd]{origin}},
+\code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}},
+\code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

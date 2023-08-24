@@ -15,17 +15,31 @@
 
 #' Read fst or HDD files as DT
 #'
-#' This is the function \code{\link[fst]{read_fst}} but with automatic conversion to data.table. It also allows to read \code{hdd} data.
+#' This is the function \code{\link[fst]{read_fst}} but with automatic conversion 
+#' to data.table. It also allows to read \code{hdd} data.
 #'
 #' @inherit hdd seealso
 #'
-#' @param path Path to \code{fst} file -- or path to \code{hdd} data. For hdd files, there is a
-#' @param columns Column names to read. The default is to read all columns. Ignored for \code{hdd} files.
+#' @param path Path to \code{fst} file -- or path to \code{hdd} data. For hdd files, 
+#' there is a
+#' @param columns Column names to read. The default is to read all columns. Ignored 
+#' for \code{hdd} files.
 #' @param from Read data starting from this row number. Ignored for \code{hdd} files.
-#' @param to Read data up until this row number. The default is to read to the last row of the stored data set. Ignored for \code{hdd} files.
-#' @param confirm If the HDD file is larger than ten times the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.
-#'
+#' @param to Read data up until this row number. The default is to read to the last 
+#' row of the stored data set. Ignored for \code{hdd} files.
+#' @param confirm If the HDD file is larger than ten times the variable \code{getHdd_extract.cap()}, 
+#' then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. 
+#' You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}.
+#' 
 #' @author Laurent Berge
+#' 
+#' @details 
+#' This function reads one or several `.fst` files and place them in a single 
+#' data table.  
+#' 
+#' @return 
+#' This function returns a data table located in memory. It allows to read in memory
+#' the `hdd` data saved on disk.
 #'
 #' @examples
 #'
@@ -278,27 +292,48 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk, replace = FALSE, 
 
 #' Hard drive data set
 #'
-#' This function connects to a hard drive data set (HDD). You can access the hard drive data in a similar way to a \code{data.table}.
+#' This function connects to a hard drive data set (HDD). You can access the hard 
+#' drive data in a similar way to a \code{data.table}.
 #'
 #' @param dir The directory where the hard drive data set is.
 #'
 #' @author Laurent Berge
 #'
 #' @details
-#' HDD has been created to deal with out of memory data sets. The data set exists in the hard drive, split in multiple files -- each file being workable in memory.
+#' HDD has been created to deal with out of memory data sets. The data set exists 
+#' in the hard drive, split in multiple files -- each file being workable in memory.
 #'
-#' You can perform extraction and manipulation operations as with a regular data set with \code{\link[hdd]{sub-.hdd}}. Each operation is performed chunk-by-chunk behind the scene.
+#' You can perform extraction and manipulation operations as with a regular data 
+#' set with \code{\link[hdd]{sub-.hdd}}. Each operation is performed chunk-by-chunk 
+#' behind the scene.
 #'
-#' In terms of performance, working with complete data sets in memory will always be faster. This is because read/write operations on disk are order of magnitude slower than read/write in memory. However, this might be the only way to deal with out of memory data.
+#' In terms of performance, working with complete data sets in memory will always 
+#' be faster. This is because read/write operations on disk are order of magnitude 
+#' slower than read/write in memory. However, this might be the only way to deal 
+#' with out of memory data.
+#' 
+#' @return 
+#' This function returns an object of class `hdd` which is linked to 
+#' a folder on disk containing the data. The data is not loaded in R. 
+#' 
+#' This object is not intended to be interacted with directly as a regular list. Please use the methods
+#' \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} to extract the data. 
+#' 
 #'
 #' @seealso
-#' See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+#' See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} 
+#' for the extraction and manipulation of out of memory data. For importation of 
+#' HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 #'
-#' See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+#' See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create 
+#' HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 #'
-#' To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+#' To create/reshape HDD objects from memory or from other HDD objects, see 
+#' \code{\link[hdd]{write_hdd}}.
 #'
-#' To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
+#' To display general information from HDD objects: \code{\link[hdd]{origin}}, 
+#' \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, 
+#' \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 #'
 #' @examples
 #'
@@ -933,24 +968,44 @@ get_confirmation = function(){
 
 #' Saves or appends a data set into a HDD file
 #'
-#' This function saves in-memory/HDD data sets into HDD repositories. Useful to append several data sets.
+#' This function saves in-memory/HDD data sets into HDD repositories. Useful to 
+#' append several data sets.
 #'
 #' @inherit hdd seealso
 #'
 #' @param x A data set.
 #' @param dir The HDD repository, i.e. the directory where the HDD data is.
-#' @param chunkMB If the data has to be split in several files of \code{chunkMB} sizes. Default is \code{Inf}.
-#' @param rowsPerChunk Integer, default is missing. Alternative to the argument \code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk} rows.
-#' @param compress Compression rate to be applied by \code{\link[fst]{write_fst}}. Default is 50.
+#' @param chunkMB If the data has to be split in several files of \code{chunkMB} 
+#' sizes. Default is \code{Inf}.
+#' @param rowsPerChunk Integer, default is missing. Alternative to the argument 
+#' \code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk} 
+#' rows.
+#' @param compress Compression rate to be applied by \code{\link[fst]{write_fst}}. 
+#' Default is 50.
 #' @param add Should the file be added to the existing repository? Default is \code{FALSE}.
-#' @param replace If \code{add = FALSE}, should any existing document be replaced? Default is \code{FALSE}.
-#' @param showWarning If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} is NOT called within a function.
+#' @param replace If \code{add = FALSE}, should any existing document be replaced? 
+#' Default is \code{FALSE}.
+#' @param showWarning If the data \code{x} has no observation, then a warning is 
+#' raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} 
+#' is NOT called within a function.
 #' @param ... Not currently used.
 #'
 #' @author Laurent Berge
 #'
 #' @details
-#' Creating a HDD data set with this function always create an additional file named \dQuote{_hdd.txt} in the HDD folder. This file contains summary information on the data: the number of rows, the number of variables, the first five lines and a log of how the HDD data set has been created. To access the log directly from \code{R}, use the function \code{\link[hdd]{origin}}.
+#' Creating a HDD data set with this function always create an additional file named 
+#' \dQuote{_hdd.txt} in the HDD folder. This file contains summary information on 
+#' the data: the number of rows, the number of variables, the first five lines and 
+#' a log of how the HDD data set has been created. To access the log directly from 
+#' \code{R}, use the function \code{\link[hdd]{origin}}.
+#' 
+#' @return 
+#' This function does not return anything in R. Instead it creates a folder
+#' on disk containing `.fst` files. These files represent the data that has been
+#' converted to the `hdd` format. 
+#' 
+#' You can then read the created data with the function [hdd()].
+#'
 #'
 #' @examples
 #'
@@ -972,7 +1027,8 @@ get_confirmation = function(){
 #' base_hdd = hdd(hdd_path)
 #' summary(base_hdd) # => 8 files, 150 lines, 10.2KB on disk
 #'
-write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = FALSE, replace = FALSE, showWarning, ...){
+write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = FALSE, 
+                     replace = FALSE, showWarning, ...){
 	# data: the data (in memory or fst or hdd)
 	# dir: the hdd repository
 	# write hdd data
@@ -1276,18 +1332,28 @@ write_hdd = function(x, dir, chunkMB = Inf, rowsPerChunk, compress = 50, add = F
 
 #' Sorts HDD objects
 #'
-#' This function sets a key to a HDD file. It creates a copy of the HDD file sorted by the key. Note that the sorting process is very time consuming.
+#' This function sets a key to a HDD file. It creates a copy of the HDD file sorted 
+#' by the key. Note that the sorting process is very time consuming.
 #'
 #' @inherit hdd seealso
 #' @inheritParams hdd_merge
 #'
 #' @param x A hdd file.
 #' @param key A character vector of the keys.
-#' @param chunkMB The size of chunks used to sort the data. Default is 500MB. The bigger this number the faster the sorting is (depends on your memory available though).
-#' @param verbose Numeric, default is 1. Whether to display information on the advancement of the algorithm. If equal to 0, nothing is displayed.
+#' @param chunkMB The size of chunks used to sort the data. Default is 500MB. The 
+#' bigger this number the faster the sorting is (depends on your memory available though).
+#' @param verbose Numeric, default is 1. Whether to display information on the advancement 
+#' of the algorithm. If equal to 0, nothing is displayed.
 #'
 #' @details
-#' This function is provided for convenience reason: it does the job of sorting the data and ensuring consistency across files, but it is very slow since it involves copying several times the entire data set. To be used parsimoniously.
+#' This function is provided for convenience reason: it does the job of sorting 
+#' the data and ensuring consistency across files, but it is very slow since it 
+#' involves copying several times the entire data set. To be used parsimoniously.
+#' 
+#' @return 
+#' This functions does not return anything in R, instead its result is a new
+#' folder populated with `.fst` files which represent a data set that can be loaded
+#' with the function [hdd()].
 #'
 #' @author Laurent Berge
 #'
@@ -1542,22 +1608,40 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 #'
 #' @param x A HDD object or a \code{data.frame}.
 #' @param y A data set either a data.frame of a HDD object.
-#' @param newfile Destination of the result, i.e., a destination folder that will receive the HDD data.
-#' @param chunkMB Numeric, default is missing. If provided, the data 'x' is split in chunks of 'chunkMB' MB and the merge is applied chunkwise.
-#' @param rowsPerChunk Integer, default is missing. If provided, the data 'x' is split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.
+#' @param newfile Destination of the result, i.e., a destination folder that will 
+#' receive the HDD data.
+#' @param chunkMB Numeric, default is missing. If provided, the data 'x' is split 
+#' in chunks of 'chunkMB' MB and the merge is applied chunkwise.
+#' @param rowsPerChunk Integer, default is missing. If provided, the data 'x' is 
+#' split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.
 #' @param all Default is \code{FALSE}.
 #' @param all.x Default is \code{all}.
 #' @param all.y Default is \code{all}.
 #' @param allow.cartesian Logical: whether to allow cartesian merge. Defaults to \code{FALSE}.
-#' @param replace Default is \code{FALSE}: if the destination folder already contains data, whether to replace it.
-#' @param verbose Numeric. Whether information on the advancement should be displayed. If equal to 0, nothing is displayed. By default it is equal to 1 if the size of \code{x} is greater than 1GB.
+#' @param replace Default is \code{FALSE}: if the destination folder already contains 
+#' data, whether to replace it.
+#' @param verbose Numeric. Whether information on the advancement should be displayed. 
+#' If equal to 0, nothing is displayed. By default it is equal to 1 if the size 
+#' of \code{x} is greater than 1GB.
 #'
 #' @details
-#' If \code{x} (resp \code{y}) is a HDD object, then the merging will be operated chunkwise, with the original chunks of the objects. To change the size of the chunks for \code{x}: you can use the argument \code{chunkMB} or \code{rowsPerChunk.}
+#' If \code{x} (resp \code{y}) is a HDD object, then the merging will be operated 
+#' chunkwise, with the original chunks of the objects. To change the size of the 
+#' chunks for \code{x}: you can use the argument \code{chunkMB} or \code{rowsPerChunk.}
 #'
-#' To change the chunk size of \code{y}, you can rewrite \code{y} with a new chunk size using \code{\link[hdd]{write_hdd}}.
+#' To change the chunk size of \code{y}, you can rewrite \code{y} with a new chunk 
+#' size using \code{\link[hdd]{write_hdd}}.
 #'
-#' Note that the merging operation could also be achieved with \code{\link[hdd]{hdd_slice}} (although it would require setting up a ad hoc function).
+#' Note that the merging operation could also be achieved with \code{\link[hdd]{hdd_slice}} 
+#' (although it would require setting up an ad hoc function).
+#' 
+#' @return 
+#' This function does not return anything. It applies the merging between
+#' two potentially large (out of memory) data set and saves them on disk at the location 
+#' of `newfile`, the destination folder which will be populated with .fst files
+#' representing chunks of the resulting merge.
+#' 
+#' To interact with the data (on disk) newly created, use the function [hdd()].
 #'
 #' @author Laurent Berge
 #'
@@ -1580,7 +1664,9 @@ hdd_setkey = function(x, key, newfile, chunkMB = 500, replace = FALSE, verbose =
 #' summary(base_merged)
 #' print(base_merged)
 #'
-hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = all, all.y = all, allow.cartesian = FALSE, replace = FALSE, verbose){
+hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, 
+                     all.x = all, all.y = all, allow.cartesian = FALSE, 
+										 replace = FALSE, verbose){
 	# Function to merge Hdd files
 	# It returns a HDD file
 	# x: hdd
@@ -1803,6 +1889,13 @@ hdd_merge = function(x, y, newfile, chunkMB, rowsPerChunk, all = FALSE, all.x = 
 #' The delimiter is found with the function \code{\link[hdd]{guess_delim}}, which 
 #' uses the guessing from \code{\link[data.table]{fread}}. Note that fixed width 
 #' delimited files are not supported.
+#' 
+#' @return 
+#' This function does not return anything in R. Instead it creates a folder
+#' on disk containing `.fst` files. These files represent the data that has been
+#' imported and converted to the `hdd` format. 
+#' 
+#' You can then read the created data with the function [hdd()].
 #'
 #' @author Laurent Berge
 #'
@@ -2531,7 +2624,8 @@ print.hdd = function(x, ...){
 
 #' Summary information for HDD objects
 #'
-#' Provides summary information -- i.e. dimension, size on disk, path, number of slices -- of hard drive data sets (HDD).
+#' Provides summary information -- i.e. dimension, size on disk, path, number of 
+#' slices -- of hard drive data sets (HDD).
 #'
 #' @inheritParams dim.hdd
 #' @inherit hdd examples
@@ -2541,11 +2635,17 @@ print.hdd = function(x, ...){
 #' @param ... Not currently used.
 #'
 #' @details
-#' Displays concisely general information on the HDD object: its size on disk, the number of files it is made of, its location on disk and the number of rows and columns.
+#' Displays concisely general information on the HDD object: its size on disk, the 
+#' number of files it is made of, its location on disk and the number of rows and columns.
 #'
-#' Note that each HDD object contain the text file \dQuote{_hdd.txt} in their folder also containing this information.
+#' Note that each HDD object contain the text file \dQuote{_hdd.txt} in their folder 
+#' also containing this information.
 #'
 #' To obtain how the HDD object was constructed, use function \code{\link[hdd]{origin}}.
+#' 
+#' @return 
+#' This function does not return anything. It only prints general information 
+#' on the data set in the console.
 #'
 #' @author Laurent Berge
 #'

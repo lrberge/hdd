@@ -21,25 +21,44 @@ write_hdd(
 
 \item{dir}{The HDD repository, i.e. the directory where the HDD data is.}
 
-\item{chunkMB}{If the data has to be split in several files of \code{chunkMB} sizes. Default is \code{Inf}.}
+\item{chunkMB}{If the data has to be split in several files of \code{chunkMB}
+sizes. Default is \code{Inf}.}
 
-\item{rowsPerChunk}{Integer, default is missing. Alternative to the argument \code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk} rows.}
+\item{rowsPerChunk}{Integer, default is missing. Alternative to the argument
+\code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk}
+rows.}
 
-\item{compress}{Compression rate to be applied by \code{\link[fst]{write_fst}}. Default is 50.}
+\item{compress}{Compression rate to be applied by \code{\link[fst]{write_fst}}.
+Default is 50.}
 
 \item{add}{Should the file be added to the existing repository? Default is \code{FALSE}.}
 
-\item{replace}{If \code{add = FALSE}, should any existing document be replaced? Default is \code{FALSE}.}
+\item{replace}{If \code{add = FALSE}, should any existing document be replaced?
+Default is \code{FALSE}.}
 
-\item{showWarning}{If the data \code{x} has no observation, then a warning is raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} is NOT called within a function.}
+\item{showWarning}{If the data \code{x} has no observation, then a warning is
+raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd}
+is NOT called within a function.}
 
 \item{...}{Not currently used.}
 }
+\value{
+This function does not return anything in R. Instead it creates a folder
+on disk containing \code{.fst} files. These files represent the data that has been
+converted to the \code{hdd} format.
+
+You can then read the created data with the function \code{\link[=hdd]{hdd()}}.
+}
 \description{
-This function saves in-memory/HDD data sets into HDD repositories. Useful to append several data sets.
+This function saves in-memory/HDD data sets into HDD repositories. Useful to
+append several data sets.
 }
 \details{
-Creating a HDD data set with this function always create an additional file named \dQuote{_hdd.txt} in the HDD folder. This file contains summary information on the data: the number of rows, the number of variables, the first five lines and a log of how the HDD data set has been created. To access the log directly from \code{R}, use the function \code{\link[hdd]{origin}}.
+Creating a HDD data set with this function always create an additional file named
+\dQuote{_hdd.txt} in the HDD folder. This file contains summary information on
+the data: the number of rows, the number of variables, the first five lines and
+a log of how the HDD data set has been created. To access the log directly from
+\code{R}, use the function \code{\link[hdd]{origin}}.
 }
 \examples{
 
@@ -63,13 +82,19 @@ summary(base_hdd) # => 8 files, 150 lines, 10.2KB on disk
 
 }
 \seealso{
-See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}}
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
-See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create
+HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
-To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+To create/reshape HDD objects from memory or from other HDD objects, see
+\code{\link[hdd]{write_hdd}}.
 
-To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
+To display general information from HDD objects: \code{\link[hdd]{origin}},
+\code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}},
+\code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

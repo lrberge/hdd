@@ -7,18 +7,32 @@
 readfst(path, columns = NULL, from = 1, to = NULL, confirm = FALSE)
 }
 \arguments{
-\item{path}{Path to \code{fst} file -- or path to \code{hdd} data. For hdd files, there is a}
+\item{path}{Path to \code{fst} file -- or path to \code{hdd} data. For hdd files,
+there is a}
 
-\item{columns}{Column names to read. The default is to read all columns. Ignored for \code{hdd} files.}
+\item{columns}{Column names to read. The default is to read all columns. Ignored
+for \code{hdd} files.}
 
 \item{from}{Read data starting from this row number. Ignored for \code{hdd} files.}
 
-\item{to}{Read data up until this row number. The default is to read to the last row of the stored data set. Ignored for \code{hdd} files.}
+\item{to}{Read data up until this row number. The default is to read to the last
+row of the stored data set. Ignored for \code{hdd} files.}
 
-\item{confirm}{If the HDD file is larger than ten times the variable \code{getHdd_extract.cap()}, then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}, the default being 1GB.}
+\item{confirm}{If the HDD file is larger than ten times the variable \code{getHdd_extract.cap()},
+then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}.
+You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}.}
+}
+\value{
+This function returns a data table located in memory. It allows to read in memory
+the \code{hdd} data saved on disk.
 }
 \description{
-This is the function \code{\link[fst]{read_fst}} but with automatic conversion to data.table. It also allows to read \code{hdd} data.
+This is the function \code{\link[fst]{read_fst}} but with automatic conversion
+to data.table. It also allows to read \code{hdd} data.
+}
+\details{
+This function reads one or several \code{.fst} files and place them in a single
+data table.
 }
 \examples{
 
@@ -38,13 +52,19 @@ base_mem_bis = base_hdd[]
 
 }
 \seealso{
-See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}}
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
-See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create
+HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
-To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+To create/reshape HDD objects from memory or from other HDD objects, see
+\code{\link[hdd]{write_hdd}}.
 
-To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
+To display general information from HDD objects: \code{\link[hdd]{origin}},
+\code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}},
+\code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge

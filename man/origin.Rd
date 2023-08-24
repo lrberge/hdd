@@ -38,11 +38,17 @@ origin(base_hdd)
 
 }
 \seealso{
-See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}}
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
-See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create
+HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
-To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+To create/reshape HDD objects from memory or from other HDD objects, see
+\code{\link[hdd]{write_hdd}}.
 
-To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
+To display general information from HDD objects: \code{\link[hdd]{origin}},
+\code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}},
+\code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }

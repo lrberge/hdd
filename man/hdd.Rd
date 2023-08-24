@@ -9,15 +9,29 @@ hdd(dir)
 \arguments{
 \item{dir}{The directory where the hard drive data set is.}
 }
+\value{
+This function returns an object of class \code{hdd} which is linked to
+a folder on disk containing the data. The data is not loaded in R.
+
+This object is not intended to be interacted with directly as a regular list. Please use the methods
+\code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} to extract the data.
+}
 \description{
-This function connects to a hard drive data set (HDD). You can access the hard drive data in a similar way to a \code{data.table}.
+This function connects to a hard drive data set (HDD). You can access the hard
+drive data in a similar way to a \code{data.table}.
 }
 \details{
-HDD has been created to deal with out of memory data sets. The data set exists in the hard drive, split in multiple files -- each file being workable in memory.
+HDD has been created to deal with out of memory data sets. The data set exists
+in the hard drive, split in multiple files -- each file being workable in memory.
 
-You can perform extraction and manipulation operations as with a regular data set with \code{\link[hdd]{sub-.hdd}}. Each operation is performed chunk-by-chunk behind the scene.
+You can perform extraction and manipulation operations as with a regular data
+set with \code{\link[hdd]{sub-.hdd}}. Each operation is performed chunk-by-chunk
+behind the scene.
 
-In terms of performance, working with complete data sets in memory will always be faster. This is because read/write operations on disk are order of magnitude slower than read/write in memory. However, this might be the only way to deal with out of memory data.
+In terms of performance, working with complete data sets in memory will always
+be faster. This is because read/write operations on disk are order of magnitude
+slower than read/write in memory. However, this might be the only way to deal
+with out of memory data.
 }
 \examples{
 
@@ -46,13 +60,19 @@ names(base_hdd)
 
 }
 \seealso{
-See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}} for the extraction and manipulation of out of memory data. For importation of HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
+See \code{\link[hdd]{hdd}}, \code{\link[hdd]{sub-.hdd}} and \code{\link[hdd]{cash-.hdd}}
+for the extraction and manipulation of out of memory data. For importation of
+HDD data sets from text files: see \code{\link[hdd]{txt2hdd}}.
 
-See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
+See \code{\link[hdd]{hdd_slice}} to apply functions to chunks of data (and create
+HDD objects) and \code{\link[hdd]{hdd_merge}} to merge large files.
 
-To create/reshape HDD objects from memory or from other HDD objects, see \code{\link[hdd]{write_hdd}}.
+To create/reshape HDD objects from memory or from other HDD objects, see
+\code{\link[hdd]{write_hdd}}.
 
-To display general information from HDD objects: \code{\link[hdd]{origin}}, \code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}}, \code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
+To display general information from HDD objects: \code{\link[hdd]{origin}},
+\code{\link[hdd]{summary.hdd}}, \code{\link[hdd]{print.hdd}},
+\code{\link[hdd]{dim.hdd}} and \code{\link[hdd]{names.hdd}}.
 }
 \author{
 Laurent Berge
