@@ -544,7 +544,8 @@ hdd = function(dir){
   mc_dots = mc[["..."]]
   
   env = NULL
-  if("internal" %in% names(mc_dots)){
+  is_internal = "internal" %in% names(mc_dots)
+  if(is_internal){
     env = eval(quote(env), parent.frame())
     mc_origin = eval(quote(mc_origin), parent.frame())
   } else {
@@ -563,15 +564,23 @@ hdd = function(dir){
 	if(!is.null(newfile)){
 	  destDir = newfile
 	}
-
-	mc_small = mc[!names(mc) %in% c("x", "index", "file", "all.vars")]
-	if(all.vars || length(mc_small) == 1){
+	
+	if(!is_internal && !is.null(destDir)){
+	  meta = attr(x, "meta")
+	  dir_origin = dirname(meta$.fileName[1])
+	  if(destDir == dir_origin){
+	    stop("In argument `destDir`, you cannot overwrite the current location of the HDD file. Please choose another destination directory.")
+	  }
+	}
+	
+	user_dots = mc_origin[["..."]]
+	if(all.vars || length(user_dots) == 1){
 		# I do that because in what follows, it is just a guess,
 		# if I rename a variable, I am screwed
 		var2select = var_names
 	} else {
 		# variables in the dt call + index!
-		names_all = unlist(lapply(mc_small[2:length(mc_small)], all.names))
+		names_all = unlist(lapply(user_dots, all.names))
 		if(any(var_names %in% names_all)){
 			var2select = intersect(var_names, names_all)
 			if(!missing(index)){
@@ -618,7 +627,7 @@ hdd = function(dir){
 	}
 	
 	#
-	# `file` not missing ####
+	# ... `file` not missing ####
 	#
 	
 
@@ -658,7 +667,7 @@ hdd = function(dir){
 			if(missing(index) || dt_call){
 				# index is missing or can contain variables
 				# => we extract all rows
-				
+				browser()
 				x_tmp = read_fst(fileName, as.data.table = TRUE, columns = var2select)
 			} else {
 			  # index is just a number
@@ -715,7 +724,7 @@ hdd = function(dir){
 	
 	
 	#
-	# `file` is missing ####
+	# ... `file` is missing ####
 	#
 	
 
@@ -770,7 +779,7 @@ hdd = function(dir){
 	}
 	
 	#
-	# index = flat integer
+	# ... index = flat integer ####
 	#
 	
 	
@@ -790,6 +799,7 @@ hdd = function(dir){
 	if(ind_min < 1){
 		stop("indexes must be greater or equal than 1!")
 	}
+	
 	if(ind_max > n_max){
 		stop("The maximum number of lines is ", numberFormat(n_max), ". You cannot provide indexes greater than this number!")
 	}
@@ -839,11 +849,8 @@ hdd = function(dir){
 			mc_current$index = NULL
 			x_tmp_call = build_x_tmp_call(mc_current)
 			
-			mema("branch: index_small")
-			
 		} else {
 		  # the current index is large
-		  mema("branch: index_large")
 			x_tmp = read_fst(x$.fileName[i], as.data.table = TRUE)
 			
 			# we use the current index

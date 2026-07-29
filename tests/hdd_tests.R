@@ -34,6 +34,10 @@ vars = c("Species", "Sepal.Length")
 dt = iris_hdd[1:5, vars, with = FALSE]
 test(names(dt), vars)
 
+vec = iris_hdd[, Species]
+test(length(vec), 150)
+test(is.factor(vec), TRUE)
+
 fun_nested = function(){
   my_species = "versicolor"
   iris_hdd[Species %in% my_species]
@@ -42,10 +46,8 @@ fun_nested = function(){
 dt = fun_nested()
 test(nrow(dt), 50)
 
+dir_agg = file.path(tempdir(), "iris_agg")
+iris_hdd[, .(avg_sl = mean(Sepal.Length)), by = Species, destDir = dir_agg]
 
-# now with a large data set => to trigger a specific branch
-dir_iris_large = tempdir()
-write_hdd(iris, dir = dir_iris_large, rowsPerChunk = 100)
-for(i in 1:20) write_hdd(iris, dir = dir_iris_large, rowsPerChunk = 100, add = TRUE)
-
-iris_hdd = hdd(dir_iris)
+dt = hdd(dir_agg)
+test(dim(dt), c(4, 2))
