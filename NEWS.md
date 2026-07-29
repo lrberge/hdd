@@ -5,13 +5,15 @@
 
 - fix major bug in `[.hdd` preventing this function to be used in nested environments 
 
-## Changes
+## Improvements
 
 - changing the default for the argument `replace`: it becomes `TRUE` in all functions using it (previously it was `FALSE`)
 
 - argument `newfile` becomes `destDir`, retro compatibility is ensured
 
 - in argument `destDir`, now parent and grand-parent directories arenow automatically created if they are missing
+
+- add progress bar to `txt2hdd` and `hdd_slice`
 
 ## Other changes
 

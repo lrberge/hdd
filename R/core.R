@@ -2117,7 +2117,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 	#
 	# Preliminary stuff
 	#
-
+	
 	# If multiple files: we check the consistency
 	n = length(path_all)
 	fileSize_all = numeric(n)
@@ -2128,7 +2128,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 		path = path_all[i]
 
 		# sample DT to get first information
-		first_lines = readr::read_lines(path, n_max = 10000)
+		first_lines = readr::read_lines(path, n_max = 10000, progress = FALSE)
 		sample_table = data.table::fread(paste0(first_lines, collapse = "\n"))
 
 		nb_col = ncol(sample_table)
@@ -2260,12 +2260,11 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 		}
 
 		if(verbose > 0){
-			message("Approx. number of chunks: ", ceiling(nbChunks_approx), " (", 
-			        addCommas(rowsPerChunk), " rows per chunk)")
+			mema("Approx. number of chunks: {n ? ceiling(nbChunks_approx)} ({n ? rowsPerChunk} rows per chunk)")
+			mema("verbose = TRUE")
 		}
 	}
-
-
+	
 	# Function to apply to each chunk
 
 	dirDest = clean_path(dirDest)
@@ -2295,7 +2294,9 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 	CALL_TXT = deparse_long(match.call())
 	INDEX = 0
 	
-	prog_bar = txtProgressBar(max = nbChunks_approx, width = 80, style = 3)
+	if(verbose > 0){
+	  prog_bar = txtProgressBar(max = nbChunks_approx, width = 80, style = 3)
+	}
 
 	funPerChunk = function(x, pos){
 	  
@@ -2341,9 +2342,9 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 															skip = nb_skip, delim = delimiter, ...)
 	}
 	
-	close(prog_bar)
-	
-	if(verbose){
+	if(verbose > 0){
+	  close(prog_bar)
+	  
 		message("Importation in ", format_difftime(time_start), ".")
 	}
 
@@ -2472,18 +2473,16 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 #' guess_delim(iris_path)
 #'
 guess_delim = function(path){
-
-
-	check_arg(path, "path read mbt")
-
+  
+  check_arg(path, "character vector", .message = "The argument `path` must be a valid path.")
+  
 	# importing a sample
 	FROM_HDD = FALSE
 	if(!is.null(attr(path, "from_hdd"))){
 		first_lines = path
 		FROM_HDD = TRUE
-	} else if(length(path) > 1){
-		stop("Argument path must be a valid path. Currenlty it is of length ", length(path), ".")
 	} else {
+	  check_arg(path, "path read mbt")
 		first_lines = readLines(path, n = 100)
 	}
 
