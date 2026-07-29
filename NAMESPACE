@@ -25,6 +25,7 @@ S3method(summary, hdd)
 # Depends
 import(data.table)
 import(dreamerr)
+import(stringmagic)
 
 # Imports
 importFrom(fst, fst, read_fst, write_fst)

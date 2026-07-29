@@ -3,7 +3,7 @@ Type: Package
 Title: Easy Manipulation of Out of Memory Data Sets
 Version: 0.1.2
 Authors@R: person("Laurent", "Berge", email = "laurent.berge@u-bordeaux.fr", role = c("aut", "cre"))
-Imports: fst, utils, readr, dreamerr, data.table
+Imports: fst, utils, readr, data.table, dreamerr(>= 1.4.0), stringmagic(>= 1.2.0)
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Description: Hard drive data: Class of data allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to 'data.table'. Operations are performed "chunk-wise" behind the scene. See <https://lrberge.github.io/hdd/> for more information.
