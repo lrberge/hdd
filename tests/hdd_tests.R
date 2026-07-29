@@ -1,5 +1,7 @@
 
 
+library(hdd)
+test = hdd:::test
 
 ####
 #### [.hdd ####
