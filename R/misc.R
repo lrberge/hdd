@@ -83,6 +83,53 @@ getHdd_extract.cap = function(){
 #### HDD utilities ####
 ####
 
+force_names = function(x){
+  res = names(x)
+  if(is.null(res)){
+    return(character(length(x)))
+  }
+  
+  res
+}
+
+add_dots = function(expr, mc_dots){
+  # expr: a call
+  if(!is.call(expr)){
+    stop("Internal error: `expr` should always be a call.")
+  }
+  
+  if(length(mc_dots) == 0){
+    return(expr)
+  }
+  
+  nm = force_names(mc_dots)
+  for(i in seq_along(mc_dots)){
+		arg_name = nm[i]
+    if(nchar(arg_name) > 0){
+      expr[[arg_name]] = mc_dots[[i]]
+    } else {
+      expr[[length(expr) + 1]] = mc_dots[[i]]
+    }
+  }
+  
+  expr
+}
+
+MISSING_VALUE = quote(x[,])
+
+build_x_tmp_call = function(mc){
+  expr = quote(x_tmp__[])
+  
+  mc_dots = mc[["..."]]
+  
+  if("index" %in% names(mc)){
+		expr[[3]] = mc$index
+	} else {
+	  expr[[3]] = MISSING_VALUE[[3]]
+	}
+  
+  add_dots(expr, mc_dots)
+}
 
 object_size = function(x){
 	if(inherits(x, "hdd")){

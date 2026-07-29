@@ -539,10 +539,20 @@ hdd = function(dir){
 "[.hdd" = function(x, index, ..., file, destDir = NULL, newfile = NULL, 
                    replace = TRUE, all.vars = FALSE){
   #### [.hdd ####
+  
+  mc = mc_origin = match.call(expand.dots = FALSE)
+  mc_dots = mc[["..."]]
+  
+  env = NULL
+  if("internal" %in% names(mc_dots)){
+    env = eval(quote(env), parent.frame())
+    mc_origin = eval(quote(mc_origin), parent.frame())
+  } else {
+    env = parent.frame()
+  }
 
 	# We look at what variables to select, because it is costly to extract variables: we need the minimum!
 	var_names = names(x)
-	mc = match.call()
 	call_txt = deparse_long(mc)
 
 	# check_arg(file, "integer vector")
@@ -570,16 +580,6 @@ hdd = function(dir){
 			}
 		} else {
 			var2select = var_names
-		}
-	}
-
-	# To handle evaluation problems
-	useDoCall = FALSE
-	if("with" %in% names(mc_small)){
-		args = list(x = NA, ...)
-		if(!args$with){
-			useDoCall = TRUE
-			if(!"j" %in% names(args) && any(names(args) == "")) names(args)[which(names(args) == "")[1]] = "j"
 		}
 	}
 
@@ -616,11 +616,17 @@ hdd = function(dir){
 			dir = gsub("([^/])$", "\\1/", dir)
 		}
 	}
+	
+	#
+	# `file` not missing ####
+	#
+	
 
 	if(!missing(file)){
+	  
 		# special treatment!
 		nfiles_max = length(x$.row_cum)
-		file_nb = eval(mc$file, list(.N = nfiles_max), enclos = parent.frame())
+		file_nb = eval(mc$file, list(.N = nfiles_max), enclos = env)
 		if(!is.numeric(file_nb) || !checkVector(file_nb)){
 			stop("The argument 'file' must be an integer vector.")
 		} else if(any(file_nb > nfiles_max | file_nb < 1)){
@@ -640,69 +646,43 @@ hdd = function(dir){
 				stop("'index' must be a data.table expresison or a numeric vector.")
 			}
 		}
-
+		
+		# we need to eval a call to x_tmp that we define here
+		x_tmp_call = build_x_tmp_call(mc_origin)
+		
 		res = list()
 		for(i in seq_along(file_nb)){
 			fileName = x$.fileName[file_nb[i]]
-
-			if(missing(index)){
-				# easy case
-				# cat("i = ", i, sep = "")
-				p = proc.time()
+			
+			x_tmp = NULL
+			if(missing(index) || dt_call){
+				# index is missing or can contain variables
+				# => we extract all rows
+				
 				x_tmp = read_fst(fileName, as.data.table = TRUE, columns = var2select)
-				# cat(", in ", (proc.time()-p)[3], "s.\n", sep = "")
-				res[[i]] = x_tmp[, ...]
 			} else {
-				# now we have to see if it's worth of downloading everything
-				if(dt_call){
-					# if it's a call to data.table, then we NEED to download everything
-					x_tmp = read_fst(fileName, as.data.table = TRUE, columns = var2select)
-					index2text = deparse(substitute(index))
-					if(length(index2text) > 1){
-						index2text = paste0(index2text, collapse = "")
-					}
-					res[[i]] = eval(parse(text = paste0("x_tmp[", index2text, ", ...]")))
-				} else if(onlyN){
-					x_tmp = fst(fileName)
-					new_index = eval(mc$index, list(.N = nrow(x_tmp)))
-					if(ncol(x_tmp) == 1){
-						x_tmp = data.table(x_tmp[new_index, ])
-						names(x_tmp) = names(x)
-					} else {
-						x_tmp = x_tmp[new_index, ]
-						setDT(x_tmp)
-					}
-
-					# res[[i]] = x_tmp[, ...]
-
-					if(useDoCall){
-						args$x = x_tmp
-						res[[i]] = do.call("[", args)
-					} else {
-						res[[i]] = x_tmp[, ...]
-					}
-				} else {
-					# we use the fst format to download small chunks
-					x_tmp = fst(fileName)
-
-					if(ncol(x_tmp) == 1){
-						x_tmp = data.table(x_tmp[index, ])
-						names(x_tmp) = names(x)
-					} else {
-						x_tmp = x_tmp[index, ]
-						setDT(x_tmp)
-					}
-
-					# res[[i]] = x_tmp[, ...]
-
-					if(useDoCall){
-						args$x = x_tmp
-						res[[i]] = do.call("[", args)
-					} else {
-						res[[i]] = x_tmp[, ...]
-					}
+			  # index is just a number
+			  # => we extract just the needed rows
+			  
+			  x_tmp = fst(fileName)
+			  
+			  new_index = index
+			  if(onlyN){
+					new_index = eval(mc$index, list(.N = nrow(x_tmp)), enclos = env)
 				}
+				
+				if(ncol(x_tmp) == 1){
+					x_tmp = data.table(x_tmp[new_index, ])
+					names(x_tmp) = names(x)
+				} else {
+					x_tmp = x_tmp[new_index, ]
+					setDT(x_tmp)
+				}
+				
 			}
+			
+			assign("x_tmp__", x_tmp, env)
+			res[[i]] = eval(x_tmp_call, env)
 
 			if(doWrite){
 				if(!is.data.frame(res[[i]])){
@@ -717,8 +697,10 @@ hdd = function(dir){
 
 		if(doWrite) {
 			return(invisible(NULL))
+			
 		} else if(length(file_nb) == 1){
 			return(res[[1]])
+			
 		} else {
 			if(!is.data.frame(res[[which.max(lengths(res))]])){
 				# when what is returned is a vector
@@ -726,23 +708,32 @@ hdd = function(dir){
 			} else {
 				res_all = rbindlist(res)
 			}
+			
 			return(res_all)
 		}
 	}
-
+	
+	
+	#
+	# `file` is missing ####
+	#
+	
 
 	if(missing(index)){
 		# isOrder = FALSE
 		# index_sorted = 1:nrow(x)
 		if(doWrite){
-			x[, ..., file = 1:.N, destDir = destDir, replace = replace]
+			x[, ..., file = 1:.N, destDir = destDir, replace = replace, internal = TRUE]
+			
 			return(invisible(NULL))
+			
 		} else {
-			return(x[, ..., file = 1:.N])
+			return(x[, ..., file = 1:.N, internal = TRUE])
 		}
 
 	} else if(".N" %in% all.names(mc$index)){
 		stop("The variable .N is not supported in 'index' when you do not use argument 'file'.")
+		
 	} else if(any(var_names %in% all.names(mc$index))){
 		# means it is a dt call
 		# we apply it to all files!
@@ -753,10 +744,19 @@ hdd = function(dir){
 		}
 
 		if(doWrite){
-			res = eval(parse(text = paste0("x[", index2text, ", ..., file = 1:.N, destDir =\"", dir, "\", replace = ", replace, "]")))
+			expr = substitute(
+			  x[index_, ..., file = 1:.N, destDir = dir_, replace = rep_, internal = TRUE],
+			  list(index_ = mc$index, dir_ = dir, rep_ = replace)
+			)
+			res = eval(expr, enclos = env)
 			return(invisible(NULL))
+			
 		} else {
-			res = eval(parse(text = paste0("x[", index2text, ", ..., file = 1:.N]")))
+		  expr = substitute(
+			  x[index_, ..., file = 1:.N, internal = TRUE],
+			  list(index_ = mc$index)
+			)
+			res = eval(expr, enclos = env)
 		}
 
 		return(res)
@@ -768,6 +768,18 @@ hdd = function(dir){
 		isOrder = FALSE
 		index_sorted = index
 	}
+	
+	#
+	# index = flat integer
+	#
+	
+	
+	# If here:
+	# - file is missing
+	# - index is provided
+	# - there are no variables in `index`
+	# => index is a flat integer vector
+	# 
 
 	# Finding out which tables to use
 	n_max = tail(x$.row_cum, 1)
@@ -788,6 +800,8 @@ hdd = function(dir){
 	remaining_index = index_sorted
 	res = list()
 	i_running = 0
+	mc_current = mc_origin
+	x_tmp_call = NULL
 	for(i in file_start:file_end){
 		if(remaining_index[1] > x$.row_cum[i]){
 			next
@@ -808,8 +822,11 @@ hdd = function(dir){
 		}
 
 		# Extraction of the data
+		x_tmp = NULL
 		if(length(current_index) < x$.row_cum[i]/1000){
+		  # the current index is small
 			x_tmp = fst(x$.fileName[i])
+			
 			if(ncol(x_tmp) == 1){
 				x_tmp = data.table(x_tmp[current_index, ])
 				names(x_tmp) = names(x)
@@ -817,24 +834,26 @@ hdd = function(dir){
 				x_tmp = x_tmp[current_index, ]
 				setDT(x_tmp)
 			}
-
-			if(useDoCall){
-				args$x = x_tmp
-				res[[i]] = do.call("[", args)
-			} else {
-				res[[i]] = x_tmp[, ...]
-			}
+			
+			# we don't use the index
+			mc_current$index = NULL
+			x_tmp_call = build_x_tmp_call(mc_current)
+			
+			mema("branch: index_small")
+			
 		} else {
+		  # the current index is large
+		  mema("branch: index_large")
 			x_tmp = read_fst(x$.fileName[i], as.data.table = TRUE)
-
-			if(useDoCall){
-				args = list(x = x_tmp, i = current_index, ...)
-				if(!"j" %in% names(args) && any(names(args) == "")) names(args)[which(names(args) == "")[1]] = "j"
-				res[[i]] = do.call("[", args)
-			} else {
-				res[[i]] = x_tmp[current_index, ...]
-			}
+			
+			# we use the current index
+			mc_current$index = as.name("current_index__")
+			assign("current_index__", current_index, env)
+			x_tmp_call = build_x_tmp_call(mc_current)
 		}
+		
+		assign("x_tmp__", x_tmp, env)
+    res[[i]] = eval(x_tmp_call, env)
 
 		if(doWrite){
 			stop("destDir not implemented for 'regular' indexes. Think to the design.")
@@ -986,7 +1005,9 @@ hdd = function(dir){
 	}
 
 	# now extraction
-	res = eval(parse(text = paste0("x[, ", name, "]")))
+	mc = match.call()
+	expr = substitute(x[, name_], list(name_ = mc$name))
+	res = eval(expr)
 
 	res
 }

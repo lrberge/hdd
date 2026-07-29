@@ -1,6 +1,10 @@
 
 # `hdd` version 0.1.2
 
+## Bug fixes
+
+- fix major bug in `[.hdd` preventing this function to be used in nested environments 
+
 ## Changes
 
 - changing the default for the argument `replace`: it becomes `TRUE` in all functions using it (previously it was `FALSE`)
