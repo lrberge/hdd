@@ -1,9 +1,21 @@
 
 # `hdd` version 0.1.2
 
+## Changes
+
+- changing the default for the argument `replace`: it becomes `TRUE` in all functions using it (previously it was `FALSE`)
+
+- argument `newfile` becomes `destDir`, retro compatibility is ensured
+
+- in argument `destDir`, now parent and grand-parent directories arenow automatically created if they are missing
+
 ## Other changes
 
 - use `data.table` as `imports` and not as `depends`
+
+- rewrite of the documentation
+
+- improve the argument checking
 
 # `hdd` version 0.1.1 (2023-08-22)
 
