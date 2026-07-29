@@ -19,7 +19,7 @@ This function uses \code{\link[data.table]{fread}} to guess the delimiter of a t
 
 # Example with the iris data set
 iris_path = tempfile()
-fwrite(iris, iris_path)
+write.csv(iris, iris_path, row.names = FALSE)
 
 guess_delim(iris_path)
 

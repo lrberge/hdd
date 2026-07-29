@@ -28,7 +28,7 @@ Note that by default, columns that are found to be integers are imported as doub
 
 # Example with the iris data set
 iris_path = tempfile()
-fwrite(iris, iris_path)
+write.csv(iris, iris_path, row.names = FALSE)
 
 # returns a readr columns set:
 guess_col_types(iris_path)

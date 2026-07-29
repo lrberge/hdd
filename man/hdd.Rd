@@ -37,7 +37,7 @@ with out of memory data.
 
 # Toy example with iris data
 iris_path = tempfile()
-fwrite(iris, iris_path)
+write.csv(iris, iris_path, row.names = FALSE)
 
 # destination path
 hdd_path = tempfile()

@@ -32,7 +32,7 @@ To obtain how the HDD object was constructed, use function \code{\link[hdd]{orig
 
 # Toy example with iris data
 iris_path = tempfile()
-fwrite(iris, iris_path)
+write.csv(iris, iris_path, row.names = FALSE)
 
 # destination path
 hdd_path = tempfile()

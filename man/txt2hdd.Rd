@@ -120,7 +120,7 @@ delimited files are not supported.
 
 # we create a text file on disk
 iris_path = tempfile()
-fwrite(iris, iris_path)
+write.csv(iris, iris_path, row.names = FALSE)
 
 # destination path
 hdd_path = tempfile()

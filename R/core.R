@@ -351,7 +351,7 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk = NULL,
 #'
 #' # Toy example with iris data
 #' iris_path = tempfile()
-#' fwrite(iris, iris_path)
+#' write.csv(iris, iris_path, row.names = FALSE)
 #'
 #' # destination path
 #' hdd_path = tempfile()
@@ -667,7 +667,6 @@ hdd = function(dir){
 			if(missing(index) || dt_call){
 				# index is missing or can contain variables
 				# => we extract all rows
-				browser()
 				x_tmp = read_fst(fileName, as.data.table = TRUE, columns = var2select)
 			} else {
 			  # index is just a number
@@ -2012,7 +2011,7 @@ hdd_merge = function(x, y, destDir, newfile, chunkMB = NULL, rowsPerChunk = NULL
 #'
 #' # we create a text file on disk
 #' iris_path = tempfile()
-#' fwrite(iris, iris_path)
+#' write.csv(iris, iris_path, row.names = FALSE)
 #'
 #' # destination path
 #' hdd_path = tempfile()
@@ -2374,7 +2373,7 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 #'
 #' # Example with the iris data set
 #' iris_path = tempfile()
-#' fwrite(iris, iris_path)
+#' write.csv(iris, iris_path, row.names = FALSE)
 #'
 #' # returns a readr columns set:
 #' guess_col_types(iris_path)
@@ -2454,7 +2453,7 @@ guess_col_types = function(dt_or_path, col_names, n = 10000){
 #'
 #' # Example with the iris data set
 #' iris_path = tempfile()
-#' fwrite(iris, iris_path)
+#' write.csv(iris, iris_path, row.names = FALSE)
 #'
 #' guess_delim(iris_path)
 #'
@@ -2536,7 +2535,7 @@ guess_delim = function(path){
 #'
 #' # Example with the iris data set
 #' iris_path = tempfile()
-#' fwrite(iris, iris_path)
+#' write.csv(iris, iris_path, row.names = FALSE)
 #'
 #' # The first lines of the text file on viewer
 #' peek(iris_path)

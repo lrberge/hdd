@@ -29,7 +29,7 @@ displays it. It can also just show the first lines of the file without formattin
 
 # Example with the iris data set
 iris_path = tempfile()
-fwrite(iris, iris_path)
+write.csv(iris, iris_path, row.names = FALSE)
 
 # The first lines of the text file on viewer
 peek(iris_path)
