@@ -9,8 +9,8 @@ hdd_slice(
   fun,
   dir,
   chunkMB = 500,
-  rowsPerChunk,
-  replace = FALSE,
+  rowsPerChunk = NULL,
+  replace = TRUE,
   verbose = 1,
   ...
 )
@@ -18,17 +18,25 @@ hdd_slice(
 \arguments{
 \item{x}{A data set (data.frame, HDD).}
 
-\item{fun}{A function to be applied to slices of the data set. The function must return a data frame like object.}
+\item{fun}{A function to be applied to slices of the data set.
+The function must return a data frame like object.}
 
-\item{dir}{The destination directory where the data is saved.}
+\item{dir}{The destination directory where the data is saved. No default.}
 
-\item{chunkMB}{The size of the slices, default is 500MB. That is: the function \code{fun} is applied to each 500Mb of data \code{x}. If the function creates a lot of additional information, you may want this number to go down. On the other hand, if the function reduces the information you may want this number to go up. In the end it will depend on the amount of memory available.}
+\item{chunkMB}{Numeric scalar, default is 500. The size of the slices.
+That is: the function \code{fun} is applied to each 500Mb of data \code{x}.
+If the function creates a lot of additional information, you may want this number to go down.
+On the other hand, if the function reduces the information you may want this number to go up.
+In the end it will depend on the amount of memory available.}
 
-\item{rowsPerChunk}{Integer, default is missing. Alternative to the argument \code{chunkMB}. If provided, the functions will be applied to chunks of \code{rowsPerChunk} of \code{x}.}
+\item{rowsPerChunk}{Integer scalar, default is NULL. Alternative to the argument \code{chunkMB}.
+If provided, the functions will be applied to chunks of \code{rowsPerChunk} of \code{x}.}
 
-\item{replace}{Whether all information on the destination directory should be erased beforehand. Default is \code{FALSE}.}
+\item{replace}{Logical scalar, default is \code{TRUE}.
+Whether all information on the destination directory should be erased beforehand.
+If \code{replace = FALSE} and an HDD data set already exists in \code{dir}, an error is thrown.}
 
-\item{verbose}{Integer, defaults to 1. If greater than 0 then the progress is displayed.}
+\item{verbose}{Integer scalar, defaults to 1. If greater than 0 then the progress is displayed.}
 
 \item{...}{Other parameters to be passed to \code{fun}.}
 }
@@ -39,9 +47,12 @@ It doesn't return anything, the output is a "hard drive data" saved in the hard 
 This function is useful to apply complex R functions to large data sets (out of memory). It slices the input data, applies the function, then saves each chunk into a hard drive folder. This can then be a HDD data set.
 }
 \details{
-This function splits the original data into several slices and then apply a function to each of them, saving the results into a HDD data set.
+This function splits the original data into several slices and then applies
+a function to each of them, saving the results into a HDD data set.
 
-You can perform merging operations with \code{hdd_slice}, but for regular merges not that you have the function \code{\link[hdd]{hdd_merge}} that may prove more convenient (not need to write a ad hoc function).
+You can perform merging operations with \code{hdd_slice},
+but for regular merges not that you have the function \code{\link[hdd]{hdd_merge}} that may
+prove more convenient (not need to write a ad hoc function).
 }
 \examples{
 

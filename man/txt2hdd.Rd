@@ -8,13 +8,13 @@ txt2hdd(
   path,
   dirDest,
   chunkMB = 500,
-  rowsPerChunk,
+  rowsPerChunk = NULL,
   col_names,
   col_types,
-  nb_skip,
-  delim,
+  nb_skip = NULL,
+  delim = NULL,
   preprocessfun,
-  replace = FALSE,
+  replace = TRUE,
   encoding = "UTF-8",
   verbose = 0,
   locale = NULL,
@@ -28,34 +28,44 @@ it can be equal to patterns if multiple files with the same name are to be impor
 
 \item{dirDest}{The destination directory, where the new HDD data should be saved.}
 
-\item{chunkMB}{The chunk sizes in MB, defaults to 500MB. Instead of using this
-argument, you can alternatively use the argument \code{rowsPerChunk} which decides
+\item{chunkMB}{Numeric scalar representing the chunk sizes in MB, defaults to 500MB.
+The reading of the file is done chunk-wise, and this argument provides the size
+of the chunks.
+Instead of using this argument, you can alternatively use
+the argument \code{rowsPerChunk} which decides
 the size of chunks in terms of lines.}
 
-\item{rowsPerChunk}{Number of rows per chunk. By default it is missing: its value
-is deduced from argument \code{chunkMB} and the size of the file. If provided,
-replaces any value provided in \code{chunkMB}.}
+\item{rowsPerChunk}{Integer scalar or \code{NULL} (default). The reading of the file
+is done chunk-wise, this argument, if provided, gives the number of rows per chunk.
+By default it is NULL and the number of rows is deduced from the argument \code{chunkMB}
+and the size of the file. If provided, it replaces the argument \code{chunkMB}.}
 
 \item{col_names}{The column names, by default is uses the ones of the data set.
 If the data set lacks column names, you must provide them.}
 
-\item{col_types}{The column types, in the \code{readr} fashion. You can use \code{\link{guess_col_types}}
-to find them.}
+\item{col_types}{The column types, in the \code{readr} fashion.
+You can use \code{\link{guess_col_types}} to find them.}
 
-\item{nb_skip}{Number of lines to skip.}
+\item{nb_skip}{Integer scalar, default is \code{NULL}. Number of lines to skip.}
 
-\item{delim}{The delimiter. By default the function tries to find the delimiter, but sometimes it fails.}
+\item{delim}{Character scalar representing the delimiter of the columns, or \code{NULL} (default).
+By default the algorithm tries to find automatically the delimiter.
+If the algorithm fails, you must provide the delimiter with this argument.}
 
 \item{preprocessfun}{A function that is applied to the data before saving. Default
 is missing. Note that if a function is provided, it MUST return a data.frame,
 anything other than data.frame is ignored.}
 
-\item{replace}{If the destination directory already exists, you need to set the
-argument \code{replace=TRUE} to overwrite all the HDD files in it.}
+\item{replace}{Logical scalar, default is \code{TRUE}.
+If \code{replace=TRUE}, the default, the destination directory is cleaned before running the query.
+If \code{replace=FALSE} and the destination directory already contains an HDD data set,
+an error is thrown.}
 
 \item{encoding}{Character scalar containing the encoding of the file to be read.
-By default it is "UTF-8" and is passed to the \code{readr} function \code{\link[readr]{locale}} which is used
-in \code{\link[readr]{read_delim_chunked}} (the reading function). A common encoding in Western Europe is
+By default it is "UTF-8" and is passed to the \code{readr}
+function \code{\link[readr]{locale}} which is used
+in \code{\link[readr]{read_delim_chunked}} (the reading function).
+A common encoding in Western Europe is
 "ISO-8859-1" (simply use "file filename" in a non-Windows console to get the encoding).
 
 Note that this argument is ignored if the argument \code{locale} is not NULL.}
@@ -66,7 +76,8 @@ If \code{NULL}, it becomes \code{TRUE} when the data to import is greater than 5
 more than one chunk.}
 
 \item{locale}{Either \code{NULL} (default), either an object created with \code{\link[readr]{locale}}.
-This object will be passed to the reading function \code{\link[readr]{read_delim_chunked}} and handles
+This object will be passed to the reading function
+\code{\link[readr]{read_delim_chunked}} and handles
 how the data is imported.}
 
 \item{...}{Other arguments to be passed to \code{\link[readr]{read_delim_chunked}},
@@ -88,7 +99,8 @@ This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr}
 to read a large text file per chunk, and generate a HDD data set.
 
 Since the main function for importation uses \code{readr}, the column specification
-must also be in readr's style (namely \code{\link[readr]{cols}} or \code{\link[readr]{cols_only}}).
+must also be in readr's style (namely \code{\link[readr]{cols}} or
+\code{\link[readr]{cols_only}}).
 
 By default a guess of the column types is made on the first 10,000 rows. The
 guess is the application of \code{\link[hdd]{guess_col_types}} on these rows.

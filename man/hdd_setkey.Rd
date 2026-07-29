@@ -4,21 +4,33 @@
 \alias{hdd_setkey}
 \title{Sorts HDD objects}
 \usage{
-hdd_setkey(x, key, newfile, chunkMB = 500, replace = FALSE, verbose = 1)
+hdd_setkey(
+  x,
+  key,
+  destDir,
+  newfile,
+  chunkMB = 500,
+  replace = TRUE,
+  verbose = 1
+)
 }
 \arguments{
 \item{x}{A hdd file.}
 
 \item{key}{A character vector of the keys.}
 
-\item{newfile}{Destination of the result, i.e., a destination folder that will
-receive the HDD data.}
+\item{destDir}{A path to a destination directory, must be provided (no default).
+This is the destination folder that will contain the new HDD data set.}
+
+\item{newfile}{(Deprecated, please use \code{destDir} instead.) A path to a destination directory.}
 
 \item{chunkMB}{The size of chunks used to sort the data. Default is 500MB. The
 bigger this number the faster the sorting is (depends on your memory available though).}
 
-\item{replace}{Default is \code{FALSE}: if the destination folder already contains
-data, whether to replace it.}
+\item{replace}{Logical scalar, default is \code{TRUE}.
+If \code{replace=TRUE}, the default, the destination directory is cleaned before running the query.
+If \code{replace=FALSE} and the destination directory already contains an HDD data set,
+an error is thrown.}
 
 \item{verbose}{Numeric, default is 1. Whether to display information on the advancement
 of the algorithm. If equal to 0, nothing is displayed.}
@@ -54,7 +66,7 @@ summary(base_hdd)
 hdd_sorted = tempfile()
 # we use a very small chunkMB to show how the function works
 hdd_setkey(base_hdd, key = "Sepal.Width",
-		   newfile = hdd_sorted, chunkMB = 0.010)
+		   destDir = hdd_sorted, chunkMB = 0.010)
 
 
 base_hdd_sorted = hdd(hdd_sorted)
@@ -65,7 +77,7 @@ print(base_hdd_sorted)
 hdd_sorted = tempfile()
 # we use a very small chunkMB to show how the function works
 hdd_setkey(base_hdd, key = c("Species", "Sepal.Width"),
-		   newfile = hdd_sorted, chunkMB = 0.010)
+		   destDir = hdd_sorted, chunkMB = 0.010)
 
 
 base_hdd_sorted = hdd(hdd_sorted)

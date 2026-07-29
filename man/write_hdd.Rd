@@ -8,11 +8,11 @@ write_hdd(
   x,
   dir,
   chunkMB = Inf,
-  rowsPerChunk,
+  rowsPerChunk = NULL,
   compress = 50,
   add = FALSE,
-  replace = FALSE,
-  showWarning,
+  replace = TRUE,
+  showWarning = NULL,
   ...
 )
 }
@@ -21,22 +21,26 @@ write_hdd(
 
 \item{dir}{The HDD repository, i.e. the directory where the HDD data is.}
 
-\item{chunkMB}{If the data has to be split in several files of \code{chunkMB}
+\item{chunkMB}{Numeric scalar, default is \code{Inf}.
+If the data has to be split in several files of \code{chunkMB}
 sizes. Default is \code{Inf}.}
 
-\item{rowsPerChunk}{Integer, default is missing. Alternative to the argument
+\item{rowsPerChunk}{Integer scalar, default is \code{NULL}. Alternative to the argument
 \code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk}
 rows.}
 
-\item{compress}{Compression rate to be applied by \code{\link[fst]{write_fst}}.
-Default is 50.}
+\item{compress}{Integer scalar, default is 50.
+Compression rate to be applied by \code{\link[fst]{write_fst}}.}
 
-\item{add}{Should the file be added to the existing repository? Default is \code{FALSE}.}
+\item{add}{Logical scalar, default is \code{FALSE}.
+Should the file be added to the existing repository? Default is \code{FALSE}.}
 
-\item{replace}{If \code{add = FALSE}, should any existing document be replaced?
-Default is \code{FALSE}.}
+\item{replace}{Logical scalar default is \code{TRUE}.
+This argument only works if \code{add = FALSE}. If \code{TRUE}, then the HDD data is
+replaced. If \code{FALSE} an error is thrown if the HDD data already exists.}
 
-\item{showWarning}{If the data \code{x} has no observation, then a warning is
+\item{showWarning}{Logical scalar or \code{NULL} (default).
+If the data \code{x} has no observation, then a warning is
 raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd}
 is NOT called within a function.}
 
@@ -74,8 +78,7 @@ base_hdd = hdd(hdd_path)
 summary(base_hdd) # => 11 files, 1650 lines, 48.7KB on disk
 
 # Let's save the iris data by chunks of 1KB
-# we use replace = TRUE to delete the previous data
-write_hdd(iris, hdd_path, chunkMB = 0.001, replace = TRUE)
+write_hdd(iris, hdd_path, chunkMB = 0.001)
 
 base_hdd = hdd(hdd_path)
 summary(base_hdd) # => 8 files, 150 lines, 10.2KB on disk

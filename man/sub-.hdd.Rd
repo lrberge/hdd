@@ -4,22 +4,48 @@
 \alias{[.hdd}
 \title{Extraction of HDD data}
 \usage{
-\method{[}{hdd}(x, index, ..., file, newfile, replace = FALSE, all.vars = FALSE)
+\method{[}{hdd}(
+  x,
+  index,
+  ...,
+  file,
+  destDir = NULL,
+  newfile = NULL,
+  replace = TRUE,
+  all.vars = FALSE
+)
 }
 \arguments{
-\item{x}{A hdd file.}
+\item{x}{An \code{hdd} data set.}
 
-\item{index}{An index, you can use \code{.N} and variable names, like in data.table.}
+\item{index}{An index, you can use \code{.N} and variable names, like in \code{data.table}.}
 
-\item{...}{Other components of the extraction to be passed to \code{\link[data.table]{data.table}}.}
+\item{...}{Other components of the extraction to be passed to
+\code{\link[data.table]{data.table}}.}
 
-\item{file}{Which file to extract from? (Remember hdd data is split in several files.) You can use \code{.N}.}
+\item{file}{Integer vector. Which file to extract from?
+Remember hdd data is split in several files.
+You can use the special variable \code{.N} to refer to the last file.}
 
-\item{newfile}{A destination directory. Default is missing. Should be result of the query be saved into a new HDD directory? Otherwise, it is put in memory.}
+\item{destDir}{A destination directory, default is \code{NULL}.
+If \code{destDir=NULL}, the default, then the result of the query is loaded into memory.
+To save the result of the query into a new directory, use \code{destDir}.}
 
-\item{replace}{Only used if argument \code{newfile} is not missing: default is \code{FALSE}. If the \code{newfile} points to an existing HDD data, then to replace it you must have \code{replace = TRUE}.}
+\item{newfile}{(Deprecated, please use \code{destDir} now.)
+A destination directory, default is \code{NULL}.}
 
-\item{all.vars}{Logical, default is \code{FALSE}. By default, if the first argument of \code{...} is provided (i.e. argument \code{j}) then only variables appearing in all \code{...} plus the variable names found in \code{index} are extracted. If \code{TRUE} all variables are extracted before any selection is done. (This can be useful when the algorithm getting the variable names gets confused in case of complex queries.)}
+\item{replace}{Logical scalar, default is \code{TRUE}.
+Only used if argument \code{destDir} is not missing. If \code{replace=TRUE}, the default,
+the destination directory is cleaned before running the query.
+If \code{replace=FALSE} and the destination directory already contains an HDD data set,
+an error is thrown.}
+
+\item{all.vars}{Logical scaalr, default is \code{FALSE}.
+By default, if the first argument of \code{...} is provided (i.e. argument \code{j})
+then only variables appearing in all \code{...} plus the variable names found
+in \code{index} are extracted. If \code{TRUE} all variables are extracted
+before any selection is done. (This can be useful when the algorithm getting
+the variable names gets confused in case of complex queries.)}
 }
 \value{
 Returns a data.table extracted from a HDD file (except if newwfile is not missing).
@@ -28,11 +54,16 @@ Returns a data.table extracted from a HDD file (except if newwfile is not missin
 This function extract data from HDD files, in a similar fashion as data.table but with more arguments.
 }
 \details{
-The extraction of variables look like a regular \code{data.table} extraction but in fact all operations are made chunk-by-chunk behind the scene.
+The extraction of variables look like a regular \code{data.table} extraction
+but in fact all operations are made chunk-by-chunk behind the scene.
 
-The extra arguments \code{file}, \code{newfile} and \code{replace} are added to a regular \code{\link[data.table]{data.table}} call. Argument \code{file} is used to select the chunks, you can use the special variable \code{.N} to identify the last chunk.
+The extra arguments \code{file}, \code{destDir} and \code{replace} are added to
+a regular \code{\link[data.table]{data.table}} call.
+Argument \code{file} is used to select the chunks, you can use the special variable \code{.N}
+to identify the last chunk.
 
-By default, the operation loads the data in memory. But if the expected size is still too large, you can use the argument \code{newfile} to create a new HDD data set without size restriction. If a HDD data set already exists in the \code{newfile} destination, you can use the argument \code{replace=TRUE} to override it.
+By default, the operation loads the data in memory. But if the expected size is still too large,
+you can use the argument \code{destDir} to create a new HDD data set without size restriction.
 }
 \examples{
 
@@ -75,9 +106,9 @@ data_hdd[, pl2 := Petal.Length**2]
 data_hdd[, .(mean_pl = mean(Petal.Length)), by = Species]
 
 # If the data you extract does not fit into memory,
-# you can create a new HDD file with the argument 'newfile':
+# you can create a new HDD file with the argument 'destDir':
 hdd_path_new = tempfile()
-data_hdd[, pl2 := Petal.Length**2, newfile = hdd_path_new]
+data_hdd[, pl2 := Petal.Length**2, destDir = hdd_path_new]
 # check the result:
 data_hdd_bis = hdd(hdd_path_new)
 summary(data_hdd_bis)

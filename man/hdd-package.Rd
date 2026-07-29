@@ -3,7 +3,6 @@
 \docType{package}
 \name{hdd-package}
 \alias{hdd-package}
-\alias{_PACKAGE}
 \title{Easy manipulation of out of memory data sets}
 \description{
 \pkg{hdd} offers a class of data, hard drive data, allowing the easy importation/manipulation of out of memory data sets. The data sets are located on disk but look like in-memory, the syntax for manipulation is similar to \code{\link[data.table]{data.table}}. Operations are performed "chunk-wise" behind the scene.

@@ -7,14 +7,15 @@
 hdd_merge(
   x,
   y,
+  destDir,
   newfile,
-  chunkMB,
-  rowsPerChunk,
+  chunkMB = NULL,
+  rowsPerChunk = NULL,
   all = FALSE,
   all.x = all,
   all.y = all,
   allow.cartesian = FALSE,
-  replace = FALSE,
+  replace = TRUE,
   verbose
 )
 }
@@ -23,13 +24,15 @@ hdd_merge(
 
 \item{y}{A data set either a data.frame of a HDD object.}
 
-\item{newfile}{Destination of the result, i.e., a destination folder that will
-receive the HDD data.}
+\item{destDir}{A path to a destination directory, must be provided (no default).
+This is the destination folder that will contain the new HDD data set.}
 
-\item{chunkMB}{Numeric, default is missing. If provided, the data 'x' is split
+\item{newfile}{(Deprecated, please use \code{destDir} instead.) A path to a destination directory.}
+
+\item{chunkMB}{Numeric scalar or \code{NULL} (default). If provided, the data 'x' is split
 in chunks of 'chunkMB' MB and the merge is applied chunkwise.}
 
-\item{rowsPerChunk}{Integer, default is missing. If provided, the data 'x' is
+\item{rowsPerChunk}{Integer scalar or \code{NULL} (default). If provided, the data 'x' is
 split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.}
 
 \item{all}{Default is \code{FALSE}.}
@@ -40,8 +43,10 @@ split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.}
 
 \item{allow.cartesian}{Logical: whether to allow cartesian merge. Defaults to \code{FALSE}.}
 
-\item{replace}{Default is \code{FALSE}: if the destination folder already contains
-data, whether to replace it.}
+\item{replace}{Logical scalar, default is \code{TRUE}.
+If \code{replace=TRUE}, the default, the destination directory is cleaned before running the query.
+If \code{replace=FALSE} and the destination directory already contains an HDD data set,
+an error is thrown.}
 
 \item{verbose}{Numeric. Whether information on the advancement should be displayed.
 If equal to 0, nothing is displayed. By default it is equal to 1 if the size
@@ -50,7 +55,7 @@ of \code{x} is greater than 1GB.}
 \value{
 This function does not return anything. It applies the merging between
 two potentially large (out of memory) data set and saves them on disk at the location
-of \code{newfile}, the destination folder which will be populated with .fst files
+of \code{destDir}, the destination folder which will be populated with \code{.fst} files
 representing chunks of the resulting merge.
 
 To interact with the data (on disk) newly created, use the function \code{\link[=hdd]{hdd()}}.
@@ -81,7 +86,7 @@ iris_bis$id = iris$id = 1
 
 # merge, we chunk 'x' by 50 rows
 hdd_path = tempfile()
-hdd_merge(iris, iris_bis, newfile = hdd_path,
+hdd_merge(iris, iris_bis, destDir = hdd_path,
 		  rowsPerChunk = 50, allow.cartesian = TRUE)
 
 base_merged = hdd(hdd_path)
