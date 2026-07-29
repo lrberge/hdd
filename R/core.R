@@ -504,6 +504,7 @@ hdd = function(dir){
 #' print(data_hdd_bis)
 #'
 "[.hdd" = function(x, index, ..., file, newfile, replace = FALSE, all.vars = FALSE){
+  #### [.hdd ####
 	# newfile: creates a new hdd
 
 	# We look at what variables to select, because it is costly to extract variables: we need the minimum!
@@ -2547,6 +2548,7 @@ origin = function(x){
 ####
 #### S3 methods ####
 ####
+
 
 #' Dimension of a HDD object
 #'

@@ -1,4 +1,10 @@
 
+# `hdd` version 0.1.2
+
+## Other changes
+
+- use `data.table` as `imports` and not as `depends`
+
 # `hdd` version 0.1.1 (2023-08-22)
 
 ## User visible changes

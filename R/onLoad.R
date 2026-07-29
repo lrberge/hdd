@@ -1,7 +1,7 @@
 
 
 
-.onLoad <- function(libname, pkgname){
+.onLoad = function(libname, pkgname){
 	# setting the two options
 
 	setHdd_extract.cap()
