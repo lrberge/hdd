@@ -273,9 +273,12 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk = NULL,
 	call_txt = deparse_long(match.call())
 
 	# The main loop
+	prog_bar = txtProgressBar(max = n, width = 80, style = 3)
 	for(i in 1:n_chunks){
-		if(verbose > 0) message(i, "..", appendLF = FALSE)
-
+		if(verbose > 0){
+		  setTxtProgressBar(prog_bar, i)
+		}
+		
 		if(isTable){
 			x_small = x[start[i]:end[i], ]
 		} else {
@@ -296,8 +299,9 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk = NULL,
 
 
 	}
-
-	if(verbose > 0) message("end.")
+	
+	close(prog_bar)
+	
 }
 
 
@@ -2289,8 +2293,16 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 	}
 
 	CALL_TXT = deparse_long(match.call())
+	INDEX = 0
+	
+	prog_bar = txtProgressBar(max = nbChunks_approx, width = 80, style = 3)
 
 	funPerChunk = function(x, pos){
+	  
+	  if(verbose > 0){
+	    INDEX <<- INDEX + 1
+	    setTxtProgressBar(prog_bar, INDEX)
+		}
 
 		# get the problems
 		pblm = readr::problems(x)
@@ -2328,6 +2340,8 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 		                          col_names = col_names, col_types = col_types, locale = my_locale,
 															skip = nb_skip, delim = delimiter, ...)
 	}
+	
+	close(prog_bar)
 	
 	if(verbose){
 		message("Importation in ", format_difftime(time_start), ".")
