@@ -16,19 +16,19 @@
 #' Read fst or HDD files as DT
 #'
 #' This is the function \code{\link[fst]{read_fst}} but with automatic conversion 
-#' to data.table. It also allows to read \code{hdd} data.
+#' to data.table. It also allows to read `hdd` data.
 #'
 #' @inherit hdd seealso
 #'
-#' @param path Path to \code{fst} file -- or path to \code{hdd} data. For hdd files, 
+#' @param path Path to `fst` file -- or path to `hdd` data. For hdd files, 
 #' there is a
 #' @param columns Column names to read. The default is to read all columns. Ignored 
-#' for \code{hdd} files.
-#' @param from Read data starting from this row number. Ignored for \code{hdd} files.
+#' for `hdd` files.
+#' @param from Read data starting from this row number. Ignored for `hdd` files.
 #' @param to Read data up until this row number. The default is to read to the last 
-#' row of the stored data set. Ignored for \code{hdd} files.
-#' @param confirm If the HDD file is larger than ten times the variable \code{getHdd_extract.cap()}, 
-#' then by default an error is raised. To anyway read the data, use \code{confirm = TRUE}. 
+#' row of the stored data set. Ignored for `hdd` files.
+#' @param confirm If the HDD file is larger than ten times the variable `getHdd_extract.cap()`, 
+#' then by default an error is raised. To anyway read the data, use `confirm = TRUE`. 
 #' You can set the data cap with the function \code{\link[hdd]{setHdd_extract.cap}}.
 #' 
 #' @author Laurent Berge
@@ -122,18 +122,18 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 #' @param fun A function to be applied to slices of the data set. 
 #' The function must return a data frame like object.
 #' @param chunkMB Numeric scalar, default is 500. The size of the slices. 
-#' That is: the function \code{fun} is applied to each 500Mb of data \code{x}. 
+#' That is: the function `fun` is applied to each 500Mb of data `x`. 
 #' If the function creates a lot of additional information, you may want this number to go down. 
 #' On the other hand, if the function reduces the information you may want this number to go up. 
 #' In the end it will depend on the amount of memory available.
-#' @param rowsPerChunk Integer scalar, default is NULL. Alternative to the argument \code{chunkMB}.
-#'  If provided, the functions will be applied to chunks of \code{rowsPerChunk} of \code{x}.
+#' @param rowsPerChunk Integer scalar, default is NULL. Alternative to the argument `chunkMB`.
+#'  If provided, the functions will be applied to chunks of `rowsPerChunk` of `x`.
 #' @param dir The destination directory where the data is saved. No default.
 #' @param replace Logical scalar, default is `TRUE`. 
 #' Whether all information on the destination directory should be erased beforehand. 
 #' If `replace = FALSE` and an HDD data set already exists in `dir`, an error is thrown.
 #' @param verbose Integer scalar, defaults to 1. If greater than 0 then the progress is displayed.
-#' @param ... Other parameters to be passed to \code{fun}.
+#' @param ... Other parameters to be passed to `fun`.
 #'
 #' @author Laurent Berge
 #'
@@ -141,7 +141,7 @@ readfst = function(path, columns = NULL, from = 1, to = NULL, confirm = FALSE){
 #' This function splits the original data into several slices and then applies 
 #' a function to each of them, saving the results into a HDD data set.
 #'
-#' You can perform merging operations with \code{hdd_slice}, 
+#' You can perform merging operations with `hdd_slice`, 
 #' but for regular merges not that you have the function \code{\link[hdd]{hdd_merge}} that may
 #' prove more convenient (not need to write a ad hoc function).
 #'
@@ -305,7 +305,7 @@ hdd_slice = function(x, fun, dir, chunkMB = 500, rowsPerChunk = NULL,
 #' Hard drive data set
 #'
 #' This function connects to a hard drive data set (HDD). You can access the hard 
-#' drive data in a similar way to a \code{data.table}.
+#' drive data in a similar way to a `data.table`.
 #'
 #' @param dir The directory where the hard drive data set is.
 #'
@@ -447,16 +447,16 @@ hdd = function(dir){
 #' @inherit hdd seealso
 #'
 #' @param x An `hdd` data set.
-#' @param index An index, you can use \code{.N} and variable names, like in `data.table`.
+#' @param index An index, you can use `.N` and variable names, like in `data.table`.
 #' @param ... Other components of the extraction to be passed to 
 #' \code{\link[data.table]{data.table}}.
 #' @param file Integer vector. Which file to extract from? 
 #' Remember hdd data is split in several files. 
-#' You can use the special variable \code{.N} to refer to the last file.
-#' @param all.vars Logical scaalr, default is \code{FALSE}. 
-#' By default, if the first argument of \code{...} is provided (i.e. argument \code{j}) 
-#' then only variables appearing in all \code{...} plus the variable names found 
-#' in \code{index} are extracted. If \code{TRUE} all variables are extracted 
+#' You can use the special variable `.N` to refer to the last file.
+#' @param all.vars Logical scaalr, default is `FALSE`. 
+#' By default, if the first argument of `...` is provided (i.e. argument `j`) 
+#' then only variables appearing in all `...` plus the variable names found 
+#' in `index` are extracted. If `TRUE` all variables are extracted 
 #' before any selection is done. (This can be useful when the algorithm getting 
 #' the variable names gets confused in case of complex queries.)
 #' @param destDir A destination directory, default is `NULL`. 
@@ -465,7 +465,7 @@ hdd = function(dir){
 #' @param newfile (Deprecated, please use `destDir` now.) 
 #' A destination directory, default is `NULL`. 
 #' @param replace Logical scalar, default is `TRUE`. 
-#' Only used if argument \code{destDir} is not missing. If `replace=TRUE`, the default,
+#' Only used if argument `destDir` is not missing. If `replace=TRUE`, the default,
 #' the destination directory is cleaned before running the query.
 #' If `replace=FALSE` and the destination directory already contains an HDD data set,
 #' an error is thrown.
@@ -473,16 +473,16 @@ hdd = function(dir){
 #' @author Laurent Berge
 #'
 #' @details
-#' The extraction of variables look like a regular \code{data.table} extraction 
+#' The extraction of variables look like a regular `data.table` extraction 
 #' but in fact all operations are made chunk-by-chunk behind the scene.
 #'
-#' The extra arguments \code{file}, \code{destDir} and \code{replace} are added to 
+#' The extra arguments `file`, `destDir` and `replace` are added to 
 #' a regular \code{\link[data.table]{data.table}} call. 
-#' Argument \code{file} is used to select the chunks, you can use the special variable \code{.N} 
+#' Argument `file` is used to select the chunks, you can use the special variable `.N` 
 #' to identify the last chunk.
 #'
 #' By default, the operation loads the data in memory. But if the expected size is still too large,
-#'  you can use the argument \code{destDir} to create a new HDD data set without size restriction.
+#'  you can use the argument `destDir` to create a new HDD data set without size restriction.
 #'
 #' @return
 #' Returns a data.table extracted from a HDD file (except if newwfile is not missing).
@@ -879,7 +879,7 @@ hdd = function(dir){
 #' For numeric variables, the expected size is exact. For non-numeric data, the expected size is a guess that considers all the non-numeric variables being of the same size. This may lead to an over or under estimation depending on the cases.
 #' In any case, if your variable is large and you don't want to change the extraction cap (\code{\link[hdd]{setHdd_extract.cap}}), you can still extract the variable with \code{\link[hdd]{sub-.hdd}} for which there is no such protection.
 #'
-#' Note that you cannot create variables with \code{$}, e.g. like \code{base_hdd$x_new <- something}. To create variables, use the \code{[} instead (see \code{\link[hdd]{sub-.hdd}}).
+#' Note that you cannot create variables with `$`, e.g. like `base_hdd$x_new <- something`. To create variables, use the `[` instead (see \code{\link[hdd]{sub-.hdd}}).
 #'
 #' @return
 #' It returns a vector.
@@ -1014,21 +1014,21 @@ get_confirmation = function(){
 #' @param x A data set.
 #' @param dir The HDD repository, i.e. the directory where the HDD data is.
 #' @param chunkMB Numeric scalar, default is `Inf`. 
-#' If the data has to be split in several files of \code{chunkMB} 
-#' sizes. Default is \code{Inf}.
+#' If the data has to be split in several files of `chunkMB` 
+#' sizes. Default is `Inf`.
 #' @param rowsPerChunk Integer scalar, default is `NULL`. Alternative to the argument 
-#' \code{chunkMB}. If provided, the data will be split in several files of \code{rowsPerChunk} 
+#' `chunkMB`. If provided, the data will be split in several files of `rowsPerChunk` 
 #' rows.
 #' @param compress Integer scalar, default is 50. 
 #' Compression rate to be applied by \code{\link[fst]{write_fst}}. 
 #' @param add Logical scalar, default is `FALSE`. 
-#' Should the file be added to the existing repository? Default is \code{FALSE}.
+#' Should the file be added to the existing repository? Default is `FALSE`.
 #' @param replace Logical scalar default is `TRUE`. 
-#' This argument only works if \code{add = FALSE}. If `TRUE`, then the HDD data is 
+#' This argument only works if `add = FALSE`. If `TRUE`, then the HDD data is 
 #' replaced. If `FALSE` an error is thrown if the HDD data already exists. 
 #' @param showWarning Logical scalar or `NULL` (default). 
-#' If the data \code{x} has no observation, then a warning is 
-#' raised if \code{showWarning = TRUE}. By default, it occurs only if \code{write_hdd} 
+#' If the data `x` has no observation, then a warning is 
+#' raised if `showWarning = TRUE`. By default, it occurs only if `write_hdd` 
 #' is NOT called within a function.
 #' @param ... Not currently used.
 #'
@@ -1039,7 +1039,7 @@ get_confirmation = function(){
 #' \dQuote{_hdd.txt} in the HDD folder. This file contains summary information on 
 #' the data: the number of rows, the number of variables, the first five lines and 
 #' a log of how the HDD data set has been created. To access the log directly from 
-#' \code{R}, use the function \code{\link[hdd]{origin}}.
+#' `R`, use the function \code{\link[hdd]{origin}}.
 #' 
 #' @return 
 #' This function does not return anything in R. Instead it creates a folder
@@ -1656,7 +1656,7 @@ hdd_setkey = function(x, key, destDir, newfile,
 #'
 #' @inherit hdd seealso
 #'
-#' @param x A HDD object or a \code{data.frame}.
+#' @param x A HDD object or a `data.frame`.
 #' @param y A data set either a data.frame of a HDD object.
 #' @param destDir A path to a destination directory, must be provided (no default). 
 #' This is the destination folder that will contain the new HDD data set.
@@ -1665,24 +1665,24 @@ hdd_setkey = function(x, key, destDir, newfile,
 #' in chunks of 'chunkMB' MB and the merge is applied chunkwise.
 #' @param rowsPerChunk Integer scalar or `NULL` (default). If provided, the data 'x' is 
 #' split in chunks of 'rowsPerChunk' rows and the merge is applied chunkwise.
-#' @param all Default is \code{FALSE}.
-#' @param all.x Default is \code{all}.
-#' @param all.y Default is \code{all}.
-#' @param allow.cartesian Logical: whether to allow cartesian merge. Defaults to \code{FALSE}.
+#' @param all Default is `FALSE`.
+#' @param all.x Default is `all`.
+#' @param all.y Default is `all`.
+#' @param allow.cartesian Logical: whether to allow cartesian merge. Defaults to `FALSE`.
 #' @param replace Logical scalar, default is `TRUE`. 
 #' If `replace=TRUE`, the default, the destination directory is cleaned before running the query.
 #' If `replace=FALSE` and the destination directory already contains an HDD data set,
 #' an error is thrown.
 #' @param verbose Numeric. Whether information on the advancement should be displayed. 
 #' If equal to 0, nothing is displayed. By default it is equal to 1 if the size 
-#' of \code{x} is greater than 1GB.
+#' of `x` is greater than 1GB.
 #'
 #' @details
-#' If \code{x} (resp \code{y}) is a HDD object, then the merging will be operated 
+#' If `x` (resp `y`) is a HDD object, then the merging will be operated 
 #' chunkwise, with the original chunks of the objects. To change the size of the 
-#' chunks for \code{x}: you can use the argument \code{chunkMB} or \code{rowsPerChunk.}
+#' chunks for `x`: you can use the argument `chunkMB` or `rowsPerChunk.`
 #'
-#' To change the chunk size of \code{y}, you can rewrite \code{y} with a new chunk 
+#' To change the chunk size of `y`, you can rewrite `y` with a new chunk 
 #' size using \code{\link[hdd]{write_hdd}}.
 #'
 #' Note that the merging operation could also be achieved with \code{\link[hdd]{hdd_slice}} 
@@ -1909,7 +1909,7 @@ hdd_merge = function(x, y, destDir, newfile, chunkMB = NULL, rowsPerChunk = NULL
 #' The reading of the file is done chunk-wise, and this argument provides the size
 #' of the chunks.  
 #' Instead of using this argument, you can alternatively use 
-#' the argument \code{rowsPerChunk} which decides 
+#' the argument `rowsPerChunk` which decides 
 #' the size of chunks in terms of lines.
 #' @param rowsPerChunk Integer scalar or `NULL` (default). The reading of the file
 #' is done chunk-wise, this argument, if provided, gives the number of rows per chunk.
@@ -1917,7 +1917,7 @@ hdd_merge = function(x, y, destDir, newfile, chunkMB = NULL, rowsPerChunk = NULL
 #' and the size of the file. If provided, it replaces the argument `chunkMB`.
 #' @param col_names The column names, by default is uses the ones of the data set. 
 #' If the data set lacks column names, you must provide them.
-#' @param col_types The column types, in the \code{readr} fashion. 
+#' @param col_types The column types, in the `readr` fashion. 
 #' You can use \code{\link{guess_col_types}} to find them.
 #' @param nb_skip Integer scalar, default is `NULL`. Number of lines to skip.
 #' @param delim Character scalar representing the delimiter of the columns, or `NULL` (default). 
@@ -1947,13 +1947,13 @@ hdd_merge = function(x, y, destDir, newfile, chunkMB = NULL, rowsPerChunk = NULL
 #' \code{\link[readr]{read_delim_chunked}} and handles
 #' how the data is imported.
 #' @param ... Other arguments to be passed to \code{\link[readr]{read_delim_chunked}}, 
-#' \code{quote = ""} can be interesting sometimes.
+#' `quote = ""` can be interesting sometimes.
 #'
 #' @details
-#' This function uses \code{\link[readr]{read_delim_chunked}} from \code{readr} 
+#' This function uses \code{\link[readr]{read_delim_chunked}} from `readr` 
 #' to read a large text file per chunk, and generate a HDD data set.
 #'
-#' Since the main function for importation uses \code{readr}, the column specification 
+#' Since the main function for importation uses `readr`, the column specification 
 #' must also be in readr's style (namely \code{\link[readr]{cols}} or 
 #' \code{\link[readr]{cols_only}}).
 #'
@@ -2317,18 +2317,18 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 #'
 #' @param dt_or_path Either a data frame or a path.
 #' @param col_names Optional: the vector of names of the columns, if not contained in the file. Must match the number of columns in the file.
-#' @param n Number of observations used to make the guess. By default, \code{n = 100000}.
+#' @param n Number of observations used to make the guess. By default, `n = 100000`.
 #'
 #' @author Laurent Berge
 #'
 #' @details
 #'
-#' The guessing of the column types is based on the 10,000 (set with argument \code{n}) first rows.
+#' The guessing of the column types is based on the 10,000 (set with argument `n`) first rows.
 #'
 #' Note that by default, columns that are found to be integers are imported as double (in want of integer64 type in readr). Note that for large data sets, sometimes integer-like identifiers can be larger than 16 digits: in these case you must import them as character not to lose information.
 #'
 #' @return
-#' It returns a \code{\link[readr]{cols}} object a la \code{readr}.
+#' It returns a \code{\link[readr]{cols}} object a la `readr`.
 #'
 #' @seealso
 #' See \code{\link[hdd]{peek}} to have a convenient look at the first lines of a text file. 
@@ -2492,12 +2492,12 @@ guess_delim = function(path){
 #' @inherit guess_col_types seealso
 #'
 #' @param path Path linking to the text file.
-#' @param onlyLines Default is \code{FALSE}. If \code{TRUE}, then the first 
-#' \code{n} lines are directly displayed without formatting.
+#' @param onlyLines Default is `FALSE`. If `TRUE`, then the first 
+#' `n` lines are directly displayed without formatting.
 #' @param n Integer. The number of lines to extract from the file. Default is 100 or 5 
-#' if \code{onlyLine = TRUE}.
-#' @param view Logical, default it \code{TRUE}: whether the data should be 
-#' displayed on the viewer. Only when \code{onlyLines = FALSE}.
+#' if `onlyLine = TRUE`.
+#' @param view Logical, default it `TRUE`: whether the data should be 
+#' displayed on the viewer. Only when `onlyLines = FALSE`.
 #'
 #' @return
 #' Returns the data invisibly.
@@ -2591,7 +2591,7 @@ peek = function(path, onlyLines = FALSE, n, view = TRUE){
 #'
 #' @details
 #'
-#' Each HDD lives on disk and a \dQuote{_hdd.txt} is always present in the folder containing summary information. The function \code{origin} extracts the log from this information file.
+#' Each HDD lives on disk and a \dQuote{_hdd.txt} is always present in the folder containing summary information. The function `origin` extracts the log from this information file.
 #'
 #' @return
 #' A character vector, if the HDD data set has been created with several instances of \code{\link[hdd]{write_hdd}} its length will be greater than 1.
@@ -2645,7 +2645,7 @@ origin = function(x){
 #'
 #' @inherit hdd examples
 #'
-#' @param x A \code{HDD} object.
+#' @param x A `HDD` object.
 #'
 #' @return
 #' It returns a vector of length 2 containing the number of rows and the number of columns of the HDD object.

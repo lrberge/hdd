@@ -19,7 +19,7 @@
 #' @details
 #' In \code{\link[hdd]{readfst}}, if the expected size of the data set exceeds the cap then, 
 #' in interactive mode, a confirmation is asked. When not in interactive mode, no confirmation is asked. 
-#' This can also be bypassed by using the argument \code{confirm}.
+#' This can also be bypassed by using the argument `confirm`.
 #'
 #' @return
 #' The size cap, a numeric scalar.
