@@ -678,10 +678,7 @@ hdd = function(dir){
 			  
 			  x_tmp = fst(fileName)
 			  
-			  new_index = index
-			  if(onlyN){
-					new_index = eval(mc$index, list(.N = nrow(x_tmp)), enclos = env)
-				}
+			  new_index = eval(mc$index, list(.N = nrow(x_tmp)), enclos = env)
 				
 				if(ncol(x_tmp) == 1){
 					x_tmp = data.table(x_tmp[new_index, ])
@@ -2261,7 +2258,6 @@ txt2hdd = function(path, dirDest, chunkMB = 500, rowsPerChunk = NULL,
 
 		if(verbose > 0){
 			mema("Approx. number of chunks: {n ? ceiling(nbChunks_approx)} ({n ? rowsPerChunk} rows per chunk)")
-			mema("verbose = TRUE")
 		}
 	}
 	
