@@ -29,9 +29,8 @@ import(stringmagic)
 
 # Imports
 importFrom(fst, fst, read_fst, write_fst)
-importFrom(utils, object.size, head, tail)
+importFrom(utils, object.size, head, tail, setTxtProgressBar, txtProgressBar)
 importFrom(readr, read_delim_chunked, read_lines, guess_parser, problems, cols)
-
 
 
 
