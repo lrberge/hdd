@@ -11,7 +11,7 @@
 
 - argument `newfile` becomes `destDir`, retro compatibility is ensured
 
-- in argument `destDir`, now parent and grand-parent directories arenow automatically created if they are missing
+- in argument `destDir`, the parent and grand-parent directories are now automatically created if they are missing
 
 - add progress bar to `txt2hdd` and `hdd_slice`
 
@@ -21,7 +21,7 @@
 
 - rewrite of the documentation
 
-- improve the argument checking
+- improve arguments checking
 
 # `hdd` version 0.1.1 (2023-08-22)
 
